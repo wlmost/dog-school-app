@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  # Nginx Webserver
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: dog-school-nginx
+    ports:
+      - "8081:80"
+      - "8443:443"
+    volumes:
+      - ./backend:/var/www/html
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d
+      - ./docker/nginx/logs:/var/log/nginx
+    depends_on:
+      - php
+    networks:
+      - dog-school-network
+    restart: unless-stopped
+
+  # PHP-FPM for Laravel
+  php:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: dog-school-php
+    volumes:
+      - ./backend:/var/www/html
+      - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+    environment:
+      - PHP_OPCACHE_ENABLE=1
+      - PHP_OPCACHE_REVALIDATE_FREQ=0
+      - PHP_MEMORY_LIMIT=512M
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - dog-school-network
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: dog-school-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: dog_school
+      POSTGRES_USER: dog_school_user
+      POSTGRES_PASSWORD: dog_school_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    networks:
+      - dog-school-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dog_school_user -d dog_school"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis for Caching and Queues
+  redis:
+    image: redis:7-alpine
+    container_name: dog-school-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - dog-school-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # Node.js for Frontend Development
+  node:
+    image: node:20-alpine
+    container_name: dog-school-node
+    working_dir: /var/www/html/frontend
+    volumes:
+      - ./frontend:/var/www/html/frontend
+    ports:
+      - "5173:5173"
+    networks:
+      - dog-school-network
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    restart: unless-stopped
+
+  # Laravel Queue Worker
+  queue:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: dog-school-queue
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - dog-school-network
+    command: php artisan queue:work --sleep=3 --tries=3 --timeout=90
+    restart: unless-stopped
+
+  # Laravel Schedule Runner
+  scheduler:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: dog-school-scheduler
+    volumes:
+      - ./backend:/var/www/html
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - dog-school-network
+    command: sh -c "while true; do php artisan schedule:run --verbose --no-interaction & sleep 60; done"
+    restart: unless-stopped
+
+  # Mailpit for Email Testing (Development)
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: dog-school-mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - dog-school-network
+    restart: unless-stopped
+
+networks:
+  dog-school-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

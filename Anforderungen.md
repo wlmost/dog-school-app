@@ -78,5 +78,7 @@ Einen Entwurf für das User-Interface (UI) der Anamnese-Seite.
 ## Implementation
 Nach einer Überprüfung und Freigabe von mir, beginne mit der Entwicklung.
 Verwende hierbei TDD und Clean Code.
-Erzeuge nach jeder erfolgreich getesteten Funktionalität eine Commit-Nachricht.
-Beachte die Instruktionen und Skills.
+1. Erstelle zunächst die Docker-Infrastruktur, sodass die Container gestartet werden können, damit innerhalb der Container entwickelt werden kann (keine PHP Installation, oder Webserver, oder Datenbank-Installation auf Host)
+2. Beginne mit der empfohlenen Abfolge der Implementationsschritte
+3. Erzeuge nach jeder erfolgreich getesteten Funktionalität eine Commit-Nachricht.
+4. Beachte die Instruktionen und Skills.

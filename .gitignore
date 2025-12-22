@@ -1,21 +1,53 @@
-/vendor/*
-/config/app.php
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 
-/tmp/cache/models/*
-!/tmp/cache/models/empty
-/tmp/cache/persistent/*
-!/tmp/cache/persistent/empty
-/tmp/cache/views/*
-!/tmp/cache/views/empty
-/tmp/sessions/*
-!/tmp/sessions/empty
-/tmp/tests/*
-!/tmp/tests/empty
+# OS
+.DS_Store
+Thumbs.db
 
-/logs/*
-!/logs/empty
+# Environment files
+.env
+.env.local
+.env.*.local
 
-/app/tmp/*
-/app/Config/core.php
-/app/Config/database.php
-/vendors/*
+# Logs
+*.log
+logs/
+docker/nginx/logs/
+
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+dist/
+build/
+
+# Docker volumes
+postgres_data/
+redis_data/
+
+# Testing
+coverage/
+.phpunit.result.cache
+
+# Laravel specific
+backend/storage/*.key
+backend/.env
+backend/.env.backup
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/logs/*
+
+# Frontend specific
+frontend/.env
+frontend/.env.local
+frontend/dist/
+
+# Package locks (keep composer.lock, remove package-lock if using yarn)
+package-lock.json
