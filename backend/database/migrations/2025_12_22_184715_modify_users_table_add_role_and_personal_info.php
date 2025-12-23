@@ -15,8 +15,8 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->enum('role', ['trainer', 'customer', 'admin'])->default('customer')->after('email');
-            $table->string('first_name')->after('role');
-            $table->string('last_name')->after('first_name');
+            $table->string('first_name')->nullable()->after('role');
+            $table->string('last_name')->nullable()->after('first_name');
             $table->string('phone', 20)->nullable()->after('last_name');
             $table->softDeletes();
         });
