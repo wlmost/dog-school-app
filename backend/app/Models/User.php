@@ -6,6 +6,8 @@ namespace App\Models;
 
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -109,5 +111,45 @@ class User extends Authenticatable implements MustVerifyEmail
         }
 
         return trim("{$this->first_name} {$this->last_name}");
+    }
+
+    /**
+     * Get the customer profile for this user (if customer role).
+     */
+    public function customer(): HasOne
+    {
+        return $this->hasOne(Customer::class);
+    }
+
+    /**
+     * Get all courses taught by this trainer (if trainer role).
+     */
+    public function courses(): HasMany
+    {
+        return $this->hasMany(Course::class, 'trainer_id');
+    }
+
+    /**
+     * Get all training sessions led by this trainer (if trainer role).
+     */
+    public function trainingSessions(): HasMany
+    {
+        return $this->hasMany(TrainingSession::class, 'trainer_id');
+    }
+
+    /**
+     * Get all anamnesis templates created by this trainer (if trainer role).
+     */
+    public function anamnesisTemplates(): HasMany
+    {
+        return $this->hasMany(AnamnesisTemplate::class, 'trainer_id');
+    }
+
+    /**
+     * Get all training logs created by this trainer (if trainer role).
+     */
+    public function trainingLogs(): HasMany
+    {
+        return $this->hasMany(TrainingLog::class, 'trainer_id');
     }
 }
