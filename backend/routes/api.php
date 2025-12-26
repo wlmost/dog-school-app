@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DogController;
+use App\Http\Controllers\Api\TrainingSessionController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -50,5 +52,16 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/dogs/{dog}/vaccinations', [DogController::class, 'vaccinations']);
     Route::get('/dogs/{dog}/training-logs', [DogController::class, 'trainingLogs']);
     Route::get('/dogs/{dog}/bookings', [DogController::class, 'bookings']);
+    
+    // Training Session Management
+    Route::get('/training-sessions', [TrainingSessionController::class, 'index']);
+    Route::get('/training-sessions/{trainingSession}', [TrainingSessionController::class, 'show']);
+    Route::get('/training-sessions/{trainingSession}/bookings', [TrainingSessionController::class, 'bookings']);
+    Route::get('/training-sessions/{trainingSession}/availability', [TrainingSessionController::class, 'availability']);
+    
+    // Booking Management
+    Route::apiResource('bookings', BookingController::class);
+    Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']);
+    Route::post('/bookings/{booking}/confirm', [BookingController::class, 'confirm']);
 });
 

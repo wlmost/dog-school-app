@@ -28,6 +28,7 @@ class BookingResource extends JsonResource
             'trainingSessionId' => $this->training_session_id,
             'customerId' => $this->customer_id,
             'dogId' => $this->dog_id,
+            'bookingDate' => $this->booking_date?->toISOString(),
             'status' => $this->status,
             'attended' => $this->attended,
             'cancellationReason' => $this->cancellation_reason,
