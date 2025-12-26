@@ -102,6 +102,14 @@ class User extends Authenticatable implements MustVerifyEmail
     }
 
     /**
+     * Check if user is an admin or trainer.
+     */
+    public function isAdminOrTrainer(): bool
+    {
+        return in_array($this->role, ['admin', 'trainer'], true);
+    }
+
+    /**
      * Get the user's full name.
      */
     public function getFullNameAttribute(): ?string

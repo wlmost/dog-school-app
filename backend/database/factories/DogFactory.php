@@ -26,9 +26,11 @@ class DogFactory extends Factory
             'neutered' => fake()->boolean(),
             'weight' => fake()->randomFloat(2, 5, 80),
             'chip_number' => fake()->optional()->numerify('##########'),
-            'veterinarian_name' => fake()->optional()->name(),
-            'veterinarian_contact' => fake()->optional()->phoneNumber(),
-            'medical_notes' => fake()->optional()->sentence(),
+            'color' => fake()->optional()->colorName(),
+            'veterinarian' => fake()->optional()->name(),
+            'special_needs' => fake()->optional()->sentence(),
+            'notes' => fake()->optional()->paragraph(),
+            'is_active' => true,
         ];
     }
 

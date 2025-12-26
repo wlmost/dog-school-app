@@ -56,9 +56,11 @@ class Dog extends Model
         'neutered',
         'weight',
         'chip_number',
-        'veterinarian_name',
-        'veterinarian_contact',
-        'medical_notes',
+        'color',
+        'veterinarian',
+        'special_needs',
+        'notes',
+        'is_active',
     ];
 
     /**
@@ -71,6 +73,7 @@ class Dog extends Model
         return [
             'date_of_birth' => 'date',
             'neutered' => 'boolean',
+            'is_active' => 'boolean',
             'weight' => 'float',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',

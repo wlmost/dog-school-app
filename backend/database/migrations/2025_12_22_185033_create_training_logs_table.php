@@ -16,16 +16,14 @@ return new class extends Migration
             $table->foreignId('dog_id')->constrained()->onDelete('cascade');
             $table->foreignId('training_session_id')->nullable()->constrained('training_sessions')->onDelete('set null');
             $table->foreignId('trainer_id')->constrained('users')->onDelete('cascade');
-            $table->date('log_date');
-            $table->string('title');
-            $table->text('notes')->nullable();
-            $table->text('recommendations')->nullable();
+            $table->text('progress_notes')->nullable();
+            $table->text('behavior_notes')->nullable();
+            $table->text('homework')->nullable();
             $table->timestamps();
 
             $table->index('dog_id');
             $table->index('training_session_id');
             $table->index('trainer_id');
-            $table->index('log_date');
         });
     }
 

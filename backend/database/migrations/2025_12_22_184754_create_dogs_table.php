@@ -21,9 +21,11 @@ return new class extends Migration
             $table->boolean('neutered')->default(false);
             $table->decimal('weight', 5, 2)->nullable();
             $table->string('chip_number')->nullable();
-            $table->string('veterinarian_name')->nullable();
-            $table->string('veterinarian_contact')->nullable();
-            $table->text('medical_notes')->nullable();
+            $table->string('color')->nullable();
+            $table->string('veterinarian')->nullable();
+            $table->text('special_needs')->nullable();
+            $table->text('notes')->nullable();
+            $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();
 

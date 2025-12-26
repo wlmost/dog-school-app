@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\DogController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -43,5 +44,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/customers/{customer}/bookings', [CustomerController::class, 'bookings']);
     Route::get('/customers/{customer}/invoices', [CustomerController::class, 'invoices']);
     Route::get('/customers/{customer}/credits', [CustomerController::class, 'credits']);
+    
+    // Dog Management
+    Route::apiResource('dogs', DogController::class);
+    Route::get('/dogs/{dog}/vaccinations', [DogController::class, 'vaccinations']);
+    Route::get('/dogs/{dog}/training-logs', [DogController::class, 'trainingLogs']);
+    Route::get('/dogs/{dog}/bookings', [DogController::class, 'bookings']);
 });
 
