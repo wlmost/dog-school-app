@@ -27,6 +27,7 @@ class CourseResource extends JsonResource
             'maxParticipants' => $this->max_participants,
             'startDate' => $this->start_date?->toDateString(),
             'endDate' => $this->end_date?->toDateString(),
+            'status' => $this->status,
             'isActive' => $this->isActive(),
             'isFull' => $this->isFull(),
             'createdAt' => $this->created_at?->toISOString(),

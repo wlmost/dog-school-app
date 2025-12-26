@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\DogController;
 use App\Http\Controllers\Api\TrainingSessionController;
@@ -63,5 +64,10 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::apiResource('bookings', BookingController::class);
     Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']);
     Route::post('/bookings/{booking}/confirm', [BookingController::class, 'confirm']);
+    
+    // Course Management
+    Route::apiResource('courses', CourseController::class);
+    Route::get('/courses/{course}/sessions', [CourseController::class, 'sessions']);
+    Route::get('/courses/{course}/participants', [CourseController::class, 'participants']);
 });
 
