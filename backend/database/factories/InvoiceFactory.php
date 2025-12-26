@@ -17,21 +17,13 @@ class InvoiceFactory extends Factory
 
     public function definition(): array
     {
-        $subtotal = fake()->randomFloat(2, 50, 500);
-        $taxRate = 19.00;
-        $taxAmount = round($subtotal * ($taxRate / 100), 2);
-        $total = $subtotal + $taxAmount;
-        
         return [
             'customer_id' => Customer::factory(),
             'invoice_number' => 'INV-' . fake()->unique()->numerify('######'),
-            'invoice_date' => now(),
-            'due_date' => now()->addDays(14),
-            'subtotal' => $subtotal,
-            'tax_rate' => $taxRate,
-            'tax_amount' => $taxAmount,
-            'total' => $total,
             'status' => 'draft',
+            'total_amount' => fake()->randomFloat(2, 50, 500),
+            'issue_date' => now(),
+            'due_date' => now()->addDays(14),
             'notes' => fake()->optional()->sentence(),
         ];
     }
@@ -40,7 +32,7 @@ class InvoiceFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'paid',
-            'payment_date' => now(),
+            'paid_date' => now(),
         ]);
     }
 

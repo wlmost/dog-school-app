@@ -16,11 +16,11 @@ return new class extends Migration
         Schema::create('customers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
-            $table->string('address_line1');
+            $table->string('address_line1')->nullable();
             $table->string('address_line2')->nullable();
-            $table->string('postal_code', 10);
-            $table->string('city');
-            $table->string('country')->default('Deutschland');
+            $table->string('postal_code', 10)->nullable();
+            $table->string('city')->nullable();
+            $table->string('country')->nullable()->default('Deutschland');
             $table->string('emergency_contact')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();

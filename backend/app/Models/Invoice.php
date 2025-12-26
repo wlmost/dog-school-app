@@ -45,15 +45,11 @@ class Invoice extends Model
     protected $fillable = [
         'customer_id',
         'invoice_number',
-        'invoice_date',
-        'due_date',
-        'subtotal',
-        'tax_rate',
-        'tax_amount',
-        'total',
         'status',
-        'payment_date',
-        'payment_method',
+        'total_amount',
+        'issue_date',
+        'due_date',
+        'paid_date',
         'notes',
     ];
 
@@ -65,13 +61,10 @@ class Invoice extends Model
     protected function casts(): array
     {
         return [
-            'invoice_date' => 'date',
+            'issue_date' => 'date',
             'due_date' => 'date',
-            'payment_date' => 'date',
-            'subtotal' => 'float',
-            'tax_rate' => 'float',
-            'tax_amount' => 'float',
-            'total' => 'float',
+            'paid_date' => 'date',
+            'total_amount' => 'decimal:2',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
@@ -132,7 +125,7 @@ class Invoice extends Model
      */
     public function getRemainingBalanceAttribute(): float
     {
-        return max(0, $this->total - $this->total_paid);
+        return max(0, (float) $this->total_amount - $this->total_paid);
     }
 
     /**

@@ -91,47 +91,88 @@ Diese Software bietet Hundeschulen eine vollständige digitale Lösung für:
   - JSON für flexible Daten
   - Strict Type Declarations (PHP 8.4)
 
+#### 4. Authentication & Authorization (Commit: TBD)
+- [x] **Laravel Sanctum Konfiguration**
+  - API-Token-Authentifizierung
+  - SPA-Authentifizierung
+  - routes/api.php mit v1 Prefix
+- [x] **User Management**
+  - Registrierung (nur Admin) - AuthController@register
+  - Login/Logout - AuthController@login, AuthController@logout
+  - Profil-Verwaltung - AuthController@user
+  - UserFactory erweitert mit role States
+- [x] **Role-Based Access Control (RBAC)**
+  - UserPolicy mit Admin/Trainer/Customer Policies
+  - Gates für role-basierte Checks (admin, trainer, customer)
+  - Helper-Methoden: isAdmin(), isTrainer(), isCustomer()
+  - full_name Accessor für User Model
+- [x] **Form Request Validation**
+  - LoginRequest - E-Mail & Passwort
+  - RegisterRequest - Komplett mit Rollen-Validierung
+  - UpdateProfileRequest - Profil-Updates
+- [x] **Test-Suite für Authentication & Authorization**
+  - 11 Authentication Tests (Login, Register, Logout, Profil)
+  - 29 Authorization Tests (Gates, Policies, Rollen)
+  - 60 Tests gesamt mit 114 Assertions
+  - Alle Tests erfolgreich
+
+#### 5. Models & Relationships (Commit: TBD)
+- [x] **17 Eloquent Models erstellt**
+  - Customer (mit full_address Accessor, scopeWithActiveCredits)
+  - Dog (mit age Accessor, SoftDeletes, scopeActive, scopePuppies)
+  - Vaccination (mit isDue, scopeOverdue, scopeDueSoon)
+  - Course (mit isActive, isFull, scopeActive, scopeOfType)
+  - TrainingSession (mit isPast, isFull, available_spots, scopeUpcoming, scopePast)
+  - Booking (mit isConfirmed, isCancelled, scopeConfirmed, scopeAttended)
+  - CreditPackage
+  - CustomerCredit (mit useCredit, isActive, isExpired, scopeActive, scopeExpired)
+  - Invoice (mit isPaid, isOverdue, total_paid, remaining_balance, scopeUnpaid, scopeOverdue)
+  - InvoiceItem
+  - Payment (mit isCompleted, isPending, isFailed, scopeCompleted)
+  - AnamnesisTemplate (mit scopeActive)
+  - AnamnesisQuestion
+  - AnamnesisResponse (mit isCompleted, scopeCompleted)
+  - AnamnesisAnswer
+  - TrainingLog
+  - TrainingAttachment
+- [x] **Model Relationships definiert**
+  - hasMany, belongsTo, hasOne Beziehungen
+  - Customer ↔ User, Dogs, Bookings, Credits, Invoices
+  - Dog ↔ Customer, Vaccinations, Bookings, Responses, Logs
+  - Course ↔ Trainer, Sessions
+  - TrainingSession ↔ Course, Trainer, Bookings, Logs
+  - Invoice ↔ Customer, Items, Payments
+  - Anamnesis: Templates ↔ Questions ↔ Responses ↔ Answers
+- [x] **Accessors, Mutators & Casts**
+  - full_address (Customer), age (Dog), available_spots (TrainingSession)
+  - total_paid, remaining_balance (Invoice)
+  - Date Casts für alle Datums-Felder
+  - Boolean Casts, Decimal Casts
+- [x] **Query Scopes**
+  - 20+ Scopes für häufige Queries (active, upcoming, past, overdue, etc.)
+  - Type-Safe Scopes mit Builder Type Hints
+- [x] **Business Logic Methoden**
+  - isActive, isFull, isPast, isExpired, etc.
+  - useCredit mit automatischer Status-Aktualisierung
+  - isDue für Impfungen mit 30-Tage-Logik
+- [x] **11 Model Factories**
+  - Mit States für verschiedene Szenarien (upcoming, past, overdue, etc.)
+  - Schema-aligned mit Migrationen
+  - CustomerFactory, DogFactory, VaccinationFactory, CourseFactory
+  - TrainingSessionFactory, BookingFactory, CreditPackageFactory
+  - CustomerCreditFactory, InvoiceFactory, InvoiceItemFactory, PaymentFactory
+- [x] **Test-Suite für Models**
+  - 15 Relationship Tests
+  - 14 Scope Tests
+  - 19 Business Logic Tests
+  - 48 Model-Tests + 60 Auth-Tests = 108 Tests gesamt
+  - Alle Tests erfolgreich (177 Assertions)
+
 ### 🔄 In Arbeit
 
 _Aktuell keine Tasks in Bearbeitung_
 
 ### 📋 Geplant
-
-#### 4. Authentication & Authorization
-- [ ] Laravel Sanctum Konfiguration
-  - API-Token-Authentifizierung
-  - Cookie-basierte SPA-Authentifizierung
-  - Token-Refresh-Mechanismus
-- [ ] User Management
-  - Registrierung (nur Admin)
-  - Login/Logout
-  - Passwort-Reset
-  - E-Mail-Verifizierung
-- [ ] Role-Based Access Control (RBAC)
-  - Admin-Policy
-  - Trainer-Policy
-  - Customer-Policy
-- [ ] Tests
-  - Authentication Flow Tests
-  - Authorization Tests
-  - Role & Permission Tests
-
-#### 5. Models & Relationships
-- [ ] Eloquent Models erstellen
-  - User, Customer, Dog, Vaccination
-  - Course, TrainingSession, Booking
-  - CreditPackage, CustomerCredit
-  - AnamnesisTemplate, AnamnesisQuestion, AnamnesisResponse, AnamnesisAnswer
-  - TrainingLog, TrainingAttachment
-  - Invoice, InvoiceItem, Payment
-- [ ] Model Relationships definieren
-  - hasMany, belongsTo, belongsToMany
-  - Polymorphic Relations wo sinnvoll
-- [ ] Accessors, Mutators & Casts
-- [ ] Query Scopes
-- [ ] Model Events & Observers
-- [ ] Factory & Seeder
-- [ ] Model Tests
 
 #### 6. API-Endpunkte (RESTful)
 - [ ] **Authentication API**

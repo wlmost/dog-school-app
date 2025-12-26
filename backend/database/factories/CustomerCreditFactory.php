@@ -18,16 +18,30 @@ class CustomerCreditFactory extends Factory
 
     public function definition(): array
     {
-        $package = CreditPackage::factory()->create();
+        $totalCredits = fake()->numberBetween(5, 20);
         
         return [
             'customer_id' => Customer::factory(),
-            'credit_package_id' => $package->id,
-            'remaining_credits' => $package->total_credits,
+            'credit_package_id' => CreditPackage::factory(),
+            'total_credits' => $totalCredits,
+            'remaining_credits' => $totalCredits,
             'purchase_date' => now(),
-            'expiry_date' => now()->addDays($package->validity_days ?? 365),
+            'expiration_date' => now()->addDays(365),
             'status' => 'active',
         ];
+    }
+
+    public function active(): static
+    {
+        return $this->state(function (array $attributes) {
+            $totalCredits = $attributes['total_credits'] ?? 10;
+            return [
+                'status' => 'active',
+                'total_credits' => $totalCredits,
+                'remaining_credits' => fake()->numberBetween(1, $totalCredits),
+                'expiration_date' => now()->addDays(30),
+            ];
+        });
     }
 
     public function depleted(): static
@@ -41,7 +55,7 @@ class CustomerCreditFactory extends Factory
     public function expired(): static
     {
         return $this->state(fn (array $attributes) => [
-            'expiry_date' => now()->subDays(10),
+            'expiration_date' => now()->subDays(10),
             'status' => 'expired',
         ]);
     }

@@ -28,4 +28,36 @@ class CustomerFactory extends Factory
             'notes' => fake()->optional()->sentence(),
         ];
     }
+
+    /**
+     * Indicate that the customer has dogs.
+     */
+    public function hasDogs(int $count = 1): static
+    {
+        return $this->has(\App\Models\Dog::factory()->count($count), 'dogs');
+    }
+
+    /**
+     * Indicate that the customer has bookings.
+     */
+    public function hasBookings(int $count = 1): static
+    {
+        return $this->has(\App\Models\Booking::factory()->count($count), 'bookings');
+    }
+
+    /**
+     * Indicate that the customer has invoices.
+     */
+    public function hasInvoices(int $count = 1): static
+    {
+        return $this->has(\App\Models\Invoice::factory()->count($count), 'invoices');
+    }
+
+    /**
+     * Indicate that the customer has credits.
+     */
+    public function hasCredits(int $count = 1): static
+    {
+        return $this->has(\App\Models\CustomerCredit::factory()->count($count), 'credits');
+    }
 }

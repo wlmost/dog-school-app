@@ -25,23 +25,32 @@ class BookingFactory extends Factory
             'training_session_id' => TrainingSession::factory(),
             'customer_id' => $customer->id,
             'dog_id' => Dog::factory()->create(['customer_id' => $customer->id])->id,
-            'status' => 'confirmed',
+            'status' => 'pending',
             'booking_date' => now(),
             'attended' => false,
             'notes' => fake()->optional()->sentence(),
         ];
     }
 
+    public function confirmed(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'confirmed',
+        ]);
+    }
+
     public function cancelled(): static
     {
         return $this->state(fn (array $attributes) => [
             'status' => 'cancelled',
+            'cancellation_reason' => fake()->sentence(),
         ]);
     }
 
     public function attended(): static
     {
         return $this->state(fn (array $attributes) => [
+            'status' => 'confirmed',
             'attended' => true,
         ]);
     }

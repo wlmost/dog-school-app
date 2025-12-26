@@ -43,6 +43,7 @@ class Booking extends Model
         'status',
         'booking_date',
         'attended',
+        'cancellation_reason',
         'notes',
     ];
 
@@ -67,6 +68,14 @@ class Booking extends Model
     public function session(): BelongsTo
     {
         return $this->belongsTo(TrainingSession::class, 'training_session_id');
+    }
+
+    /**
+     * Alias for session() relationship.
+     */
+    public function trainingSession(): BelongsTo
+    {
+        return $this->session();
     }
 
     /**

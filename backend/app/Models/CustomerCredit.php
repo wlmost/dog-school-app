@@ -37,9 +37,10 @@ class CustomerCredit extends Model
     protected $fillable = [
         'customer_id',
         'credit_package_id',
+        'total_credits',
         'remaining_credits',
         'purchase_date',
-        'expiry_date',
+        'expiration_date',
         'status',
     ];
 
@@ -51,9 +52,10 @@ class CustomerCredit extends Model
     protected function casts(): array
     {
         return [
+            'total_credits' => 'integer',
             'remaining_credits' => 'integer',
             'purchase_date' => 'date',
-            'expiry_date' => 'date',
+            'expiration_date' => 'date',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];
@@ -82,7 +84,7 @@ class CustomerCredit extends Model
     {
         return $this->status === 'active' 
             && $this->remaining_credits > 0
-            && (!$this->expiry_date || $this->expiry_date->isFuture());
+            && (!$this->expiration_date || $this->expiration_date->isFuture());
     }
 
     /**
@@ -90,7 +92,7 @@ class CustomerCredit extends Model
      */
     public function isExpired(): bool
     {
-        return $this->expiry_date && $this->expiry_date->isPast();
+        return $this->expiration_date && $this->expiration_date->isPast();
     }
 
     /**
@@ -121,8 +123,8 @@ class CustomerCredit extends Model
         return $query->where('status', 'active')
             ->where('remaining_credits', '>', 0)
             ->where(function ($q) {
-                $q->whereNull('expiry_date')
-                  ->orWhere('expiry_date', '>', now());
+                $q->whereNull('expiration_date')
+                  ->orWhere('expiration_date', '>', now());
             });
     }
 
@@ -131,7 +133,7 @@ class CustomerCredit extends Model
      */
     public function scopeExpired($query)
     {
-        return $query->whereNotNull('expiry_date')
-            ->where('expiry_date', '<', now());
+        return $query->whereNotNull('expiration_date')
+            ->where('expiration_date', '<', now());
     }
 }

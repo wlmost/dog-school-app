@@ -15,15 +15,16 @@ return new class extends Migration
             $table->id();
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->foreignId('credit_package_id')->constrained()->onDelete('cascade');
+            $table->integer('total_credits');
             $table->integer('remaining_credits');
             $table->date('purchase_date');
-            $table->date('expiry_date')->nullable();
+            $table->date('expiration_date')->nullable();
             $table->enum('status', ['active', 'expired', 'used'])->default('active');
             $table->timestamps();
 
             $table->index('customer_id');
             $table->index('status');
-            $table->index('expiry_date');
+            $table->index('expiration_date');
         });
     }
 

@@ -16,9 +16,10 @@ return new class extends Migration
             $table->foreignId('training_session_id')->constrained('training_sessions')->onDelete('cascade');
             $table->foreignId('customer_id')->constrained()->onDelete('cascade');
             $table->foreignId('dog_id')->constrained()->onDelete('cascade');
-            $table->enum('status', ['confirmed', 'cancelled', 'completed', 'waitlist'])->default('confirmed');
+            $table->enum('status', ['pending', 'confirmed', 'cancelled'])->default('pending');
             $table->dateTime('booking_date');
             $table->boolean('attended')->default(false);
+            $table->text('cancellation_reason')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
 

@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\CustomerController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -35,5 +36,12 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::middleware('can:admin')->group(function () {
         Route::post('/auth/register', [AuthController::class, 'register']);
     });
+    
+    // Customer Management
+    Route::apiResource('customers', CustomerController::class);
+    Route::get('/customers/{customer}/dogs', [CustomerController::class, 'dogs']);
+    Route::get('/customers/{customer}/bookings', [CustomerController::class, 'bookings']);
+    Route::get('/customers/{customer}/invoices', [CustomerController::class, 'invoices']);
+    Route::get('/customers/{customer}/credits', [CustomerController::class, 'credits']);
 });
 
