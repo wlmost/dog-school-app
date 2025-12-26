@@ -21,12 +21,12 @@ class AnamnesisResponseResource extends JsonResource
             'dogId' => $this->dog_id,
             'templateId' => $this->template_id,
             'completedAt' => $this->completed_at?->toISOString(),
-            'isCompleted' => $this->isCompleted(),
+            'completedBy' => $this->completed_by,
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
-            
             'dog' => new DogResource($this->whenLoaded('dog')),
             'template' => new AnamnesisTemplateResource($this->whenLoaded('template')),
+            'completedByUser' => new UserResource($this->whenLoaded('completedBy')),
             'answers' => AnamnesisAnswerResource::collection($this->whenLoaded('answers')),
         ];
     }

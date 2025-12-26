@@ -18,13 +18,18 @@ class AnamnesisTemplateResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'trainerId' => $this->trainer_id,
             'name' => $this->name,
             'description' => $this->description,
-            'isActive' => $this->is_active,
+            'isDefault' => $this->is_default,
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
-            
+            'trainer' => new UserResource($this->whenLoaded('trainer')),
             'questions' => AnamnesisQuestionResource::collection($this->whenLoaded('questions')),
+            'responsesCount' => $this->when(
+                $this->relationLoaded('responses'),
+                fn() => $this->responses->count()
+            ),
         ];
     }
 }

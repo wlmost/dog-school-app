@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\AnamnesisResponseController;
+use App\Http\Controllers\AnamnesisTemplateController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\CourseController;
@@ -69,5 +71,13 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::apiResource('courses', CourseController::class);
     Route::get('/courses/{course}/sessions', [CourseController::class, 'sessions']);
     Route::get('/courses/{course}/participants', [CourseController::class, 'participants']);
+    
+    // Anamnesis Template Management
+    Route::apiResource('anamnesis-templates', AnamnesisTemplateController::class);
+    Route::get('/anamnesis-templates/{anamnesisTemplate}/questions', [AnamnesisTemplateController::class, 'questions']);
+    
+    // Anamnesis Response Management
+    Route::apiResource('anamnesis-responses', AnamnesisResponseController::class);
+    Route::post('/anamnesis-responses/{anamnesisResponse}/complete', [AnamnesisResponseController::class, 'complete']);
 });
 
