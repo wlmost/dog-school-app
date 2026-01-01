@@ -7,9 +7,15 @@ use App\Http\Controllers\AnamnesisTemplateController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\CourseController;
+use App\Http\Controllers\Api\CreditPackageController;
 use App\Http\Controllers\Api\CustomerController;
+use App\Http\Controllers\Api\CustomerCreditController;
 use App\Http\Controllers\Api\DogController;
+use App\Http\Controllers\Api\InvoiceController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\TrainingSessionController;
+use App\Http\Controllers\Api\VaccinationController;
+use App\Http\Controllers\TrainingLogController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -79,5 +85,32 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // Anamnesis Response Management
     Route::apiResource('anamnesis-responses', AnamnesisResponseController::class);
     Route::post('/anamnesis-responses/{anamnesisResponse}/complete', [AnamnesisResponseController::class, 'complete']);
+    
+    // Training Log Management
+    Route::apiResource('training-logs', TrainingLogController::class);
+    
+    // Vaccination Management
+    Route::apiResource('vaccinations', VaccinationController::class);
+    Route::get('/vaccinations/upcoming/list', [VaccinationController::class, 'upcoming']);
+    Route::get('/vaccinations/overdue/list', [VaccinationController::class, 'overdue']);
+    
+    // Credit Package Management
+    Route::apiResource('credit-packages', CreditPackageController::class);
+    Route::get('/credit-packages/available/list', [CreditPackageController::class, 'available']);
+    
+    // Customer Credit Management
+    Route::apiResource('customer-credits', CustomerCreditController::class);
+    Route::post('/customer-credits/{customerCredit}/use', [CustomerCreditController::class, 'useCredit']);
+    Route::get('/customer-credits/active/list', [CustomerCreditController::class, 'active']);
+    
+    // Invoice Management
+    Route::apiResource('invoices', InvoiceController::class);
+    Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'downloadPdf']);
+    Route::post('/invoices/{invoice}/mark-paid', [InvoiceController::class, 'markAsPaid']);
+    Route::get('/invoices/overdue/list', [InvoiceController::class, 'overdue']);
+    
+    // Payment Management
+    Route::apiResource('payments', PaymentController::class);
+    Route::post('/payments/{payment}/mark-completed', [PaymentController::class, 'markAsCompleted']);
 });
 

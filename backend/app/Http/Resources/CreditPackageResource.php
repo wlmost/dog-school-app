@@ -20,10 +20,9 @@ class CreditPackageResource extends JsonResource
             'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
-            'credits' => $this->credits,
-            'price' => $this->price,
+            'totalCredits' => $this->total_credits,
+            'price' => (float) $this->price,
             'validityDays' => $this->validity_days,
-            'isActive' => $this->is_active,
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
         ];

@@ -27,7 +27,7 @@ class InvoiceItemFactory extends Factory
             'quantity' => $quantity,
             'unit_price' => $unitPrice,
             'tax_rate' => $taxRate,
-            'total' => $quantity * $unitPrice,
+            'amount' => $quantity * $unitPrice,
         ];
     }
 }

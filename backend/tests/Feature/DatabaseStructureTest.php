@@ -25,8 +25,8 @@ test('dogs table exists with required columns', function () {
     expect(Schema::hasTable('dogs'))->toBeTrue();
     expect(Schema::hasColumns('dogs', [
         'id', 'customer_id', 'name', 'breed', 'date_of_birth', 
-        'gender', 'neutered', 'weight', 'chip_number', 
-        'veterinarian_name', 'veterinarian_contact', 'medical_notes',
+        'gender', 'neutered', 'weight', 'chip_number', 'color',
+        'veterinarian', 'special_needs', 'notes', 'is_active',
         'created_at', 'updated_at', 'deleted_at'
     ]))->toBeTrue();
 });
@@ -74,8 +74,8 @@ test('credit_packages table exists with required columns', function () {
 test('customer_credits table exists with required columns', function () {
     expect(Schema::hasTable('customer_credits'))->toBeTrue();
     expect(Schema::hasColumns('customer_credits', [
-        'id', 'customer_id', 'credit_package_id', 'remaining_credits', 
-        'purchase_date', 'expiry_date', 'status'
+        'id', 'customer_id', 'credit_package_id', 'total_credits', 'remaining_credits', 
+        'purchase_date', 'expiration_date', 'status'
     ]))->toBeTrue();
 });
 
@@ -112,7 +112,7 @@ test('training_logs table exists with required columns', function () {
     expect(Schema::hasTable('training_logs'))->toBeTrue();
     expect(Schema::hasColumns('training_logs', [
         'id', 'dog_id', 'training_session_id', 'trainer_id', 
-        'log_date', 'title', 'notes', 'recommendations'
+        'progress_notes', 'behavior_notes', 'homework'
     ]))->toBeTrue();
 });
 
@@ -127,9 +127,8 @@ test('training_attachments table exists with required columns', function () {
 test('invoices table exists with required columns', function () {
     expect(Schema::hasTable('invoices'))->toBeTrue();
     expect(Schema::hasColumns('invoices', [
-        'id', 'customer_id', 'invoice_number', 'invoice_date', 
-        'due_date', 'subtotal', 'tax_rate', 'tax_amount', 'total', 
-        'status', 'payment_date', 'payment_method', 'notes'
+        'id', 'customer_id', 'invoice_number', 'status', 'total_amount',
+        'issue_date', 'due_date', 'paid_date', 'notes'
     ]))->toBeTrue();
 });
 

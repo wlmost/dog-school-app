@@ -19,7 +19,8 @@ class PaymentResource extends JsonResource
         return [
             'id' => $this->id,
             'invoiceId' => $this->invoice_id,
-            'amount' => $this->amount,
+            'invoice' => $this->whenLoaded('invoice', fn() => new InvoiceResource($this->invoice)),
+            'amount' => (float) $this->amount,
             'paymentMethod' => $this->payment_method,
             'transactionId' => $this->transaction_id,
             'status' => $this->status,

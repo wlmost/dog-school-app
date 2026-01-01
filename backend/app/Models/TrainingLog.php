@@ -42,10 +42,9 @@ class TrainingLog extends Model
         'dog_id',
         'training_session_id',
         'trainer_id',
-        'log_date',
-        'title',
-        'notes',
-        'recommendations',
+        'progress_notes',
+        'behavior_notes',
+        'homework',
     ];
 
     /**
@@ -56,7 +55,6 @@ class TrainingLog extends Model
     protected function casts(): array
     {
         return [
-            'log_date' => 'date',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];

@@ -78,6 +78,18 @@ class Vaccination extends Model
     }
 
     /**
+     * Check if the vaccination is overdue.
+     */
+    public function isOverdue(): bool
+    {
+        if (!$this->next_due_date) {
+            return false;
+        }
+
+        return $this->next_due_date->isPast();
+    }
+
+    /**
      * Scope a query to only include overdue vaccinations.
      */
     public function scopeOverdue($query)

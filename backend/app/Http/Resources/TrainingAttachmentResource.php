@@ -22,8 +22,7 @@ class TrainingAttachmentResource extends JsonResource
             'fileType' => $this->file_type,
             'filePath' => $this->file_path,
             'fileName' => $this->file_name,
-            'fileSize' => $this->file_size,
-            'description' => $this->description,
+            'uploadedAt' => $this->uploaded_at?->toISOString(),
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
         ];

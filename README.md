@@ -172,52 +172,95 @@ Diese Software bietet Hundeschulen eine vollständige digitale Lösung für:
 
 _Aktuell keine Tasks in Bearbeitung_
 
+### ✅ Abgeschlossen (Fortsetzung)
+
+#### 6. API Controllers & Endpoints (Commit: TBD)
+- [x] **11 REST API Controllers implementiert**
+  - AuthController (Login, Register, Logout, Password Reset)
+  - CustomerController (CRUD + dogs, bookings, invoices, credits)
+  - DogController (CRUD + vaccinations, trainingLogs, bookings)
+  - BookingController (CRUD + cancel, confirm)
+  - CourseController (CRUD + sessions, participants)
+  - TrainingSessionController (index, show, bookings, availability)
+  - AnamnesisTemplateController (CRUD + questions)
+  - AnamnesisResponseController (CRUD + complete)
+  - TrainingLogController (CRUD)
+  - VaccinationController (CRUD + upcoming, overdue)
+  - CreditPackageController (CRUD + available)
+  - CustomerCreditController (CRUD + useCredit, active)
+  - InvoiceController (CRUD + markAsPaid, overdue)
+  - PaymentController (CRUD + markAsCompleted)
+- [x] **18 API Resources** für JSON-Serialisierung
+  - User, Customer, Dog, Vaccination, Course, TrainingSession
+  - Booking, CreditPackage, CustomerCredit
+  - Invoice, InvoiceItem, Payment
+  - AnamnesisTemplate, AnamnesisQuestion, AnamnesisResponse, AnamnesisAnswer
+  - TrainingLog, TrainingAttachment
+- [x] **24 Form Request Validation Classes**
+  - Login, Register, UpdateProfile, PasswordReset
+  - Store/Update für: Customer, Dog, Vaccination, Course, Booking
+  - Store/Update für: CreditPackage, CustomerCredit, Invoice, Payment
+  - Store/Update für: AnamnesisTemplate, AnamnesisResponse, TrainingLog
+- [x] **14 Authorization Policies**
+  - User, Customer, Dog, Vaccination, Booking, Course, TrainingSession
+  - CreditPackage, CustomerCredit, Invoice, Payment
+  - AnamnesisTemplate, AnamnesisResponse, TrainingLog
+- [x] **RESTful API Routes** (alle mit /api/v1 Prefix)
+  - Authentication (public + protected)
+  - Resource routes für alle Entities
+  - Custom endpoints (cancel, confirm, markAsPaid, useCredit, etc.)
+  - Filter & Search capabilities
+- [x] **API Features**
+  - Pagination für alle List-Endpoints
+  - Filtering & Sorting
+  - Eager Loading für Performance
+  - Role-based Access Control
+  - Consistent Error Handling
+  - Snake_case ↔ camelCase Konvertierung
+
 ### 📋 Geplant
 
-#### 6. API-Endpunkte (RESTful)
-- [ ] **Authentication API**
-  - POST /api/v1/auth/register
-  - POST /api/v1/auth/login
-  - POST /api/v1/auth/logout
-  - POST /api/v1/auth/refresh
-  - POST /api/v1/auth/password/reset
-- [ ] **Customer Management API**
-  - CRUD für Customers
-  - Customer Dogs
-  - Customer Bookings
-  - Customer Invoices
-  - Customer Credits
-- [ ] **Dog Management API**
-  - CRUD für Dogs
-  - Dog Anamnesis
-  - Dog Training Logs
-  - Dog Vaccinations
-- [ ] **Session & Booking API**
-  - Verfügbare Sessions
-  - Session-Buchung
-  - Buchungs-Stornierung
-  - Wartelisten-Management
-- [ ] **Course Management API**
-  - CRUD für Courses
-  - Course Sessions
-  - Course Participants
-- [ ] **Anamnesis API**
-  - Template-Management
-  - Response-Management
-  - Dynamic Form Generation
-- [ ] **Training Log API**
-  - Log-Erstellung
-  - Attachment-Upload
-  - Progress-Tracking
-- [ ] **Invoice & Payment API**
-  - Rechnungserstellung
-  - PDF-Generierung
-  - Payment Processing (Stripe/PayPal)
-- [ ] **API Resources** für konsistente JSON-Responses
-- [ ] **Form Requests** für Validierung
-- [ ] **API Tests** für alle Endpunkte
+#### 7. Testing & Quality Assurance
+- [ ] Feature Tests für neue API Controllers (Vaccination, CreditPackage, CustomerCredit, Invoice, Payment)
+- [ ] Integration Tests für Workflows (Buchung → Bezahlung, Guthaben-Nutzung)
+- [ ] Performance Tests für komplexe Queries
 
-#### 7. Frontend (Vue 3 + TypeScript)
+#### 8. Erweiterte Backend-Features
+- [ ] **PDF-Generierung**
+  - Invoice PDF mit Laravel DomPDF
+  - Anamnese-Reports
+  - Trainingspläne
+- [ ] **Payment Integration**
+  - Stripe SDK Installation & Setup
+  - PayPal Integration
+  - Webhook-Handling für Payment Events
+  - Refund-Processing
+- [ ] **File Upload System**
+  - Training Attachment Upload (Fotos, Videos)
+  - Image Optimization (Intervention Image)
+  - S3/Local Storage Configuration
+- [ ] **E-Mail-System**
+  - Mailable Classes (Booking Confirmation, Payment Reminder)
+  - Mail Templates mit Blade
+  - Queue-basierter E-Mail-Versand
+- [ ] **Calendar Integration**
+  - iCal Export für Bookings
+  - Google Calendar Sync
+  - Outlook Calendar Integration
+- [ ] **Reporting & Analytics**
+  - Umsatz-Reports
+  - Auslastungs-Statistiken
+  - Kunden-Entwicklung
+- [ ] **Background Jobs & Queues**
+  - Automated Invoice Generation
+  - Overdue Reminders
+  - Vaccination Reminders
+- [ ] **API Documentation**
+  - OpenAPI/Swagger Spec
+  - API Blueprint
+  - Postman Collection
+
+#### 9. Frontend (Vue 3 + TypeScript)
 - [ ] Vite-Projekt Setup
 - [ ] Pinia Store-Konfiguration
 - [ ] Vue Router Setup

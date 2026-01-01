@@ -93,11 +93,11 @@ test('customer credit scope active filters active credits', function () {
 test('customer credit scope expired filters expired credits', function () {
     CustomerCredit::factory()->create([
         'status' => 'active',
-        'expiry_date' => now()->addDays(10),
+        'expiration_date' => now()->addDays(10),
     ]);
     CustomerCredit::factory()->create([
         'status' => 'active',
-        'expiry_date' => now()->subDays(10),
+        'expiration_date' => now()->subDays(10),
     ]);
 
     $expired = CustomerCredit::expired()->get();

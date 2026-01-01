@@ -90,7 +90,7 @@ test('customer credit is active when status is active', function () {
 
 test('customer credit is expired when expiry date is in the past', function () {
     $credit = CustomerCredit::factory()->create([
-        'expiry_date' => now()->subDays(5),
+        'expiration_date' => now()->subDays(5),
     ]);
 
     expect($credit->isExpired())->toBeTrue();
@@ -124,7 +124,7 @@ test('invoice is overdue when due date passed and not paid', function () {
 });
 
 test('invoice remaining balance is calculated correctly', function () {
-    $invoice = Invoice::factory()->create(['total' => 100.00]);
+    $invoice = Invoice::factory()->create(['total_amount' => 100.00]);
     
     Payment::factory()->create([
         'invoice_id' => $invoice->id,

@@ -19,13 +19,14 @@ class VaccinationResource extends JsonResource
         return [
             'id' => $this->id,
             'dogId' => $this->dog_id,
+            'dog' => $this->whenLoaded('dog', fn() => new DogResource($this->dog)),
             'vaccinationType' => $this->vaccination_type,
             'vaccinationDate' => $this->vaccination_date?->toDateString(),
-            'expirationDate' => $this->expiration_date?->toDateString(),
-            'veterinarianName' => $this->veterinarian_name,
-            'batchNumber' => $this->batch_number,
-            'notes' => $this->notes,
+            'nextDueDate' => $this->next_due_date?->toDateString(),
+            'veterinarian' => $this->veterinarian,
+            'documentPath' => $this->document_path,
             'isDue' => $this->isDue(),
+            'isOverdue' => $this->isOverdue(),
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
         ];
