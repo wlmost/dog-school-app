@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\CustomerCreditController;
 use App\Http\Controllers\Api\DogController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\TrainerController;
 use App\Http\Controllers\Api\TrainingAttachmentController;
 use App\Http\Controllers\Api\TrainingSessionController;
 use App\Http\Controllers\Api\VaccinationController;
@@ -78,6 +79,9 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::apiResource('courses', CourseController::class);
     Route::get('/courses/{course}/sessions', [CourseController::class, 'sessions']);
     Route::get('/courses/{course}/participants', [CourseController::class, 'participants']);
+    
+    // Trainer Management
+    Route::apiResource('trainers', TrainerController::class);
     
     // Anamnesis Template Management
     Route::apiResource('anamnesis-templates', AnamnesisTemplateController::class);

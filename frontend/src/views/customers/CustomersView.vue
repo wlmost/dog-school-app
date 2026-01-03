@@ -5,12 +5,13 @@
       <div class="flex-1">
         <input
           v-model="searchQuery"
+          @input="loadCustomers"
           type="text"
           placeholder="Kunden durchsuchen..."
           class="input max-w-md"
         />
       </div>
-      <button class="btn btn-primary">
+      <button @click="openCreateModal" class="btn btn-primary">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
@@ -47,56 +48,129 @@
                 Keine Kunden gefunden
               </td>
             </tr>
-            <tr v-else v-for="customer in customers" :key="customer.id" class="hover:bg-gray-50">
+            <tr v-else v-for="customer in customers" :key="customer.id" class="hover:bg-gray-50 cursor-pointer" @click="viewCustomer(customer)">
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ customer.name }}</div>
+                <div class="text-sm font-medium text-gray-900">{{ customer.user?.full_name || '-' }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-600">{{ customer.email }}</div>
+                <div class="text-sm text-gray-600">{{ customer.user?.email || '-' }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-600">{{ customer.phone }}</div>
+                <div class="text-sm text-gray-600">{{ customer.user?.phone || '-' }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ customer.dogsCount }}</div>
+                <div class="text-sm text-gray-900">{{ customer.dogs?.length || 0 }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span :class="customer.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'" class="px-2 py-1 text-xs font-medium rounded-full">
-                  {{ customer.isActive ? 'Aktiv' : 'Inaktiv' }}
+                <span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
+                  Aktiv
                 </span>
               </td>
-              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                <button class="text-primary-600 hover:text-primary-900">Bearbeiten</button>
-                <button class="text-red-600 hover:text-red-900">Löschen</button>
+              <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2" @click.stop>
+                <button @click="editCustomer(customer)" class="text-primary-600 hover:text-primary-900">Bearbeiten</button>
+                <button @click="deleteCustomer(customer)" class="text-red-600 hover:text-red-900">Löschen</button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
     </div>
+
+    <!-- Customer Form Modal -->
+    <CustomerFormModal 
+      :is-open="showFormModal" 
+      :customer="selectedCustomer"
+      @close="closeFormModal"
+      @saved="handleCustomerSaved"
+    />
+
+    <!-- Customer Detail Modal -->
+    <CustomerDetailModal
+      :is-open="showDetailModal"
+      :customer="selectedCustomer"
+      @close="closeDetailModal"
+      @edit="editCustomer"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import apiClient from '@/api/client'
+import CustomerFormModal from '@/components/CustomerFormModal.vue'
+import CustomerDetailModal from '@/components/CustomerDetailModal.vue'
 
+const router = useRouter()
 const loading = ref(true)
 const searchQuery = ref('')
 const customers = ref<any[]>([])
+const showFormModal = ref(false)
+const showDetailModal = ref(false)
+const selectedCustomer = ref<any>(null)
 
-onMounted(async () => {
+onMounted(() => {
+  loadCustomers()
+})
+
+async function loadCustomers() {
+  loading.value = true
   try {
-    // Placeholder - replace with actual API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    customers.value = [
-      { id: 1, name: 'Max Mustermann', email: 'max@example.com', phone: '0123 456789', dogsCount: 2, isActive: true },
-      { id: 2, name: 'Anna Schmidt', email: 'anna@example.com', phone: '0123 987654', dogsCount: 1, isActive: true },
-      { id: 3, name: 'Peter Weber', email: 'peter@example.com', phone: '0123 123456', dogsCount: 1, isActive: false }
-    ]
+    const params: any = {}
+    if (searchQuery.value) {
+      params.search = searchQuery.value
+    }
+    
+    const response = await apiClient.get('/api/v1/customers', { params })
+    customers.value = response.data.data
   } catch (error) {
     console.error('Error loading customers:', error)
   } finally {
     loading.value = false
   }
-})
+}
+
+function openCreateModal() {
+  selectedCustomer.value = null
+  showFormModal.value = true
+}
+
+function editCustomer(customer: any) {
+  selectedCustomer.value = customer
+  showFormModal.value = true
+  showDetailModal.value = false
+}
+
+function viewCustomer(customer: any) {
+  selectedCustomer.value = customer
+  showDetailModal.value = true
+}
+
+function closeFormModal() {
+  showFormModal.value = false
+  selectedCustomer.value = null
+}
+
+function closeDetailModal() {
+  showDetailModal.value = false
+  selectedCustomer.value = null
+}
+
+async function handleCustomerSaved() {
+  await loadCustomers()
+  closeFormModal()
+}
+
+async function deleteCustomer(customer: any) {
+  if (!confirm(`Möchten Sie den Kunden "${customer.user?.full_name}" wirklich löschen?`)) {
+    return
+  }
+
+  try {
+    await apiClient.delete(`/api/v1/customers/${customer.id}`)
+    await loadCustomers()
+  } catch (error: any) {
+    alert(error.response?.data?.message || 'Fehler beim Löschen des Kunden')
+  }
+}
 </script>

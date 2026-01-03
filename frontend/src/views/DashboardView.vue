@@ -12,7 +12,7 @@
 
     <!-- Statistics Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-      <div class="card">
+      <router-link :to="{ name: 'Customers' }" class="card hover:shadow-lg transition-shadow cursor-pointer">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-600 mb-1">Aktive Kunden</p>
@@ -24,9 +24,9 @@
             </svg>
           </div>
         </div>
-      </div>
+      </router-link>
 
-      <div class="card">
+      <router-link :to="{ name: 'Dogs' }" class="card hover:shadow-lg transition-shadow cursor-pointer">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-600 mb-1">Registrierte Hunde</p>
@@ -36,9 +36,9 @@
             <span class="text-2xl">🐕</span>
           </div>
         </div>
-      </div>
+      </router-link>
 
-      <div class="card">
+      <router-link :to="{ name: 'Courses' }" class="card hover:shadow-lg transition-shadow cursor-pointer">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-600 mb-1">Aktive Kurse</p>
@@ -50,9 +50,9 @@
             </svg>
           </div>
         </div>
-      </div>
+      </router-link>
 
-      <div class="card">
+      <router-link :to="{ name: 'Invoices' }" class="card hover:shadow-lg transition-shadow cursor-pointer">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-600 mb-1">Offene Rechnungen</p>
@@ -64,7 +64,7 @@
             </svg>
           </div>
         </div>
-      </div>
+      </router-link>
     </div>
 
     <!-- Recent Activity -->

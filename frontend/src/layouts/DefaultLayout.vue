@@ -125,6 +125,12 @@ const navigation = computed(() => {
       roles: ['admin', 'trainer', 'customer']
     },
     {
+      name: 'Trainer',
+      to: { name: 'Trainers' },
+      icon: 'svg',
+      roles: ['admin']
+    },
+    {
       name: 'Buchungen',
       to: { name: 'Bookings' },
       icon: 'svg',
