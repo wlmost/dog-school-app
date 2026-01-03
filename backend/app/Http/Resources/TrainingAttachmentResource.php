@@ -23,6 +23,8 @@ class TrainingAttachmentResource extends JsonResource
             'filePath' => $this->file_path,
             'fileName' => $this->file_name,
             'uploadedAt' => $this->uploaded_at?->toISOString(),
+            'downloadUrl' => route('training-attachments.download', $this->id),
+            'trainingLog' => new TrainingLogResource($this->whenLoaded('trainingLog')),
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
         ];

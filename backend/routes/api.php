@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\CustomerCreditController;
 use App\Http\Controllers\Api\DogController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\TrainingAttachmentController;
 use App\Http\Controllers\Api\TrainingSessionController;
 use App\Http\Controllers\Api\VaccinationController;
 use App\Http\Controllers\TrainingLogController;
@@ -89,6 +90,10 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     
     // Training Log Management
     Route::apiResource('training-logs', TrainingLogController::class);
+    
+    // Training Attachment Management
+    Route::apiResource('training-attachments', TrainingAttachmentController::class)->except(['update']);
+    Route::get('/training-attachments/{trainingAttachment}/download', [TrainingAttachmentController::class, 'download'])->name('training-attachments.download');
     
     // Vaccination Management
     Route::apiResource('vaccinations', VaccinationController::class);
