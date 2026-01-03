@@ -9,10 +9,12 @@ use App\Http\Requests\UpdateAnamnesisResponseRequest;
 use App\Http\Resources\AnamnesisResponseResource;
 use App\Models\AnamnesisResponse;
 use App\Models\Dog;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 
 class AnamnesisResponseController extends Controller
@@ -170,5 +172,35 @@ class AnamnesisResponseController extends Controller
         $anamnesisResponse->load(['dog', 'template', 'completedBy', 'answers.question']);
 
         return new AnamnesisResponseResource($anamnesisResponse);
+    }
+
+    /**
+     * Generate and download anamnesis response as PDF.
+     *
+     * @param AnamnesisResponse $anamnesisResponse
+     * @return Response
+     */
+    public function downloadPdf(AnamnesisResponse $anamnesisResponse): Response
+    {
+        // Load relationships for authorization and PDF generation
+        $anamnesisResponse->load([
+            'dog.customer.user',
+            'template.questions',
+            'completedBy',
+            'answers.question'
+        ]);
+        
+        $this->authorize('view', $anamnesisResponse);
+
+        // Generate PDF
+        $pdf = Pdf::loadView('pdf.anamnesis', ['response' => $anamnesisResponse])
+            ->setPaper('a4', 'portrait')
+            ->setOption('isHtml5ParserEnabled', true)
+            ->setOption('isRemoteEnabled', true);
+
+        // Return PDF download
+        $filename = 'anamnesis-' . $anamnesisResponse->dog->name . '-' . $anamnesisResponse->id . '.pdf';
+        
+        return $pdf->download($filename);
     }
 }

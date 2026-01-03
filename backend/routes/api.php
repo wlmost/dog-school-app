@@ -84,6 +84,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     
     // Anamnesis Response Management
     Route::apiResource('anamnesis-responses', AnamnesisResponseController::class);
+    Route::get('/anamnesis-responses/{anamnesisResponse}/pdf', [AnamnesisResponseController::class, 'downloadPdf']);
     Route::post('/anamnesis-responses/{anamnesisResponse}/complete', [AnamnesisResponseController::class, 'complete']);
     
     // Training Log Management

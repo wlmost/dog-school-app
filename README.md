@@ -172,6 +172,11 @@ Diese Software bietet Hundeschulen eine vollständige digitale Lösung für:
 
 _Aktuell keine Tasks in Bearbeitung_
 
+**Nächste geplante Schritte:**
+1. Anamnese PDF Template erstellen
+2. File Upload System für Training Attachments implementieren
+3. Frontend Vue 3 Projekt aufsetzen
+
 ### ✅ Abgeschlossen (Fortsetzung)
 
 #### 6. API Controllers & Endpoints (Commit: TBD)
@@ -188,7 +193,7 @@ _Aktuell keine Tasks in Bearbeitung_
   - VaccinationController (CRUD + upcoming, overdue)
   - CreditPackageController (CRUD + available)
   - CustomerCreditController (CRUD + useCredit, active)
-  - InvoiceController (CRUD + markAsPaid, overdue)
+  - InvoiceController (CRUD + markAsPaid, overdue, downloadPdf)
   - PaymentController (CRUD + markAsCompleted)
 - [x] **18 API Resources** für JSON-Serialisierung
   - User, Customer, Dog, Vaccination, Course, TrainingSession
@@ -208,7 +213,7 @@ _Aktuell keine Tasks in Bearbeitung_
 - [x] **RESTful API Routes** (alle mit /api/v1 Prefix)
   - Authentication (public + protected)
   - Resource routes für alle Entities
-  - Custom endpoints (cancel, confirm, markAsPaid, useCredit, etc.)
+  - Custom endpoints (cancel, confirm, markAsPaid, useCredit, downloadPdf)
   - Filter & Search capabilities
 - [x] **API Features**
   - Pagination für alle List-Endpoints
@@ -218,47 +223,121 @@ _Aktuell keine Tasks in Bearbeitung_
   - Consistent Error Handling
   - Snake_case ↔ camelCase Konvertierung
 
+#### 7. Comprehensive Testing (Commit: TBD)
+- [x] **388 Feature Tests** für alle API Endpoints
+  - Authentication Tests (11 tests)
+  - Authorization Tests (29 tests)
+  - Customer API Tests (27 tests)
+  - Dog API Tests (29 tests)
+  - Booking API Tests (21 tests)
+  - Course API Tests (20 tests)
+  - Training Session API Tests (12 tests)
+  - Vaccination API Tests (19 tests)
+  - Credit Package API Tests (16 tests)
+  - Customer Credit API Tests (20 tests)
+  - Invoice API Tests (21 tests)
+  - Payment API Tests (23 tests)
+  - Anamnesis Template API Tests (17 tests)
+  - Anamnesis Response API Tests (22 tests)
+  - Training Log API Tests (32 tests)
+  - Model Relationship Tests (15 tests)
+  - Model Scope Tests (14 tests)
+  - Model Business Logic Tests (19 tests)
+  - Database Structure Tests (18 tests)
+- [x] **Alle 388 Tests erfolgreich** (1,297 Assertions)
+
+#### 8. PDF Generation System (Commit: TBD)
+- [x] **DomPDF Integration**
+  - barryvdh/laravel-dompdf v3.1.1 installiert
+  - PDF-Konfiguration veröffentlicht
+- [x] **Invoice PDF Template**
+  - Professionelle deutsche Rechnungs-PDF-Vorlage
+  - Header mit Geschäftsdaten & Rechnungsmetadaten
+  - Kunden-Rechnungsadresse
+  - Positionstabelle mit Artikeln
+  - Steueraufschlüsselung nach Steuersätzen
+  - Status-Indikatoren (Bezahlt, Überfällig, Unbezahlt)
+  - Zahlungsinformationen
+  - Optionaler Notizen-Bereich
+  - DomPDF-kompatibles CSS (einfaches Layout)
+- [x] **PDF Controller & Route**
+  - downloadPdf() Methode in InvoiceController
+  - GET /api/v1/invoices/{invoice}/pdf Endpoint
+  - Policy-basierte Autorisierung
+- [x] **PDF Tests**
+  - 18 umfassende Feature Tests
+  - Autorisierungs-Tests (5 tests)
+  - PDF-Inhalts-Validierung (9 tests)
+  - Technische Aspekte (2 tests)
+  - Edge Cases (2 tests)
+  - Alle 18 Tests erfolgreich
+
 ### 📋 Geplant
 
-#### 7. Testing & Quality Assurance
-- [ ] Feature Tests für neue API Controllers (Vaccination, CreditPackage, CustomerCredit, Invoice, Payment)
-- [ ] Integration Tests für Workflows (Buchung → Bezahlung, Guthaben-Nutzung)
-- [ ] Performance Tests für komplexe Queries
+#### 9. Erweiterte PDF Features
+- [ ] **Anamnese PDF Template**
+  - PDF-Template für Anamnese-Antworten
+  - Fragen & Antworten formatiert
+  - Hunde-Information
+- [ ] **Training Plan PDFs**
+  - Individueller Trainingsplan pro Hund
+  - Fortschritts-Übersichten
 
-#### 8. Erweiterte Backend-Features
-- [ ] **PDF-Generierung**
-  - Invoice PDF mit Laravel DomPDF
-  - Anamnese-Reports
-  - Trainingspläne
-- [ ] **Payment Integration**
-  - Stripe SDK Installation & Setup
-  - PayPal Integration
-  - Webhook-Handling für Payment Events
-  - Refund-Processing
-- [ ] **File Upload System**
-  - Training Attachment Upload (Fotos, Videos)
+#### 10. File Upload System
+- [ ] **Training Attachment Upload**
+  - TrainingAttachmentController (CRUD)
+  - File Upload Validation (MIME-Types, Größe)
+  - Storage-Konfiguration (Local/S3)
   - Image Optimization (Intervention Image)
-  - S3/Local Storage Configuration
-- [ ] **E-Mail-System**
-  - Mailable Classes (Booking Confirmation, Payment Reminder)
-  - Mail Templates mit Blade
-  - Queue-basierter E-Mail-Versand
-- [ ] **Calendar Integration**
-  - iCal Export für Bookings
-  - Google Calendar Sync
-  - Outlook Calendar Integration
-- [ ] **Reporting & Analytics**
-  - Umsatz-Reports
-  - Auslastungs-Statistiken
-  - Kunden-Entwicklung
-- [ ] **Background Jobs & Queues**
-  - Automated Invoice Generation
-  - Overdue Reminders
-  - Vaccination Reminders
-- [ ] **API Documentation**
-  - OpenAPI/Swagger Spec
-  - API Blueprint
-  - Postman Collection
+  - Thumbnail-Generierung
+- [ ] **File Management**
+  - Storage Symlinks
+  - Automatic Cleanup für gelöschte Records
+  - Download-Endpoint mit Authorization
+
+#### 11. Payment Integration
+- [ ] **Stripe Integration**
+  - Stripe PHP SDK Installation
+  - Payment Intent Creation
+  - Webhook-Handling
+  - Refund-Processing
+- [ ] **PayPal Integration**
+  - PayPal SDK Installation
+  - PayPal Checkout
+  - IPN-Handling
+
+#### 12. E-Mail-System
+- [ ] **Mailable Classes**
+  - BookingConfirmation
+  - PaymentReminder
+  - InvoiceCreated
+  - OverdueNotice
+- [ ] **Mail Templates**
+  - Blade Templates mit Branding
+  - Inline CSS für E-Mail-Clients
+- [ ] **Queue-basierter Versand**
+  - Mail Queue Setup
+  - Failed Jobs Handling
+
+#### 13. Calendar Integration
+- [ ] iCal Export für Bookings
+- [ ] Google Calendar Sync
+- [ ] Outlook Calendar Integration
+
+#### 14. Reporting & Analytics
+- [ ] Umsatz-Reports
+- [ ] Auslastungs-Statistiken
+- [ ] Kunden-Entwicklung
+
+#### 15. Background Jobs & Queues
+- [ ] Automated Invoice Generation
+- [ ] Overdue Reminders
+- [ ] Vaccination Reminders
+
+#### 16. API Documentation
+- [ ] OpenAPI/Swagger Spec
+- [ ] API Blueprint
+- [ ] Postman Collection
 
 #### 9. Frontend (Vue 3 + TypeScript)
 - [ ] Vite-Projekt Setup
@@ -287,33 +366,7 @@ _Aktuell keine Tasks in Bearbeitung_
 - [ ] API-Client mit Axios
 - [ ] Frontend Tests (Vitest + Cypress)
 
-#### 8. Features & Integration
-- [ ] **Kalender-Integration**
-  - Google Calendar Sync
-  - Outlook Sync
-  - iCal Export
-- [ ] **Zahlungs-Integration**
-  - Stripe Setup
-  - PayPal Setup
-  - Webhook-Handling
-- [ ] **E-Mail-System**
-  - Buchungsbestätigungen
-  - Zahlungserinnerungen
-  - Newsletter
-- [ ] **Datei-Upload & Storage**
-  - Lokaler Storage (Development)
-  - S3 Storage (Production)
-  - Image-Optimierung
-- [ ] **PDF-Generierung**
-  - Rechnungen
-  - Anamnese-Reports
-  - Trainingspläne
-- [ ] **Reporting & Analytics**
-  - Umsatz-Reports
-  - Auslastungs-Reports
-  - Kunden-Statistiken
-
-#### 9. Mobile App (Optional)
+#### 17. Mobile App (Optional)
 - [ ] Capacitor Integration
 - [ ] Native Features
   - Kamera für Fotos/Videos
@@ -321,16 +374,7 @@ _Aktuell keine Tasks in Bearbeitung_
   - Offline-Modus
 - [ ] Mobile UI/UX Optimierung
 
-#### 10. Testing & Quality Assurance
-- [ ] Unit Tests (Backend)
-- [ ] Feature Tests (Backend)
-- [ ] Browser Tests (Laravel Dusk)
-- [ ] Component Tests (Frontend)
-- [ ] E2E Tests (Cypress)
-- [ ] Performance Tests
-- [ ] Security Audit
-
-#### 11. Deployment & DevOps
+#### 18. Deployment & DevOps
 - [ ] CI/CD Pipeline (GitHub Actions)
 - [ ] Staging Environment
 - [ ] Production Environment
@@ -339,7 +383,7 @@ _Aktuell keine Tasks in Bearbeitung_
 - [ ] Error Tracking (Sentry)
 - [ ] Performance Monitoring
 
-#### 12. Dokumentation
+#### 19. Dokumentation
 - [ ] API-Dokumentation (OpenAPI/Swagger)
 - [ ] Benutzer-Handbuch
 - [ ] Admin-Dokumentation
