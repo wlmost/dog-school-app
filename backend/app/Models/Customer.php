@@ -43,6 +43,7 @@ class Customer extends Model
      */
     protected $fillable = [
         'user_id',
+        'trainer_id',
         'address_line1',
         'address_line2',
         'postal_code',
@@ -71,6 +72,14 @@ class Customer extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the assigned trainer for this customer.
+     */
+    public function trainer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'trainer_id');
     }
 
     /**

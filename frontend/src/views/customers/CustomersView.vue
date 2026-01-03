@@ -50,7 +50,7 @@
             </tr>
             <tr v-else v-for="customer in customers" :key="customer.id" class="hover:bg-gray-50 cursor-pointer" @click="viewCustomer(customer)">
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ customer.user?.full_name || '-' }}</div>
+                <div class="text-sm font-medium text-gray-900">{{ customer.user?.fullName || '-' }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-600">{{ customer.user?.email || '-' }}</div>
@@ -162,7 +162,7 @@ async function handleCustomerSaved() {
 }
 
 async function deleteCustomer(customer: any) {
-  if (!confirm(`Möchten Sie den Kunden "${customer.user?.full_name}" wirklich löschen?`)) {
+  if (!confirm(`Möchten Sie den Kunden "${customer.user?.fullName}" wirklich löschen?`)) {
     return
   }
 

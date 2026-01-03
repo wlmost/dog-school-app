@@ -26,6 +26,7 @@ class CustomerResource extends JsonResource
         return [
             'id' => $this->id,
             'userId' => $this->user_id,
+            'trainerId' => $this->trainer_id,
             'addressLine1' => $this->address_line1,
             'addressLine2' => $this->address_line2,
             'postalCode' => $this->postal_code,
@@ -39,6 +40,7 @@ class CustomerResource extends JsonResource
             
             // Conditional relationships
             'user' => new UserResource($this->whenLoaded('user')),
+            'trainer' => new UserResource($this->whenLoaded('trainer')),
             'dogs' => DogResource::collection($this->whenLoaded('dogs')),
             'bookings' => BookingResource::collection($this->whenLoaded('bookings')),
             'credits' => CustomerCreditResource::collection($this->whenLoaded('credits')),

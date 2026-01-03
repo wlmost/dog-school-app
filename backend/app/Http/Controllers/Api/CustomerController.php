@@ -34,7 +34,12 @@ class CustomerController extends Controller
         $this->authorize('viewAny', Customer::class);
         
         $perPage = $request->query('perPage', 15);
-        $query = Customer::with(['user', 'dogs']);
+        $query = Customer::with(['user', 'dogs', 'trainer']);
+        
+        // Filter by trainer if user is a trainer
+        if ($request->user()->isTrainer()) {
+            $query->where('trainer_id', $request->user()->id);
+        }
         
         // Filter by search term
         if ($search = $request->query('search')) {
@@ -76,7 +81,14 @@ class CustomerController extends Controller
      */
     public function store(StoreCustomerRequest $request): CustomerResource
     {
-        $customer = Customer::create($request->validatedSnakeCase());
+        $data = $request->validatedSnakeCase();
+        
+        // Auto-assign trainer if user is a trainer and no trainer was specified
+        if ($request->user()->isTrainer() && empty($data['trainer_id'])) {
+            $data['trainer_id'] = $request->user()->id;
+        }
+        
+        $customer = Customer::create($data);
         $customer->load('user');
         
         return new CustomerResource($customer);
@@ -94,6 +106,7 @@ class CustomerController extends Controller
         
         $customer->load([
             'user',
+            'trainer',
             'dogs',
             'bookings.trainingSession',
             'credits.creditPackage',
@@ -112,8 +125,16 @@ class CustomerController extends Controller
      */
     public function update(UpdateCustomerRequest $request, Customer $customer): CustomerResource
     {
+        // Update customer data
         $customer->update($request->validatedSnakeCase());
-        $customer->load('user');
+        
+        // Update user data if provided
+        $userData = $request->validatedUserData();
+        if (!empty($userData)) {
+            $customer->user->update($userData);
+        }
+        
+        $customer->load(['user', 'trainer']);
         
         return new CustomerResource($customer);
     }

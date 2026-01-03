@@ -42,7 +42,7 @@
                     <div class="space-y-2">
                       <div>
                         <span class="text-sm text-gray-600">Name:</span>
-                        <p class="text-base font-medium">{{ customer.user?.full_name || '-' }}</p>
+                        <p class="text-base font-medium">{{ customer.user?.fullName || '-' }}</p>
                       </div>
                       <div>
                         <span class="text-sm text-gray-600">E-Mail:</span>
@@ -59,7 +59,7 @@
                     <h4 class="text-sm font-medium text-gray-500 mb-2">Adresse</h4>
                     <div v-if="customer.street || customer.city">
                       <p class="text-base">{{ customer.street }}</p>
-                      <p class="text-base">{{ customer.postal_code }} {{ customer.city }}</p>
+                      <p class="text-base">{{ customer.postalCode }} {{ customer.city }}</p>
                       <p class="text-base">{{ customer.country }}</p>
                     </div>
                     <p v-else class="text-base text-gray-400">Keine Adresse angegeben</p>
@@ -83,8 +83,8 @@
                   <div class="space-y-2 max-h-60 overflow-y-auto">
                     <div v-for="booking in customer.bookings" :key="booking.id" class="p-3 bg-gray-50 rounded-lg flex justify-between items-center">
                       <div>
-                        <p class="font-medium">{{ booking.training_session?.course?.name }}</p>
-                        <p class="text-sm text-gray-600">{{ booking.booking_date }}</p>
+                        <p class="font-medium">{{ booking.trainingSession?.course?.name }}</p>
+                        <p class="text-sm text-gray-600">{{ booking.bookingDate }}</p>
                       </div>
                       <span :class="getBookingStatusClass(booking.status)" class="px-2 py-1 text-xs font-medium rounded-full">
                         {{ getBookingStatusLabel(booking.status) }}

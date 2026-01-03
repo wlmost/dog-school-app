@@ -52,19 +52,19 @@
             </tr>
             <tr v-else v-for="invoice in invoices" :key="invoice.id" class="hover:bg-gray-50 cursor-pointer" @click="viewInvoice(invoice)">
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-mono font-medium text-gray-900">{{ invoice.invoice_number }}</div>
+                <div class="text-sm font-mono font-medium text-gray-900">{{ invoice.invoiceNumber }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ invoice.customer?.user?.full_name || '-' }}</div>
+                <div class="text-sm text-gray-600">{{ invoice.customer?.user?.fullName || '-' }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-600">{{ formatDate(invoice.invoice_date) }}</div>
+                <div class="text-sm text-gray-600">{{ formatDate(invoice.invoiceDate) }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-600">{{ formatDate(invoice.due_date) }}</div>
+                <div class="text-sm text-gray-600">{{ formatDate(invoice.dueDate) }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ formatCurrency(invoice.total_amount) }}</div>
+                <div class="text-sm font-medium text-gray-900">{{ formatCurrency(invoice.totalAmount) }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span :class="invoiceStatusClass(invoice.status)" class="px-2 py-1 text-xs font-medium rounded-full">
@@ -169,7 +169,7 @@ async function downloadPDF(invoice: any) {
     const url = window.URL.createObjectURL(new Blob([response.data]))
     const link = document.createElement('a')
     link.href = url
-    link.setAttribute('download', `Rechnung-${invoice.invoice_number}.pdf`)
+    link.setAttribute('download', `Rechnung-${invoice.invoiceNumber}.pdf`)
     document.body.appendChild(link)
     link.click()
     link.remove()
@@ -180,7 +180,7 @@ async function downloadPDF(invoice: any) {
 }
 
 async function markAsPaid(invoice: any) {
-  if (!confirm(`Rechnung ${invoice.invoice_number} als bezahlt markieren?`)) {
+  if (!confirm(`Rechnung ${invoice.invoiceNumber} als bezahlt markieren?`)) {
     return
   }
 

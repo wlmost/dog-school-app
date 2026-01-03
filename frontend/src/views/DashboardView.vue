@@ -11,11 +11,11 @@
     </div>
 
     <!-- Statistics Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
       <router-link :to="{ name: 'Customers' }" class="card hover:shadow-lg transition-shadow cursor-pointer">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600 mb-1">Aktive Kunden</p>
+            <p class="text-sm text-gray-600 mb-1">Kunden</p>
             <p class="text-3xl font-bold text-gray-900">{{ stats.customers }}</p>
           </div>
           <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -29,7 +29,7 @@
       <router-link :to="{ name: 'Dogs' }" class="card hover:shadow-lg transition-shadow cursor-pointer">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600 mb-1">Registrierte Hunde</p>
+            <p class="text-sm text-gray-600 mb-1">Hunde</p>
             <p class="text-3xl font-bold text-gray-900">{{ stats.dogs }}</p>
           </div>
           <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -41,7 +41,7 @@
       <router-link :to="{ name: 'Courses' }" class="card hover:shadow-lg transition-shadow cursor-pointer">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600 mb-1">Aktive Kurse</p>
+            <p class="text-sm text-gray-600 mb-1">Kurse</p>
             <p class="text-3xl font-bold text-gray-900">{{ stats.courses }}</p>
           </div>
           <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -52,10 +52,24 @@
         </div>
       </router-link>
 
+      <router-link :to="{ name: 'Bookings' }" class="card hover:shadow-lg transition-shadow cursor-pointer">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm text-gray-600 mb-1">Buchungen</p>
+            <p class="text-3xl font-bold text-gray-900">{{ stats.bookings }}</p>
+          </div>
+          <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+            <svg class="w-6 h-6 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          </div>
+        </div>
+      </router-link>
+
       <router-link :to="{ name: 'Invoices' }" class="card hover:shadow-lg transition-shadow cursor-pointer">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600 mb-1">Offene Rechnungen</p>
+            <p class="text-sm text-gray-600 mb-1">Rechnungen</p>
             <p class="text-3xl font-bold text-gray-900">{{ stats.invoices }}</p>
           </div>
           <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -137,7 +151,8 @@ const stats = ref({
   customers: 0,
   dogs: 0,
   courses: 0,
-  invoices: 0
+  invoices: 0,
+  bookings: 0
 })
 
 const upcomingSessions = ref<any[]>([])
@@ -146,27 +161,11 @@ const recentBookings = ref<any[]>([])
 onMounted(async () => {
   try {
     // Load dashboard data from API
-    // This is placeholder - replace with actual API calls
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const response = await apiClient.get('/api/v1/dashboard')
     
-    stats.value = {
-      customers: 124,
-      dogs: 156,
-      courses: 12,
-      invoices: 8
-    }
-
-    upcomingSessions.value = [
-      { id: 1, course: 'Welpentraining', date: '05.01.2026', time: '10:00', participants: 6 },
-      { id: 2, course: 'Agility Fortgeschrittene', date: '06.01.2026', time: '14:00', participants: 8 },
-      { id: 3, course: 'Grundgehorsam', date: '07.01.2026', time: '16:00', participants: 5 }
-    ]
-
-    recentBookings.value = [
-      { id: 1, customer: 'Max Mustermann', dog: 'Bello', course: 'Welpentraining', status: 'confirmed' },
-      { id: 2, customer: 'Anna Schmidt', dog: 'Luna', course: 'Agility', status: 'pending' },
-      { id: 3, customer: 'Peter Weber', dog: 'Rex', course: 'Grundgehorsam', status: 'confirmed' }
-    ]
+    stats.value = response.data.stats
+    upcomingSessions.value = response.data.upcomingSessions
+    recentBookings.value = response.data.recentBookings
   } catch (error) {
     console.error('Error loading dashboard data:', error)
   } finally {

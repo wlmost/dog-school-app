@@ -36,7 +36,14 @@ class UpdateCustomerRequest extends FormRequest
      */
     public function rules(): array
     {
+        $customer = $this->route('customer');
+        
         return [
+            'firstName' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'lastName' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'email' => ['sometimes', 'nullable', 'email', 'max:255', 'unique:users,email,' . $customer->user_id],
+            'phone' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'trainerId' => ['sometimes', 'nullable', 'exists:users,id'],
             'addressLine1' => ['sometimes', 'nullable', 'string', 'max:255'],
             'addressLine2' => ['sometimes', 'nullable', 'string', 'max:255'],
             'postalCode' => ['sometimes', 'nullable', 'string', 'max:20'],
@@ -75,6 +82,9 @@ class UpdateCustomerRequest extends FormRequest
         $validated = $this->validated();
         $data = [];
         
+        if (isset($validated['trainerId'])) {
+            $data['trainer_id'] = $validated['trainerId'];
+        }
         if (isset($validated['addressLine1'])) {
             $data['address_line1'] = $validated['addressLine1'];
         }
@@ -95,6 +105,32 @@ class UpdateCustomerRequest extends FormRequest
         }
         if (isset($validated['notes'])) {
             $data['notes'] = $validated['notes'];
+        }
+        
+        return $data;
+    }
+
+    /**
+     * Get validated user data.
+     *
+     * @return array<string, mixed>
+     */
+    public function validatedUserData(): array
+    {
+        $validated = $this->validated();
+        $data = [];
+        
+        if (isset($validated['firstName'])) {
+            $data['first_name'] = $validated['firstName'];
+        }
+        if (isset($validated['lastName'])) {
+            $data['last_name'] = $validated['lastName'];
+        }
+        if (isset($validated['email'])) {
+            $data['email'] = $validated['email'];
+        }
+        if (isset($validated['phone'])) {
+            $data['phone'] = $validated['phone'];
         }
         
         return $data;

@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\CreditPackageController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\CustomerCreditController;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DogController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\PaymentController;
@@ -46,10 +47,16 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/auth/user', [AuthController::class, 'user']);
     Route::post('/auth/resend-verification', [AuthController::class, 'resendVerification']);
     
+    // User registration (Admins and Trainers only) - Authorization handled in RegisterRequest
+    Route::post('/auth/register', [AuthController::class, 'register']);
+    
     // Admin only routes
     Route::middleware('can:admin')->group(function () {
-        Route::post('/auth/register', [AuthController::class, 'register']);
+        // Admin specific routes can go here
     });
+    
+    // Dashboard
+    Route::get('/dashboard', [DashboardController::class, 'index']);
     
     // Customer Management
     Route::apiResource('customers', CustomerController::class);

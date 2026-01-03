@@ -42,15 +42,15 @@
                     <div class="space-y-2">
                       <div>
                         <span class="text-sm text-gray-600">Rechnungsnummer:</span>
-                        <p class="text-base font-mono font-medium">{{ invoice.invoice_number }}</p>
+                        <p class="text-base font-mono font-medium">{{ invoice.invoiceNumber }}</p>
                       </div>
                       <div>
                         <span class="text-sm text-gray-600">Rechnungsdatum:</span>
-                        <p class="text-base">{{ formatDate(invoice.invoice_date) }}</p>
+                        <p class="text-base">{{ formatDate(invoice.invoiceDate) }}</p>
                       </div>
                       <div>
                         <span class="text-sm text-gray-600">Fälligkeitsdatum:</span>
-                        <p class="text-base">{{ formatDate(invoice.due_date) }}</p>
+                        <p class="text-base">{{ formatDate(invoice.dueDate) }}</p>
                       </div>
                       <div>
                         <span class="text-sm text-gray-600">Status:</span>
@@ -67,11 +67,11 @@
                     <h4 class="text-sm font-medium text-gray-500 mb-2">Kunde</h4>
                     <div class="space-y-2">
                       <div>
-                        <p class="text-base font-medium">{{ invoice.customer?.user?.full_name || '-' }}</p>
+                        <p class="text-base font-medium">{{ invoice.customer?.user?.fullName || '-' }}</p>
                       </div>
                       <div v-if="invoice.customer?.street">
                         <p class="text-sm text-gray-600">{{ invoice.customer.street }}</p>
-                        <p class="text-sm text-gray-600">{{ invoice.customer.postal_code }} {{ invoice.customer.city }}</p>
+                        <p class="text-sm text-gray-600">{{ invoice.customer.postalCode }} {{ invoice.customer.city }}</p>
                       </div>
                       <div>
                         <p class="text-sm text-gray-600">{{ invoice.customer?.user?.email }}</p>
@@ -96,22 +96,22 @@
                       <tr v-for="item in invoice.items" :key="item.id">
                         <td class="px-4 py-2 text-sm">{{ item.description }}</td>
                         <td class="px-4 py-2 text-sm text-right">{{ item.quantity }}</td>
-                        <td class="px-4 py-2 text-sm text-right">{{ formatCurrency(item.unit_price) }}</td>
-                        <td class="px-4 py-2 text-sm text-right font-medium">{{ formatCurrency(item.quantity * item.unit_price) }}</td>
+                        <td class="px-4 py-2 text-sm text-right">{{ formatCurrency(item.unitPrice) }}</td>
+                        <td class="px-4 py-2 text-sm text-right font-medium">{{ formatCurrency(item.quantity * item.unitPrice) }}</td>
                       </tr>
                     </tbody>
                     <tfoot class="bg-gray-50">
                       <tr>
                         <td colspan="3" class="px-4 py-2 text-sm text-right font-medium">Zwischensumme:</td>
-                        <td class="px-4 py-2 text-sm text-right font-medium">{{ formatCurrency(invoice.subtotal_amount) }}</td>
+                        <td class="px-4 py-2 text-sm text-right font-medium">{{ formatCurrency(invoice.subtotalAmount) }}</td>
                       </tr>
                       <tr>
                         <td colspan="3" class="px-4 py-2 text-sm text-right">MwSt (19%):</td>
-                        <td class="px-4 py-2 text-sm text-right">{{ formatCurrency(invoice.tax_amount) }}</td>
+                        <td class="px-4 py-2 text-sm text-right">{{ formatCurrency(invoice.taxAmount) }}</td>
                       </tr>
                       <tr class="border-t-2 border-gray-300">
                         <td colspan="3" class="px-4 py-3 text-base text-right font-bold">Gesamtbetrag:</td>
-                        <td class="px-4 py-3 text-base text-right font-bold">{{ formatCurrency(invoice.total_amount) }}</td>
+                        <td class="px-4 py-3 text-base text-right font-bold">{{ formatCurrency(invoice.totalAmount) }}</td>
                       </tr>
                     </tfoot>
                   </table>

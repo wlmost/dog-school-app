@@ -46,31 +46,31 @@
         <div class="grid grid-cols-2 gap-4 mb-4">
           <div>
             <p class="text-xs text-gray-500 mb-1">Startdatum</p>
-            <p class="text-sm font-medium text-gray-900">{{ formatDate(course.start_date) }}</p>
+            <p class="text-sm font-medium text-gray-900">{{ formatDate(course.startDate) }}</p>
           </div>
           <div>
             <p class="text-xs text-gray-500 mb-1">Enddatum</p>
-            <p class="text-sm font-medium text-gray-900">{{ formatDate(course.end_date) }}</p>
+            <p class="text-sm font-medium text-gray-900">{{ formatDate(course.endDate) }}</p>
           </div>
           <div>
             <p class="text-xs text-gray-500 mb-1">Teilnehmer</p>
-            <p class="text-sm font-medium text-gray-900">{{ course.current_participants || 0 }} / {{ course.max_participants }}</p>
+            <p class="text-sm font-medium text-gray-900">{{ course.currentParticipants || 0 }} / {{ course.maxParticipants }}</p>
           </div>
           <div>
             <p class="text-xs text-gray-500 mb-1">Typ</p>
-            <p class="text-sm font-medium text-gray-900">{{ getCourseTypeLabel(course.course_type) }}</p>
+            <p class="text-sm font-medium text-gray-900">{{ getCourseTypeLabel(course.courseType) }}</p>
           </div>
         </div>
 
         <div class="mb-4">
           <div class="flex items-center justify-between text-xs text-gray-600 mb-1">
             <span>Auslastung</span>
-            <span>{{ Math.round((course.current_participants || 0) / course.max_participants * 100) }}%</span>
+            <span>{{ Math.round((course.currentParticipants || 0) / course.maxParticipants * 100) }}%</span>
           </div>
           <div class="w-full bg-gray-200 rounded-full h-2">
             <div
               class="bg-primary-600 h-2 rounded-full transition-all"
-              :style="{ width: `${Math.round((course.current_participants || 0) / course.max_participants * 100)}%` }"
+              :style="{ width: `${Math.round((course.currentParticipants || 0) / course.maxParticipants * 100)}%` }"
             ></div>
           </div>
         </div>

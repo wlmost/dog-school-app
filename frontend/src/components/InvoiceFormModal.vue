@@ -37,7 +37,7 @@
                     <select v-model="form.customer_id" required class="input">
                       <option value="">Kunde auswählen...</option>
                       <option v-for="customer in customers" :key="customer.id" :value="customer.id">
-                        {{ customer.user?.full_name }}
+                        {{ customer.user?.fullName }}
                       </option>
                     </select>
                   </div>
@@ -181,11 +181,15 @@ onMounted(() => {
 watch(() => props.invoice, (newInvoice) => {
   if (newInvoice) {
     form.value = {
-      customer_id: newInvoice.customer_id,
-      invoice_date: newInvoice.invoice_date,
-      due_date: newInvoice.due_date,
-      status: newInvoice.status,
-      items: newInvoice.items?.length > 0 ? newInvoice.items : [{ description: '', quantity: 1, unit_price: 0 }],
+      customer_id: newInvoice.customerId,
+      invoice_date: newInvoice.invoiceDate,
+      due_date: newInvoice.dueDate,
+      status: newInvoice.status || 'draft',
+      items: newInvoice.items?.length > 0 ? newInvoice.items.map((item: any) => ({
+        description: item.description,
+        quantity: item.quantity,
+        unit_price: item.unitPrice
+      })) : [{ description: '', quantity: 1, unit_price: 0 }],
       notes: newInvoice.notes || ''
     }
   } else {

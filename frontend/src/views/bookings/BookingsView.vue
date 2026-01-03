@@ -54,16 +54,16 @@
                 <div class="text-sm font-medium text-gray-900">#{{ booking.id }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ booking.dog?.customer?.user?.full_name || '-' }}</div>
+                <div class="text-sm text-gray-900">{{ booking.dog?.customer?.user?.fullName || '-' }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-900">{{ booking.dog?.name || '-' }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ booking.training_session?.course?.name || '-' }}</div>
+                <div class="text-sm text-gray-900">{{ booking.trainingSession?.course?.name || '-' }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-600">{{ formatDate(booking.booking_date) }}</div>
+                <div class="text-sm text-gray-600">{{ formatDate(booking.bookingDate) }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span :class="bookingStatusClass(booking.status)" class="px-2 py-1 text-xs font-medium rounded-full">

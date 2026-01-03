@@ -36,7 +36,7 @@
                   <select v-model="form.dog_id" @change="onDogChange" required class="input">
                     <option value="">Hund auswählen...</option>
                     <option v-for="dog in dogs" :key="dog.id" :value="dog.id">
-                      {{ dog.name }} ({{ dog.customer?.user?.full_name }})
+                      {{ dog.name }} ({{ dog.customer?.user?.fullName }})
                     </option>
                   </select>
                 </div>
@@ -150,10 +150,10 @@ onMounted(() => {
 watch(() => props.booking, (newBooking) => {
   if (newBooking) {
     form.value = {
-      dog_id: newBooking.dog_id,
-      course_id: newBooking.training_session?.course_id || '',
-      training_session_id: newBooking.training_session_id,
-      booking_date: newBooking.booking_date,
+      dog_id: newBooking.dogId,
+      course_id: newBooking.trainingSession?.courseId || '',
+      training_session_id: newBooking.trainingSessionId,
+      booking_date: newBooking.bookingDate,
       status: newBooking.status,
       notes: newBooking.notes || ''
     }

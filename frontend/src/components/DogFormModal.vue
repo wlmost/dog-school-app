@@ -37,7 +37,7 @@
                     <select v-model="form.customer_id" required class="input">
                       <option value="">Besitzer auswählen...</option>
                       <option v-for="customer in customers" :key="customer.id" :value="customer.id">
-                        {{ customer.user?.full_name }}
+                        {{ customer.user?.fullName }}
                       </option>
                     </select>
                   </div>
@@ -170,16 +170,16 @@ onMounted(() => {
 watch(() => props.dog, (newDog) => {
   if (newDog) {
     form.value = {
-      customer_id: newDog.customer_id,
+      customer_id: newDog.customerId,
       name: newDog.name,
       breed: newDog.breed,
-      date_of_birth: newDog.date_of_birth || '',
+      date_of_birth: newDog.dateOfBirth || '',
       gender: newDog.gender || '',
       weight: newDog.weight,
-      chip_number: newDog.chip_number || '',
+      chip_number: newDog.chipNumber || '',
       color: newDog.color || '',
-      special_characteristics: newDog.special_characteristics || '',
-      is_neutered: newDog.is_neutered || false,
+      special_characteristics: newDog.specialCharacteristics || '',
+      is_neutered: newDog.isNeutered || false,
       notes: newDog.notes || ''
     }
   } else {

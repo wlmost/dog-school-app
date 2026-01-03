@@ -12,7 +12,7 @@ use Illuminate\Validation\Rules\Password;
  * Register Request
  *
  * Validates user registration data.
- * Only admins can create new users.
+ * Admins can create any user, trainers can only create customers.
  */
 class RegisterRequest extends FormRequest
 {
@@ -21,8 +21,25 @@ class RegisterRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Only admins can register new users
-        return $this->user() && $this->user()->isAdmin();
+        $user = $this->user();
+        
+        // No authenticated user
+        if (!$user) {
+            return false;
+        }
+        
+        // Admins can register any user
+        if ($user->isAdmin()) {
+            return true;
+        }
+        
+        // Trainers can only register customers
+        if ($user->isTrainer()) {
+            $role = $this->input('role');
+            return $role === 'customer';
+        }
+        
+        return false;
     }
 
     /**
