@@ -59,10 +59,17 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function logout(): Promise<void> {
     try {
-      await apiClient.post('/api/v1/auth/logout')
-    } catch (err) {
-      console.error('Logout error:', err)
+      // Attempt to invalidate token on server
+      if (token.value) {
+        await apiClient.post('/api/v1/auth/logout')
+      }
+    } catch (err: any) {
+      // Ignore 401 errors during logout - token may already be invalid
+      if (err.response?.status !== 401) {
+        console.error('Logout error:', err)
+      }
     } finally {
+      // Always clear local state regardless of API response
       user.value = null
       token.value = null
       localStorage.removeItem('auth_token')
@@ -75,7 +82,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     try {
-      const response = await apiClient.get<{ user: User }>('/api/v1/auth/me')
+      const response = await apiClient.get<{ user: User }>('/api/v1/auth/user')
       user.value = response.data.user
     } catch (err) {
       // Token is invalid, clear it

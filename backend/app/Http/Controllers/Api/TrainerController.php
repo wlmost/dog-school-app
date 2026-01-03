@@ -52,6 +52,8 @@ class TrainerController extends Controller
             'postalCode' => ['nullable', 'string', 'max:20'],
             'city' => ['nullable', 'string', 'max:255'],
             'country' => ['nullable', 'string', 'max:255'],
+            'qualifications' => ['nullable', 'string'],
+            'specializations' => ['nullable', 'string'],
         ]);
 
         $trainer = User::create([
@@ -64,6 +66,8 @@ class TrainerController extends Controller
             'postal_code' => $validated['postalCode'] ?? null,
             'city' => $validated['city'] ?? null,
             'country' => $validated['country'] ?? null,
+            'qualifications' => $validated['qualifications'] ?? null,
+            'specializations' => $validated['specializations'] ?? null,
             'role' => 'trainer',
         ]);
 
@@ -96,11 +100,14 @@ class TrainerController extends Controller
             'firstName' => ['sometimes', 'required', 'string', 'max:255'],
             'lastName' => ['sometimes', 'required', 'string', 'max:255'],
             'email' => ['sometimes', 'required', 'string', 'email', 'max:255', 'unique:users,email,' . $trainer->id],
+            'password' => ['sometimes', 'nullable', Password::defaults()],
             'phone' => ['nullable', 'string', 'max:50'],
             'street' => ['nullable', 'string', 'max:255'],
             'postalCode' => ['nullable', 'string', 'max:20'],
             'city' => ['nullable', 'string', 'max:255'],
             'country' => ['nullable', 'string', 'max:255'],
+            'qualifications' => ['nullable', 'string'],
+            'specializations' => ['nullable', 'string'],
         ]);
 
         $updateData = [];
@@ -112,6 +119,9 @@ class TrainerController extends Controller
         }
         if (isset($validated['email'])) {
             $updateData['email'] = $validated['email'];
+        }
+        if (isset($validated['password']) && $validated['password']) {
+            $updateData['password'] = Hash::make($validated['password']);
         }
         if (array_key_exists('phone', $validated)) {
             $updateData['phone'] = $validated['phone'];
@@ -127,6 +137,12 @@ class TrainerController extends Controller
         }
         if (array_key_exists('country', $validated)) {
             $updateData['country'] = $validated['country'];
+        }
+        if (array_key_exists('qualifications', $validated)) {
+            $updateData['qualifications'] = $validated['qualifications'];
+        }
+        if (array_key_exists('specializations', $validated)) {
+            $updateData['specializations'] = $validated['specializations'];
         }
 
         $trainer->update($updateData);

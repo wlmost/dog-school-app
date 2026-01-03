@@ -6,7 +6,7 @@
         Willkommen, {{ user?.first_name }}! 👋
       </h3>
       <p class="text-gray-600">
-        Hier ist eine Übersicht über Ihre Hundeschule
+        Hier ist deine Übersicht über die wichtigsten Kennzahlen und bevorstehenden Aktivitäten.
       </p>
     </div>
 

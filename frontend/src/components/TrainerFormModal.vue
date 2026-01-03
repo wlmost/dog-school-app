@@ -57,12 +57,36 @@
                 <div v-if="!trainer" class="grid grid-cols-2 gap-4">
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Passwort *</label>
-                    <input v-model="form.password" type="password" required class="input" />
+                    <input v-model="form.password" type="password" required class="input" :class="{'border-red-500': passwordError}" />
+                    <p class="mt-1 text-xs text-gray-500">
+                      Mind. 8 Zeichen, 1 Groß-, 1 Kleinbuchstabe, 1 Ziffer, 1 Sonderzeichen
+                    </p>
+                    <p v-if="passwordError" class="mt-1 text-xs text-red-600">{{ passwordError }}</p>
                   </div>
 
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Passwort wiederholen *</label>
-                    <input v-model="form.password_confirmation" type="password" required class="input" />
+                    <input v-model="form.password_confirmation" type="password" required class="input" :class="{'border-red-500': passwordError}" />
+                  </div>
+                </div>
+
+                <!-- Password change for existing trainers -->
+                <div v-else class="pt-4 border-t border-gray-200">
+                  <h4 class="text-sm font-medium text-gray-900 mb-3">Passwort ändern (optional)</h4>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Neues Passwort</label>
+                      <input v-model="form.password" type="password" class="input" :class="{'border-red-500': passwordError}" />
+                      <p class="mt-1 text-xs text-gray-500">
+                        Mind. 8 Zeichen, 1 Groß-, 1 Kleinbuchstabe, 1 Ziffer, 1 Sonderzeichen
+                      </p>
+                      <p v-if="passwordError" class="mt-1 text-xs text-red-600">{{ passwordError }}</p>
+                    </div>
+
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Passwort wiederholen</label>
+                      <input v-model="form.password_confirmation" type="password" class="input" :class="{'border-red-500': passwordError}" />
+                    </div>
                   </div>
                 </div>
 
@@ -145,6 +169,7 @@ const emit = defineEmits<{
 
 const loading = ref(false)
 const error = ref<string | null>(null)
+const passwordError = ref<string | null>(null)
 
 const form = ref({
   first_name: '',
@@ -197,17 +222,47 @@ function resetForm() {
     qualifications: '',
     specializations: ''
   }
+  passwordError.value = null
+}
+
+function validatePassword(password: string): string | null {
+  if (password.length < 8) {
+    return 'Passwort muss mindestens 8 Zeichen lang sein'
+  }
+  if (!/[a-z]/.test(password)) {
+    return 'Passwort muss mindestens einen Kleinbuchstaben enthalten'
+  }
+  if (!/[A-Z]/.test(password)) {
+    return 'Passwort muss mindestens einen Großbuchstaben enthalten'
+  }
+  if (!/[0-9]/.test(password)) {
+    return 'Passwort muss mindestens eine Ziffer enthalten'
+  }
+  if (!/[^a-zA-Z0-9]/.test(password)) {
+    return 'Passwort muss mindestens ein Sonderzeichen enthalten'
+  }
+  return null
 }
 
 async function handleSubmit() {
   loading.value = true
   error.value = null
+  passwordError.value = null
 
-  // Validate passwords match for new trainers
-  if (!props.trainer && form.value.password !== form.value.password_confirmation) {
-    error.value = 'Passwörter stimmen nicht überein'
-    loading.value = false
-    return
+  // Validate password if provided (required for new, optional for edit)
+  if (form.value.password || !props.trainer) {
+    const pwdValidation = validatePassword(form.value.password)
+    if (pwdValidation) {
+      passwordError.value = pwdValidation
+      loading.value = false
+      return
+    }
+    
+    if (form.value.password !== form.value.password_confirmation) {
+      error.value = 'Passwörter stimmen nicht überein'
+      loading.value = false
+      return
+    }
   }
 
   try {
@@ -220,13 +275,14 @@ async function handleSubmit() {
       postalCode: form.value.postal_code || null,
       city: form.value.city || null,
       country: form.value.country || null,
+      qualifications: form.value.qualifications || null,
+      specializations: form.value.specializations || null,
       role: 'trainer'
     }
 
-    // Only include password for new trainers
-    if (!props.trainer) {
+    // Include password if provided (required for new, optional for edit)
+    if (form.value.password) {
       payload.password = form.value.password
-      payload.passwordConfirmation = form.value.password_confirmation
     }
 
     if (props.trainer) {

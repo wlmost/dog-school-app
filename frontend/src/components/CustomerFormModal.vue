@@ -54,7 +54,11 @@
 
                 <div v-if="!customer">
                   <label class="block text-sm font-medium text-gray-700 mb-1">Passwort *</label>
-                  <input v-model="form.password" type="password" required class="input" />
+                  <input v-model="form.password" type="password" required class="input" :class="{'border-red-500': passwordError}" />
+                  <p class="mt-1 text-xs text-gray-500">
+                    Mind. 8 Zeichen, 1 Groß-, 1 Kleinbuchstabe, 1 Ziffer, 1 Sonderzeichen
+                  </p>
+                  <p v-if="passwordError" class="mt-1 text-xs text-red-600">{{ passwordError }}</p>
                 </div>
 
                 <!-- Adresse -->
@@ -129,6 +133,7 @@ const emit = defineEmits<{
 
 const loading = ref(false)
 const error = ref<string | null>(null)
+const passwordError = ref<string | null>(null)
 
 const form = ref({
   first_name: '',
@@ -175,11 +180,42 @@ function resetForm() {
     country: 'Deutschland',
     notes: ''
   }
+  passwordError.value = null
+}
+
+function validatePassword(password: string): string | null {
+  if (password.length < 8) {
+    return 'Passwort muss mindestens 8 Zeichen lang sein'
+  }
+  if (!/[a-z]/.test(password)) {
+    return 'Passwort muss mindestens einen Kleinbuchstaben enthalten'
+  }
+  if (!/[A-Z]/.test(password)) {
+    return 'Passwort muss mindestens einen Großbuchstaben enthalten'
+  }
+  if (!/[0-9]/.test(password)) {
+    return 'Passwort muss mindestens eine Ziffer enthalten'
+  }
+  if (!/[^a-zA-Z0-9]/.test(password)) {
+    return 'Passwort muss mindestens ein Sonderzeichen enthalten'
+  }
+  return null
 }
 
 async function handleSubmit() {
   loading.value = true
   error.value = null
+  passwordError.value = null
+
+  // Validate password for new customers
+  if (!props.customer) {
+    const pwdValidation = validatePassword(form.value.password)
+    if (pwdValidation) {
+      passwordError.value = pwdValidation
+      loading.value = false
+      return
+    }
+  }
 
   try {
     if (props.customer) {
