@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
 use App\Http\Resources\InvoiceResource;
+use App\Mail\InvoiceCreated;
 use App\Models\Invoice;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -15,6 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Invoice Controller
@@ -100,7 +102,13 @@ class InvoiceController extends Controller
             }
         }
 
-        return new InvoiceResource($invoice->load(['customer.user', 'items', 'payments']));
+        $invoice->load(['customer.user', 'items', 'payments']);
+
+        // Send invoice email
+        Mail::to($invoice->customer->user->email)
+            ->queue(new InvoiceCreated($invoice));
+
+        return new InvoiceResource($invoice);
     }
 
     /**
