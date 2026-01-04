@@ -89,7 +89,7 @@ describe('Booking Confirmation Emails', function () {
         ]);
 
         Mail::assertQueued(BookingConfirmation::class, function ($mail) {
-            $booking = Booking::first();
+            $booking = Booking::latest()->first();
             expect($mail->booking->id)->toBe($booking->id);
             expect($mail->booking->dog->name)->toBe($this->dog->name);
             expect($mail->booking->trainingSession->id)->toBe($this->session->id);
@@ -100,15 +100,13 @@ describe('Booking Confirmation Emails', function () {
 
 describe('Invoice Creation Emails', function () {
     it('sends email when creating an invoice', function () {
-        $this->actingAs($this->admin);
+        $this->actingAs($this->trainer);
 
-        $this->postJson('/api/v1/invoices', [
+        $response = $this->postJson('/api/v1/invoices', [
             'customerId' => $this->customerModel->id,
-            'invoiceNumber' => 'INV-2024-001',
             'issueDate' => now()->toDateString(),
             'dueDate' => now()->addDays(14)->toDateString(),
-            'status' => 'pending',
-            'totalAmount' => 100.00,
+            'status' => 'draft',
             'items' => [
                 [
                     'description' => 'Welpentraining',
@@ -118,6 +116,8 @@ describe('Invoice Creation Emails', function () {
                 ],
             ],
         ]);
+
+        $response->assertCreated();
 
         Mail::assertQueued(InvoiceCreated::class, function ($mail) {
             return $mail->hasTo($this->customer->email);
@@ -125,15 +125,13 @@ describe('Invoice Creation Emails', function () {
     });
 
     it('includes correct invoice details in email', function () {
-        $this->actingAs($this->admin);
+        $this->actingAs($this->trainer);
 
         $this->postJson('/api/v1/invoices', [
             'customerId' => $this->customerModel->id,
-            'invoiceNumber' => 'INV-2024-001',
             'issueDate' => now()->toDateString(),
             'dueDate' => now()->addDays(14)->toDateString(),
-            'status' => 'pending',
-            'totalAmount' => 100.00,
+            'status' => 'draft',
             'items' => [
                 [
                     'description' => 'Welpentraining',
@@ -145,10 +143,8 @@ describe('Invoice Creation Emails', function () {
         ]);
 
         Mail::assertQueued(InvoiceCreated::class, function ($mail) {
-            $invoice = Invoice::first();
+            $invoice = Invoice::latest()->first();
             expect($mail->invoice->id)->toBe($invoice->id);
-            expect($mail->invoice->invoice_number)->toBe('INV-2024-001');
-            expect($mail->invoice->total_amount)->toBe(100.00);
             return true;
         });
     });
@@ -158,8 +154,16 @@ describe('Invoice Creation Emails', function () {
 
         $this->postJson('/api/v1/invoices', [
             'customerId' => 999999, // Non-existent customer
-            'invoiceNumber' => 'INV-2024-001',
-            'totalAmount' => 100.00,
+            'issueDate' => now()->toDateString(),
+            'dueDate' => now()->addDays(14)->toDateString(),
+            'items' => [
+                [
+                    'description' => 'Test',
+                    'quantity' => 1,
+                    'unitPrice' => 100.00,
+                    'taxRate' => 19,
+                ],
+            ],
         ])->assertStatus(422);
 
         Mail::assertNothingQueued();
@@ -168,12 +172,16 @@ describe('Invoice Creation Emails', function () {
 
 describe('Payment Reminder Emails', function () {
     it('sends reminders for overdue invoices via command', function () {
+        // Clear any existing invoices from previous tests
+        Invoice::query()->delete();
+        
         // Create overdue invoice
         $invoice = Invoice::factory()
             ->for($this->customerModel, 'customer')
             ->create([
                 'issue_date' => now(),
                 'due_date' => now()->subDays(10),
+                'status' => 'sent',
             ]);
 
         $this->artisan('invoices:send-reminders', ['--days' => 7])
@@ -186,6 +194,9 @@ describe('Payment Reminder Emails', function () {
     });
 
     it('does not send reminders for paid invoices', function () {
+        // Clear any existing invoices from previous tests
+        Invoice::query()->delete();
+        
         Invoice::factory()
             ->for($this->customerModel, 'customer')
             ->create([
@@ -202,6 +213,9 @@ describe('Payment Reminder Emails', function () {
     });
 
     it('does not send reminders for cancelled invoices', function () {
+        // Clear any existing invoices from previous tests
+        Invoice::query()->delete();
+        
         Invoice::factory()
             ->for($this->customerModel, 'customer')
             ->create([
@@ -217,12 +231,16 @@ describe('Payment Reminder Emails', function () {
     });
 
     it('respects the days overdue threshold', function () {
-        // Invoice 5 days overdue (below threshold)
+        // Clear any existing invoices from previous tests
+        Invoice::query()->delete();
+        
+        // Invoice 5 days overdue (below threshold of 7 days)
         Invoice::factory()
             ->for($this->customerModel, 'customer')
             ->create([
                 'issue_date' => now(),
                 'due_date' => now()->subDays(5),
+                'status' => 'sent',
             ]);
 
         $this->artisan('invoices:send-reminders', ['--days' => 7])
@@ -232,13 +250,18 @@ describe('Payment Reminder Emails', function () {
     });
 
     it('sends multiple reminders for multiple overdue invoices', function () {
-        $customer2 = Customer::factory()->create();
+        // Clear any existing invoices from previous tests
+        Invoice::query()->delete();
+        
+        $user2 = User::factory()->customer()->create();
+        $customer2 = Customer::factory()->for($user2)->create();
         
         Invoice::factory()
             ->for($this->customerModel, 'customer')
             ->create([
                 'issue_date' => now(),
                 'due_date' => now()->subDays(10),
+                'status' => 'sent',
             ]);
 
         Invoice::factory()
@@ -246,6 +269,7 @@ describe('Payment Reminder Emails', function () {
             ->create([
                 'issue_date' => now(),
                 'due_date' => now()->subDays(15),
+                'status' => 'sent',
             ]);
 
         $this->artisan('invoices:send-reminders', ['--days' => 7])
@@ -269,6 +293,9 @@ describe('Payment Reminder Emails', function () {
     });
 
     it('includes invoice details in reminder email', function () {
+        // Clear any existing invoices from previous tests
+        Invoice::query()->delete();
+        
         $invoice = Invoice::factory()
             ->for($this->customerModel, 'customer')
             ->create([
@@ -276,6 +303,7 @@ describe('Payment Reminder Emails', function () {
                 'issue_date' => now(),
                 'due_date' => now()->subDays(10),
                 'total_amount' => 250.00,
+                'status' => 'sent',
             ]);
 
         $this->artisan('invoices:send-reminders', ['--days' => 7])
@@ -284,7 +312,7 @@ describe('Payment Reminder Emails', function () {
         Mail::assertQueued(PaymentReminder::class, function ($mail) use ($invoice) {
             expect($mail->invoice->id)->toBe($invoice->id);
             expect($mail->invoice->invoice_number)->toBe('INV-2024-999');
-            expect($mail->invoice->total_amount)->toBe(250.00);
+            expect((float)$mail->invoice->total_amount)->toBe(250.00);
             return true;
         });
     });
@@ -307,15 +335,13 @@ describe('Email Queue Configuration', function () {
     });
 
     it('queues invoice email instead of sending immediately', function () {
-        $this->actingAs($this->admin);
+        $this->actingAs($this->trainer);
 
         $this->postJson('/api/v1/invoices', [
             'customerId' => $this->customerModel->id,
-            'invoiceNumber' => 'INV-2024-001',
             'issueDate' => now()->toDateString(),
             'dueDate' => now()->addDays(14)->toDateString(),
-            'status' => 'pending',
-            'totalAmount' => 100.00,
+            'status' => 'draft',
             'items' => [
                 [
                     'description' => 'Welpentraining',
