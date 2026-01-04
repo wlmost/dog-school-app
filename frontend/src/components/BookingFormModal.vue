@@ -253,16 +253,29 @@ async function handleSubmit() {
   error.value = null
 
   try {
+    // Get customer_id from selected dog
+    const selectedDog = dogs.value.find((d: any) => d.id === form.value.dog_id)
+    if (!selectedDog) {
+      error.value = 'Bitte wählen Sie einen Hund aus'
+      loading.value = false
+      return
+    }
+
     const payload = {
       dogId: form.value.dog_id,
+      customerId: selectedDog.customerId,
       trainingSessionId: form.value.training_session_id,
-      bookingDate: form.value.booking_date,
-      status: form.value.status,
       notes: form.value.notes || null
     }
 
     if (props.booking) {
-      await apiClient.put(`/api/v1/bookings/${props.booking.id}`, payload)
+      // For update, only send allowed fields
+      const updatePayload = {
+        status: form.value.status,
+        attended: null, // Can be added if needed
+        notes: form.value.notes || null
+      }
+      await apiClient.put(`/api/v1/bookings/${props.booking.id}`, updatePayload)
     } else {
       await apiClient.post('/api/v1/bookings', payload)
     }

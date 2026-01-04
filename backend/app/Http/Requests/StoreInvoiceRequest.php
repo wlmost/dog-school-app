@@ -25,17 +25,15 @@ class StoreInvoiceRequest extends FormRequest
     {
         return [
             'customerId' => ['required', 'integer', 'exists:customers,id'],
-            'invoiceNumber' => ['required', 'string', 'max:255', 'unique:invoices,invoice_number'],
-            'status' => ['sometimes', 'in:draft,sent,paid,overdue,cancelled'],
-            'totalAmount' => ['required', 'numeric', 'min:0', 'max:99999999.99'],
             'issueDate' => ['required', 'date'],
             'dueDate' => ['required', 'date', 'after_or_equal:issueDate'],
-            'paidDate' => ['nullable', 'date'],
+            'status' => ['sometimes', 'in:draft,sent,paid,overdue,cancelled'],
             'notes' => ['nullable', 'string', 'max:5000'],
-            'items' => ['sometimes', 'array'],
-            'items.*.description' => ['required_with:items', 'string', 'max:500'],
-            'items.*.quantity' => ['required_with:items', 'integer', 'min:1'],
-            'items.*.unitPrice' => ['required_with:items', 'numeric', 'min:0'],
+            'items' => ['required', 'array', 'min:1'],
+            'items.*.description' => ['required', 'string', 'max:500'],
+            'items.*.quantity' => ['required', 'integer', 'min:1'],
+            'items.*.unitPrice' => ['required', 'numeric', 'min:0'],
+            'items.*.taxRate' => ['sometimes', 'numeric', 'min:0', 'max:100'],
         ];
     }
 
@@ -48,13 +46,11 @@ class StoreInvoiceRequest extends FormRequest
     {
         return [
             'customerId' => 'Kunde',
-            'invoiceNumber' => 'Rechnungsnummer',
-            'status' => 'Status',
-            'totalAmount' => 'Gesamtbetrag',
             'issueDate' => 'Rechnungsdatum',
             'dueDate' => 'Fälligkeitsdatum',
-            'paidDate' => 'Bezahldatum',
+            'status' => 'Status',
             'notes' => 'Notizen',
+            'items' => 'Rechnungspositionen',
         ];
     }
 
@@ -67,15 +63,52 @@ class StoreInvoiceRequest extends FormRequest
     {
         $validated = $this->validated();
         
+        // Calculate totals from items
+        $subtotal = 0;
+        $taxAmount = 0;
+        foreach ($validated['items'] as $item) {
+            $itemAmount = $item['quantity'] * $item['unitPrice'];
+            $subtotal += $itemAmount;
+            $taxRate = $item['taxRate'] ?? 19; // Default 19% MwSt
+            $taxAmount += $itemAmount * ($taxRate / 100);
+        }
+        $totalAmount = $subtotal + $taxAmount;
+        
+        // Generate invoice number if not provided
+        $invoiceNumber = $this->generateInvoiceNumber();
+        
         return [
             'customer_id' => $validated['customerId'],
-            'invoice_number' => $validated['invoiceNumber'],
-            'status' => $validated['status'] ?? 'draft',
-            'total_amount' => $validated['totalAmount'],
+            'invoice_number' => $invoiceNumber,
             'issue_date' => $validated['issueDate'],
             'due_date' => $validated['dueDate'],
-            'paid_date' => $validated['paidDate'] ?? null,
+            'status' => $validated['status'] ?? 'draft',
+            'subtotal_amount' => round($subtotal, 2),
+            'tax_amount' => round($taxAmount, 2),
+            'total_amount' => round($totalAmount, 2),
             'notes' => $validated['notes'] ?? null,
         ];
+    }
+    
+    /**
+     * Generate a unique invoice number.
+     *
+     * @return string
+     */
+    private function generateInvoiceNumber(): string
+    {
+        $year = date('Y');
+        $lastInvoice = \App\Models\Invoice::where('invoice_number', 'like', "RE-{$year}-%")
+            ->orderBy('invoice_number', 'desc')
+            ->first();
+            
+        if ($lastInvoice) {
+            $lastNumber = (int) substr($lastInvoice->invoice_number, -4);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+        
+        return sprintf('RE-%s-%04d', $year, $newNumber);
     }
 }

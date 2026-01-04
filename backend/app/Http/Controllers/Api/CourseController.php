@@ -34,7 +34,21 @@ class CourseController extends Controller
     {
         $this->authorize('viewAny', Course::class);
 
-        $query = Course::query()->with(['trainer']);
+        $query = Course::query()->with(['trainer', 'sessions']);
+
+        $user = $request->user();
+
+        // Role-based filtering
+        if ($user->isTrainer()) {
+            // Trainer sees only their own courses
+            $query->where('trainer_id', $user->id);
+        } elseif ($user->isCustomer()) {
+            // Customer sees all available courses (for browsing/booking)
+            // Or optionally: only courses they have bookings for
+            // For now, show all active courses
+            $query->where('status', 'active');
+        }
+        // Admin sees everything (no filter)
 
         // Filter by trainer
         if ($request->has('trainerId')) {
@@ -46,15 +60,24 @@ class CourseController extends Controller
             $query->where('status', $request->input('status'));
         }
 
+        // Filter by course type
+        if ($request->has('courseType')) {
+            $query->where('course_type', $request->input('courseType'));
+        }
+
         // Filter active courses (active and not completed/cancelled)
         if ($request->boolean('activeOnly')) {
             $query->where('status', 'active')
                 ->where('end_date', '>=', now());
         }
 
-        // Search by name
+        // Search by name or description
         if ($request->has('search')) {
-            $query->where('name', 'ilike', '%' . $request->input('search') . '%');
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'ilike', "%{$search}%")
+                  ->orWhere('description', 'ilike', "%{$search}%");
+            });
         }
 
         return CourseResource::collection(

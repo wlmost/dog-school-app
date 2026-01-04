@@ -311,3 +311,133 @@ test('customer cannot delete booking', function () {
         ->deleteJson('/api/v1/bookings/' . $booking->id)
         ->assertForbidden();
 });
+
+// Role-based filtering tests
+test('trainer can only see bookings for their courses', function () {
+    // Create course for this trainer
+    $trainerCourse = \App\Models\Course::factory()->create(['trainer_id' => $this->trainer->id]);
+    $trainerSession = TrainingSession::factory()->create(['course_id' => $trainerCourse->id]);
+    
+    // Create course for another trainer
+    $otherTrainer = User::factory()->create(['role' => 'trainer']);
+    $otherCourse = \App\Models\Course::factory()->create(['trainer_id' => $otherTrainer->id]);
+    $otherSession = TrainingSession::factory()->create(['course_id' => $otherCourse->id]);
+    
+    // Create bookings
+    Booking::factory()->count(3)->create(['training_session_id' => $trainerSession->id]);
+    Booking::factory()->count(2)->create(['training_session_id' => $otherSession->id]);
+
+    $response = $this->actingAs($this->trainer)
+        ->getJson('/api/v1/bookings')
+        ->assertOk();
+
+    // Trainer should only see their own course bookings
+    expect($response->json('data'))->toHaveCount(3);
+});
+
+test('customer can only see their own bookings', function () {
+    // Create bookings for this customer
+    Booking::factory()->count(2)->create([
+        'customer_id' => $this->customer->id,
+        'dog_id' => $this->dog->id,
+    ]);
+    
+    // Create bookings for other customers
+    Booking::factory()->count(3)->create();
+
+    $response = $this->actingAs($this->customerUser)
+        ->getJson('/api/v1/bookings')
+        ->assertOk();
+
+    // Customer should only see their own bookings
+    expect($response->json('data'))->toHaveCount(2);
+    foreach ($response->json('data') as $booking) {
+        expect($booking['customer']['id'])->toBe($this->customer->id);
+    }
+});
+
+test('admin can see all bookings regardless of trainer or customer', function () {
+    // Create bookings for different trainers and customers
+    $trainer1 = User::factory()->create(['role' => 'trainer']);
+    $course1 = \App\Models\Course::factory()->create(['trainer_id' => $trainer1->id]);
+    $session1 = TrainingSession::factory()->create(['course_id' => $course1->id]);
+    
+    $trainer2 = User::factory()->create(['role' => 'trainer']);
+    $course2 = \App\Models\Course::factory()->create(['trainer_id' => $trainer2->id]);
+    $session2 = TrainingSession::factory()->create(['course_id' => $course2->id]);
+    
+    Booking::factory()->count(3)->create(['training_session_id' => $session1->id]);
+    Booking::factory()->count(2)->create(['training_session_id' => $session2->id]);
+
+    $response = $this->actingAs($this->admin)
+        ->getJson('/api/v1/bookings')
+        ->assertOk();
+
+    // Admin should see all bookings
+    expect($response->json('data'))->toHaveCount(5);
+});
+
+test('search filters bookings by customer name, dog name, or course name', function () {
+    // Create specific course and customer with unique names
+    $course = \App\Models\Course::factory()->create([
+        'trainer_id' => $this->trainer->id,
+        'name' => 'Advanced Agility Training XYZ',
+    ]);
+    $session = TrainingSession::factory()->create(['course_id' => $course->id]);
+    
+    $customer = Customer::factory()->create();
+    $customer->user()->update([
+        'first_name' => 'Maximilian',
+        'last_name' => 'Mustermann',
+    ]);
+    
+    $dog = Dog::factory()->create([
+        'customer_id' => $customer->id,
+        'name' => 'BelloUnique',
+    ]);
+    
+    Booking::factory()->create([
+        'training_session_id' => $session->id,
+        'customer_id' => $customer->id,
+        'dog_id' => $dog->id,
+    ]);
+    
+    // Create other bookings with completely different data
+    $otherCourse = \App\Models\Course::factory()->create([
+        'trainer_id' => $this->trainer->id,
+        'name' => 'Basic Obedience',
+    ]);
+    $otherSession = TrainingSession::factory()->create(['course_id' => $otherCourse->id]);
+    Booking::factory()->count(3)->create(['training_session_id' => $otherSession->id]);
+
+    // Search by customer name
+    $response = $this->actingAs($this->admin)
+        ->getJson('/api/v1/bookings?search=Mustermann')
+        ->assertOk();
+    expect($response->json('data'))->toHaveCount(1);
+
+    // Search by dog name
+    $response = $this->actingAs($this->admin)
+        ->getJson('/api/v1/bookings?search=BelloUnique')
+        ->assertOk();
+    expect($response->json('data'))->toHaveCount(1);
+
+    // Search by course name (unique part)
+    $response = $this->actingAs($this->admin)
+        ->getJson('/api/v1/bookings?search=XYZ')
+        ->assertOk();
+    expect($response->json('data'))->toHaveCount(1);
+});
+
+test('customer without customer record sees no bookings', function () {
+    // Create a user with customer role but no customer record
+    $userWithoutCustomer = User::factory()->create(['role' => 'customer']);
+    
+    Booking::factory()->count(5)->create();
+
+    $response = $this->actingAs($userWithoutCustomer)
+        ->getJson('/api/v1/bookings')
+        ->assertOk();
+
+    expect($response->json('data'))->toHaveCount(0);
+});

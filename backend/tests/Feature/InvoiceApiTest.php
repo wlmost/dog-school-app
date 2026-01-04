@@ -122,24 +122,28 @@ test('customer cannot view other customers invoice', function () {
 test('trainer can create invoice', function () {
     $data = [
         'customerId' => $this->customer->id,
-        'invoiceNumber' => 'INV-2026-001',
-        'totalAmount' => 150.00,
         'issueDate' => now()->format('Y-m-d'),
         'dueDate' => now()->addDays(30)->format('Y-m-d'),
         'notes' => 'Test invoice',
+        'items' => [
+            [
+                'description' => 'Training Session',
+                'quantity' => 2,
+                'unitPrice' => 50.00,
+                'taxRate' => 19,
+            ],
+        ],
     ];
 
-    $this->actingAs($this->trainer)
+    $response = $this->actingAs($this->trainer)
         ->postJson('/api/v1/invoices', $data)
-        ->assertCreated()
-        ->assertJsonPath('data.invoiceNumber', 'INV-2026-001')
-        ->assertJsonPath('data.totalAmount', 150)
-        ->assertJsonPath('data.status', 'draft');
+        ->assertCreated();
+
+    expect($response->json('data.invoiceNumber'))->toStartWith('RE-');
+    expect($response->json('data.status'))->toBe('draft');
 
     $this->assertDatabaseHas('invoices', [
         'customer_id' => $this->customer->id,
-        'invoice_number' => 'INV-2026-001',
-        'total_amount' => 150.00,
         'status' => 'draft',
     ]);
 });
@@ -204,24 +208,21 @@ test('invoice creation validates required fields', function () {
     $this->actingAs($this->trainer)
         ->postJson('/api/v1/invoices', [])
         ->assertUnprocessable()
-        ->assertJsonValidationErrors(['customerId', 'invoiceNumber', 'totalAmount', 'issueDate', 'dueDate']);
+        ->assertJsonValidationErrors(['customerId', 'issueDate', 'dueDate', 'items']);
 });
 
-test('invoice number must be unique', function () {
-    Invoice::factory()->create(['invoice_number' => 'INV-DUPLICATE']);
-
+test('items field must contain at least one item', function () {
     $data = [
         'customerId' => $this->customer->id,
-        'invoiceNumber' => 'INV-DUPLICATE',
-        'totalAmount' => 100.00,
         'issueDate' => now()->format('Y-m-d'),
         'dueDate' => now()->addDays(30)->format('Y-m-d'),
+        'items' => [],
     ];
 
     $this->actingAs($this->trainer)
         ->postJson('/api/v1/invoices', $data)
         ->assertUnprocessable()
-        ->assertJsonValidationErrors(['invoiceNumber']);
+        ->assertJsonValidationErrors(['items']);
 });
 
 test('due date must be after or equal to issue date', function () {

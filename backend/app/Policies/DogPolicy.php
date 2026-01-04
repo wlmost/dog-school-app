@@ -19,8 +19,8 @@ class DogPolicy
      */
     public function viewAny(User $user): bool
     {
-        // Admins and trainers can view all dogs
-        return $user->isAdminOrTrainer();
+        // Admins, trainers, and customers can view dogs (filtered in controller)
+        return $user->isAdmin() || $user->isTrainer() || $user->isCustomer();
     }
 
     /**

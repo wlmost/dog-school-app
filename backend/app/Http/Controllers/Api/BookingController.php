@@ -36,7 +36,28 @@ class BookingController extends Controller
     {
         $this->authorize('viewAny', Booking::class);
 
-        $query = Booking::query()->with(['trainingSession', 'customer.user', 'dog']);
+        $query = Booking::query()->with(['trainingSession.course', 'customer.user', 'dog']);
+
+        $user = $request->user();
+
+        // Role-based filtering
+        if ($user->isTrainer()) {
+            // Trainer sees only bookings for courses they train
+            $trainerCourses = \App\Models\Course::where('trainer_id', $user->id)->pluck('id');
+            $query->whereHas('trainingSession', function ($q) use ($trainerCourses) {
+                $q->whereIn('course_id', $trainerCourses);
+            });
+        } elseif ($user->isCustomer()) {
+            // Customer sees only their own bookings
+            $customer = \App\Models\Customer::where('user_id', $user->id)->first();
+            if ($customer) {
+                $query->where('customer_id', $customer->id);
+            } else {
+                // No customer record means no bookings
+                $query->whereRaw('1 = 0');
+            }
+        }
+        // Admin sees everything (no filter)
 
         // Filter by customer
         if ($request->has('customerId')) {
@@ -61,6 +82,23 @@ class BookingController extends Controller
         // Filter by attended status
         if ($request->has('attended')) {
             $query->where('attended', $request->boolean('attended'));
+        }
+
+        // Search by customer name, dog name, or course name
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('customer.user', function ($q) use ($search) {
+                    $q->where('first_name', 'ILIKE', "%{$search}%")
+                      ->orWhere('last_name', 'ILIKE', "%{$search}%");
+                })
+                ->orWhereHas('dog', function ($q) use ($search) {
+                    $q->where('name', 'ILIKE', "%{$search}%");
+                })
+                ->orWhereHas('trainingSession.course', function ($q) use ($search) {
+                    $q->where('name', 'ILIKE', "%{$search}%");
+                });
+            });
         }
 
         return BookingResource::collection(

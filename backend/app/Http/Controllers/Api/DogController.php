@@ -38,6 +38,26 @@ class DogController extends Controller
 
         $query = Dog::query()->with(['customer.user']);
 
+        $user = $request->user();
+
+        // Role-based filtering
+        if ($user->isTrainer()) {
+            // Trainer sees only dogs from assigned customers
+            $query->whereHas('customer', function ($q) use ($user) {
+                $q->where('trainer_id', $user->id);
+            });
+        } elseif ($user->isCustomer()) {
+            // Customer sees only their own dogs
+            $customer = \App\Models\Customer::where('user_id', $user->id)->first();
+            if ($customer) {
+                $query->where('customer_id', $customer->id);
+            } else {
+                // No customer record means no dogs
+                $query->whereRaw('1 = 0');
+            }
+        }
+        // Admin sees everything (no filter)
+
         // Filter by customer
         if ($request->has('customerId')) {
             $query->where('customer_id', $request->input('customerId'));

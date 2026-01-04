@@ -37,6 +37,26 @@ class InvoiceController extends Controller
     {
         $query = Invoice::query()->with(['customer.user', 'items', 'payments']);
 
+        $user = $request->user();
+
+        // Role-based filtering
+        if ($user->isTrainer()) {
+            // Trainer sees only invoices for their assigned customers
+            $query->whereHas('customer', function ($q) use ($user) {
+                $q->where('trainer_id', $user->id);
+            });
+        } elseif ($user->isCustomer()) {
+            // Customer sees only their own invoices
+            $customer = \App\Models\Customer::where('user_id', $user->id)->first();
+            if ($customer) {
+                $query->where('customer_id', $customer->id);
+            } else {
+                // No customer record means no invoices
+                $query->whereRaw('1 = 0');
+            }
+        }
+        // Admin sees everything (no filter)
+
         // Filter by customer
         if ($request->has('customerId')) {
             $query->where('customer_id', $request->input('customerId'));
@@ -59,11 +79,23 @@ class InvoiceController extends Controller
 
         // Filter by date range
         if ($request->has('startDate')) {
-            $query->where('issue_date', '>=', $request->input('startDate'));
+            $query->where('invoice_date', '>=', $request->input('startDate'));
         }
 
         if ($request->has('endDate')) {
-            $query->where('issue_date', '<=', $request->input('endDate'));
+            $query->where('invoice_date', '<=', $request->input('endDate'));
+        }
+
+        // Search by invoice number or customer name
+        if ($request->has('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('invoice_number', 'ILIKE', "%{$search}%")
+                  ->orWhereHas('customer.user', function ($q) use ($search) {
+                      $q->where('first_name', 'ILIKE', "%{$search}%")
+                        ->orWhere('last_name', 'ILIKE', "%{$search}%");
+                  });
+            });
         }
 
         return InvoiceResource::collection(
@@ -87,7 +119,7 @@ class InvoiceController extends Controller
         // Create invoice items if provided
         if ($request->has('items')) {
             foreach ($request->input('items') as $item) {
-                $taxRate = $item['taxRate'] ?? 0;
+                $taxRate = $item['taxRate'] ?? 19; // Default 19% MwSt
                 $unitPrice = $item['unitPrice'];
                 $quantity = $item['quantity'];
                 $amount = $unitPrice * $quantity;
@@ -97,7 +129,7 @@ class InvoiceController extends Controller
                     'quantity' => $quantity,
                     'unit_price' => $unitPrice,
                     'tax_rate' => $taxRate,
-                    'amount' => $amount,
+                    'amount' => round($amount, 2),
                 ]);
             }
         }

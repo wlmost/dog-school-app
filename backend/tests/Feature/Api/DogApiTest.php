@@ -41,7 +41,10 @@ describe('Dog API - Index', function () {
 
     test('trainer can list all dogs', function () {
         $trainer = User::factory()->trainer()->create();
-        Dog::factory()->count(2)->create();
+        
+        // Create customer assigned to this trainer with dogs
+        $assignedCustomer = Customer::factory()->create(['trainer_id' => $trainer->id]);
+        Dog::factory()->count(2)->create(['customer_id' => $assignedCustomer->id]);
 
         $response = $this->actingAs($trainer)
             ->getJson('/api/v1/dogs');
@@ -53,11 +56,19 @@ describe('Dog API - Index', function () {
     test('customer cannot list all dogs', function () {
         $customerUser = User::factory()->customer()->create();
         $customer = Customer::factory()->for($customerUser, 'user')->create();
+        
+        // Create own dogs
+        Dog::factory()->count(2)->create(['customer_id' => $customer->id]);
+        
+        // Create other dogs
+        Dog::factory()->count(3)->create();
 
         $response = $this->actingAs($customerUser)
             ->getJson('/api/v1/dogs');
 
-        $response->assertStatus(403);
+        // Customer can list but only sees their own dogs (2)
+        $response->assertStatus(200)
+            ->assertJsonCount(2, 'data');
     });
 
     test('unauthenticated user cannot list dogs', function () {
@@ -116,6 +127,84 @@ describe('Dog API - Index', function () {
 
         $response->assertStatus(200)
             ->assertJsonCount(1, 'data');
+    });
+
+    test('trainer can only see dogs from assigned customers', function () {
+        $trainer = User::factory()->trainer()->create();
+        
+        // Create customers assigned to this trainer
+        $assignedCustomer1 = Customer::factory()->create(['trainer_id' => $trainer->id]);
+        $assignedCustomer2 = Customer::factory()->create(['trainer_id' => $trainer->id]);
+        
+        // Create dogs for assigned customers
+        Dog::factory()->count(2)->create(['customer_id' => $assignedCustomer1->id]);
+        Dog::factory()->count(1)->create(['customer_id' => $assignedCustomer2->id]);
+        
+        // Create dogs for other customers (different trainer)
+        $otherTrainer = User::factory()->trainer()->create();
+        $otherCustomer = Customer::factory()->create(['trainer_id' => $otherTrainer->id]);
+        Dog::factory()->count(3)->create(['customer_id' => $otherCustomer->id]);
+
+        $response = $this->actingAs($trainer)
+            ->getJson('/api/v1/dogs');
+
+        $response->assertStatus(200)
+            ->assertJsonCount(3, 'data'); // Only see 3 dogs from assigned customers
+    });
+
+    test('customer can only see their own dogs', function () {
+        $customerUser = User::factory()->customer()->create();
+        $customer = Customer::factory()->for($customerUser, 'user')->create();
+        
+        // Create dogs for this customer
+        Dog::factory()->count(2)->create(['customer_id' => $customer->id]);
+        
+        // Create dogs for other customers
+        Dog::factory()->count(5)->create();
+
+        $response = $this->actingAs($customerUser)
+            ->getJson('/api/v1/dogs');
+
+        $response->assertStatus(200)
+            ->assertJsonCount(2, 'data'); // Only see own 2 dogs
+        
+        // Verify all dogs belong to this customer
+        foreach ($response->json('data') as $dog) {
+            expect($dog['customerId'])->toBe($customer->id);
+        }
+    });
+
+    test('customer without customer record sees no dogs', function () {
+        $customerUserWithoutRecord = User::factory()->customer()->create();
+        
+        // Create some dogs for other customers
+        Dog::factory()->count(5)->create();
+
+        $response = $this->actingAs($customerUserWithoutRecord)
+            ->getJson('/api/v1/dogs');
+
+        $response->assertStatus(200)
+            ->assertJsonCount(0, 'data');
+    });
+
+    test('admin can see all dogs regardless of trainer assignment', function () {
+        $admin = User::factory()->admin()->create();
+        
+        // Create dogs for different trainers
+        $trainer1 = User::factory()->trainer()->create();
+        $trainer2 = User::factory()->trainer()->create();
+        
+        $customer1 = Customer::factory()->create(['trainer_id' => $trainer1->id]);
+        $customer2 = Customer::factory()->create(['trainer_id' => $trainer2->id]);
+        
+        Dog::factory()->count(3)->create(['customer_id' => $customer1->id]);
+        Dog::factory()->count(2)->create(['customer_id' => $customer2->id]);
+
+        $response = $this->actingAs($admin)
+            ->getJson('/api/v1/dogs');
+
+        $response->assertStatus(200)
+            ->assertJsonCount(5, 'data'); // Admin sees all dogs
     });
 });
 
