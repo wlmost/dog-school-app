@@ -55,12 +55,25 @@ class AnamnesisResponseController extends Controller
             });
         }
 
-        // Authorization: customers only see their dogs' responses
-        if ($request->user()->role === 'customer') {
-            $query->whereHas('dog', function ($q) use ($request) {
-                $q->where('customer_id', $request->user()->customer->id);
+        // Role-based filtering
+        $user = $request->user();
+        if ($user->isTrainer()) {
+            // Trainer sees only responses for dogs of assigned customers
+            $query->whereHas('dog.customer', function ($q) use ($user) {
+                $q->where('trainer_id', $user->id);
             });
+        } elseif ($user->isCustomer()) {
+            // Customer sees only their own dogs' responses
+            $customer = \App\Models\Customer::where('user_id', $user->id)->first();
+            if ($customer) {
+                $query->whereHas('dog', function ($q) use ($customer) {
+                    $q->where('customer_id', $customer->id);
+                });
+            } else {
+                $query->whereRaw('1 = 0');
+            }
         }
+        // Admin sees all
 
         // Order by completion date descending (newest first)
         $query->orderBy('completed_at', 'desc')

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('anamnesis_templates', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('trainer_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('trainer_id')->nullable()->constrained('users')->onDelete('cascade');
             $table->string('name');
             $table->text('description')->nullable();
             $table->boolean('is_default')->default(false);

@@ -25,8 +25,22 @@ class AnamnesisTemplateController extends Controller
     {
         $query = AnamnesisTemplate::query()->with(['trainer']);
 
-        // Filter by trainer
-        if ($request->has('trainerId')) {
+        // Role-based filtering
+        $user = $request->user();
+        if ($user->isTrainer()) {
+            // Trainer sees default templates and their own templates
+            $query->where(function ($q) use ($user) {
+                $q->where('is_default', true)
+                  ->orWhere('trainer_id', $user->id);
+            });
+        } elseif ($user->isCustomer()) {
+            // Customers only see default templates (for information)
+            $query->where('is_default', true);
+        }
+        // Admin sees all
+
+        // Filter by trainer (Admin only)
+        if ($request->has('trainerId') && $user->isAdmin()) {
             $query->where('trainer_id', $request->input('trainerId'));
         }
 

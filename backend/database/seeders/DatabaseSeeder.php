@@ -21,5 +21,8 @@ class DatabaseSeeder extends Seeder
             'email' => 'test@example.com',
             'role' => 'admin',
         ]);
+
+        // Seed anamnesis templates
+        $this->call(AnamnesisTemplateSeeder::class);
     }
 }
