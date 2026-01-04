@@ -12,7 +12,12 @@
 
     <!-- Statistics Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-      <router-link :to="{ name: 'Customers' }" class="card hover:shadow-lg transition-shadow cursor-pointer">
+      <!-- Customers Card - nur für Admin und Trainer -->
+      <router-link 
+        v-if="user?.role !== 'customer'" 
+        :to="{ name: 'Customers' }" 
+        class="card hover:shadow-lg transition-shadow cursor-pointer"
+      >
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-600 mb-1">Kunden</p>
@@ -100,9 +105,15 @@
           <div v-else v-for="session in upcomingSessions" :key="session.id" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
             <div>
               <p class="font-medium text-gray-900">{{ session.course }}</p>
-              <p class="text-sm text-gray-600">{{ session.date }} - {{ session.time }}</p>
+              <p class="text-sm text-gray-600">
+                {{ session.date }} - {{ session.time }}
+                <span v-if="user?.role === 'customer' && session.dog"> - {{ session.dog }}</span>
+              </p>
             </div>
-            <span class="px-3 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
+            <span v-if="user?.role === 'customer' && session.status" :class="bookingStatusClass(session.status)">
+              {{ bookingStatusLabel(session.status) }}
+            </span>
+            <span v-else class="px-3 py-1 text-xs font-medium text-blue-800 bg-blue-100 rounded-full">
               {{ session.participants }} Teilnehmer
             </span>
           </div>
@@ -125,8 +136,10 @@
           </div>
           <div v-else v-for="booking in recentBookings" :key="booking.id" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
             <div>
-              <p class="font-medium text-gray-900">{{ booking.customer }}</p>
-              <p class="text-sm text-gray-600">{{ booking.dog }} - {{ booking.course }}</p>
+              <p v-if="user?.role === 'customer'" class="font-medium text-gray-900">{{ booking.dog }} - {{ booking.course }}</p>
+              <p v-else class="font-medium text-gray-900">{{ booking.customer }}</p>
+              <p v-if="user?.role === 'customer'" class="text-sm text-gray-600">{{ booking.date }}</p>
+              <p v-else class="text-sm text-gray-600">{{ booking.dog }} - {{ booking.course }}</p>
             </div>
             <span :class="bookingStatusClass(booking.status)">
               {{ bookingStatusLabel(booking.status) }}
