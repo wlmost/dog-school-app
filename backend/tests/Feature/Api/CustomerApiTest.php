@@ -39,7 +39,10 @@ describe('Customer API - Index', function () {
 
     test('trainer can list all customers', function () {
         $trainer = User::factory()->trainer()->create();
-        Customer::factory()->count(2)->create();
+        // Create customers assigned to this trainer
+        Customer::factory()->count(2)->create(['trainer_id' => $trainer->id]);
+        // Create customers not assigned to this trainer (should not appear)
+        Customer::factory()->count(3)->create();
 
         $response = $this->actingAs($trainer)
             ->getJson('/api/v1/customers');
