@@ -13,16 +13,37 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
-
+        // Create Admin User
         User::factory()->create([
-            'first_name' => 'Test',
+            'first_name' => 'Admin',
             'last_name' => 'User',
-            'email' => 'test@example.com',
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password'),
             'role' => 'admin',
+        ]);
+
+        // Create Trainer User
+        User::factory()->create([
+            'first_name' => 'Trainer',
+            'last_name' => 'User',
+            'email' => 'trainer@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'trainer',
+        ]);
+
+        // Create Customer User
+        User::factory()->create([
+            'first_name' => 'Customer',
+            'last_name' => 'User',
+            'email' => 'customer@example.com',
+            'password' => bcrypt('password'),
+            'role' => 'customer',
         ]);
 
         // Seed anamnesis templates
         $this->call(AnamnesisTemplateSeeder::class);
+
+        // Seed default settings
+        $this->call(SettingsSeeder::class);
     }
 }
