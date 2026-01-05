@@ -1,10 +1,10 @@
 <template>
-  <div class="min-h-screen bg-gray-50">
+  <div class="min-h-screen bg-gray-50 dark:bg-gray-900">
     <!-- Sidebar -->
-    <aside class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-40">
+    <aside class="fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 shadow-lg z-40">
       <div class="flex flex-col h-full">
         <!-- Logo -->
-        <div class="flex items-center justify-center h-16 px-4 border-b border-gray-200">
+        <div class="flex items-center justify-center h-16 px-4 border-b border-gray-200 dark:border-gray-700">
           <img src="@/assets/HomoCanis.jpg" alt="HomoCanis" class="h-12 w-auto">
         </div>
 
@@ -14,8 +14,8 @@
             v-for="item in navigation"
             :key="item.name"
             :to="item.to"
-            class="flex items-center px-4 py-3 text-gray-700 rounded-lg hover:bg-primary-50 hover:text-primary-700 transition-colors"
-            active-class="bg-primary-100 text-primary-700 font-medium"
+            class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-50 dark:hover:bg-gray-700 hover:text-primary-700 dark:hover:text-primary-400 transition-colors"
+            active-class="bg-primary-100 dark:bg-gray-700 text-primary-700 dark:text-primary-400 font-medium"
           >
             <svg v-if="item.icon === 'HomeIcon'" class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -48,20 +48,20 @@
         </nav>
 
         <!-- User Menu -->
-        <div class="px-4 py-4 border-t border-gray-200">
+        <div class="px-4 py-4 border-t border-gray-200 dark:border-gray-700">
           <div class="flex items-center justify-between px-4 py-2">
             <div class="flex items-center min-w-0">
-              <div class="flex-shrink-0 w-8 h-8 bg-primary-600 rounded-full flex items-center justify-center text-white font-medium">
+              <div class="flex-shrink-0 w-8 h-8 bg-primary-600 dark:bg-primary-500 rounded-full flex items-center justify-center text-white font-medium">
                 {{ userInitials }}
               </div>
               <div class="ml-3 min-w-0 flex-1">
-                <p class="text-sm font-medium text-gray-900 truncate">{{ user?.full_name }}</p>
-                <p class="text-xs text-gray-500 truncate">{{ roleLabel }}</p>
+                <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{{ user?.full_name }}</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ roleLabel }}</p>
               </div>
             </div>
             <button
               @click="handleLogout"
-              class="ml-2 p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              class="ml-2 p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
               title="Abmelden"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -76,9 +76,23 @@
     <!-- Main Content -->
     <div class="pl-64">
       <!-- Header -->
-      <header class="bg-white shadow-sm border-b border-gray-200">
-        <div class="px-8 py-4">
-          <h2 class="text-2xl font-semibold text-gray-900">{{ pageTitle }}</h2>
+      <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div class="px-8 py-4 flex items-center justify-between">
+          <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ pageTitle }}</h2>
+          
+          <!-- Theme Toggle -->
+          <button
+            @click="themeStore.toggleTheme()"
+            class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            title="Theme wechseln"
+          >
+            <svg v-if="themeStore.isDark" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+            <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -94,10 +108,12 @@
 import { computed } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useThemeStore } from '@/stores/theme'
 
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
+const themeStore = useThemeStore()
 
 const user = computed(() => authStore.user)
 
