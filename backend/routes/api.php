@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\TrainerController;
 use App\Http\Controllers\Api\TrainingAttachmentController;
 use App\Http\Controllers\Api\TrainingSessionController;
 use App\Http\Controllers\Api\VaccinationController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\TrainingLogController;
 use Illuminate\Support\Facades\Route;
 
@@ -129,5 +130,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // Payment Management
     Route::apiResource('payments', PaymentController::class);
     Route::post('/payments/{payment}/mark-completed', [PaymentController::class, 'markAsCompleted']);
+    
+    // Settings Management (Admin only)
+    Route::middleware('can:admin')->group(function () {
+        Route::get('/settings', [SettingsController::class, 'index']);
+        Route::put('/settings', [SettingsController::class, 'update']);
+    });
 });
 
