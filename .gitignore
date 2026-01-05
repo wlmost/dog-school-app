@@ -13,6 +13,8 @@ Thumbs.db
 .env
 .env.local
 .env.*.local
+# Keep production template
+!backend/.env.production
 
 # Logs
 *.log
@@ -48,6 +50,8 @@ backend/storage/logs/*
 frontend/.env
 frontend/.env.local
 frontend/dist/
+# Keep production htaccess template
+!frontend/dist/.htaccess
 
 # Package locks (keep composer.lock, remove package-lock if using yarn)
 package-lock.json
