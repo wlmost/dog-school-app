@@ -1,21 +1,26 @@
 <template>
   <div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+      <h1 class="text-2xl font-bold text-gray-900">Anamnese-Verwaltung</h1>
+    </div>
+
     <!-- Header Actions -->
     <div class="flex justify-between items-center">
       <div class="flex gap-4">
-        <select v-model="selectedTemplate" class="input max-w-xs">
+        <select v-model="filterTemplateId" @change="loadResponses" class="input max-w-xs">
           <option value="">Alle Vorlagen</option>
           <option v-for="template in templates" :key="template.id" :value="template.id">
             {{ template.name }}
           </option>
         </select>
-        <select v-model="filterStatus" class="input max-w-xs">
+        <select v-model="filterCompleted" @change="loadResponses" class="input max-w-xs">
           <option value="">Alle Status</option>
-          <option value="pending">Ausstehend</option>
-          <option value="completed">Abgeschlossen</option>
+          <option value="false">Ausstehend</option>
+          <option value="true">Abgeschlossen</option>
         </select>
       </div>
-      <button class="btn btn-primary" @click="showNewAnamnesisModal = true">
+      <button class="btn btn-primary" @click="openCreateModal">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
@@ -23,7 +28,7 @@
       </button>
     </div>
 
-    <!-- Anamnesis Table -->
+    <!-- Anamnesis Responses Table -->
     <div class="card">
       <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
@@ -38,7 +43,7 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-if="loading">
+            <tr v-if="loadingResponses">
               <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                 <svg class="animate-spin h-8 w-8 text-primary-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -54,27 +59,28 @@
             </tr>
             <tr v-else v-for="response in responses" :key="response.id" class="hover:bg-gray-50">
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ response.dog }}</div>
+                <div class="text-sm font-medium text-gray-900">{{ response.dogName }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-600">{{ response.owner }}</div>
+                <div class="text-sm text-gray-600">{{ response.customerName }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ response.template }}</div>
+                <div class="text-sm text-gray-900">{{ response.templateName }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-600">{{ response.created_at }}</div>
+                <div class="text-sm text-gray-600">{{ formatDate(response.createdAt) }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span :class="statusClass(response.status)" class="px-2 py-1 text-xs font-medium rounded-full">
-                  {{ statusLabel(response.status) }}
+                <span :class="statusClass(response.completedAt)" class="px-2 py-1 text-xs font-medium rounded-full">
+                  {{ statusLabel(response.completedAt) }}
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                <button class="text-primary-600 hover:text-primary-900">Anzeigen</button>
-                <button class="text-blue-600 hover:text-blue-900">PDF</button>
-                <button v-if="response.status === 'pending'" class="text-green-600 hover:text-green-900">Bearbeiten</button>
-                <button class="text-red-600 hover:text-red-900">Löschen</button>
+                <button @click="viewResponse(response)" class="text-primary-600 hover:text-primary-900">Anzeigen</button>
+                <button @click="downloadPdf(response.id)" class="text-blue-600 hover:text-blue-900">PDF</button>
+                <button v-if="!response.completedAt" @click="editResponse(response)" class="text-green-600 hover:text-green-900">Bearbeiten</button>
+                <button v-if="!response.completedAt" @click="completeResponse(response.id)" class="text-purple-600 hover:text-purple-900">Abschließen</button>
+                <button @click="deleteResponse(response.id)" class="text-red-600 hover:text-red-900">Löschen</button>
               </td>
             </tr>
           </tbody>
@@ -94,69 +100,178 @@
           <p class="mt-2 text-gray-500">Lade Vorlagen...</p>
         </div>
         <div v-else v-for="template in templates" :key="template.id" class="p-4 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-md transition-all">
-          <h4 class="font-semibold text-gray-900 mb-2">{{ template.name }}</h4>
+          <div class="flex items-start justify-between mb-2">
+            <h4 class="font-semibold text-gray-900">{{ template.name }}</h4>
+            <span v-if="template.isDefault" class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Standard</span>
+          </div>
           <p class="text-sm text-gray-600 mb-3">{{ template.description }}</p>
           <div class="text-xs text-gray-500 mb-3">
-            {{ template.questions_count }} Fragen
+            {{ template.questionsCount || 0 }} Fragen
           </div>
           <div class="flex space-x-2">
-            <button class="btn btn-primary text-sm flex-1">Verwenden</button>
-            <button class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm">Bearbeiten</button>
+            <button @click="useTemplate(template)" class="btn btn-primary text-sm flex-1">Verwenden</button>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Anamnesis Form Modal -->
+    <AnamnesisFormModal
+      v-model="showFormModal"
+      :anamnesis-response="selectedResponse"
+      :templates="templates"
+      :dogs="dogs"
+      @saved="handleSaved"
+    />
+
+    <!-- Detail View Modal -->
+    <AnamnesisDetailModal
+      v-model="showDetailModal"
+      :anamnesis-response="selectedResponse"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { anamnesisTemplatesApi, anamnesisResponsesApi, type AnamnesisTemplate, type AnamnesisResponse } from '@/api/anamnesis'
+import AnamnesisFormModal from '@/components/anamnesis/AnamnesisFormModal.vue'
+import AnamnesisDetailModal from '@/components/anamnesis/AnamnesisDetailModal.vue'
+import apiClient from '@/api/client'
 
-const loading = ref(true)
 const loadingTemplates = ref(true)
-const selectedTemplate = ref('')
-const filterStatus = ref('')
-const showNewAnamnesisModal = ref(false)
-const responses = ref<any[]>([])
-const templates = ref<any[]>([])
+const loadingResponses = ref(true)
+const filterTemplateId = ref('')
+const filterCompleted = ref('')
+const showFormModal = ref(false)
+const showDetailModal = ref(false)
+const selectedResponse = ref<AnamnesisResponse | null>(null)
+const responses = ref<AnamnesisResponse[]>([])
+const templates = ref<AnamnesisTemplate[]>([])
+const dogs = ref<any[]>([])
 
 onMounted(async () => {
-  try {
-    // Placeholder - replace with actual API calls
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    responses.value = [
-      { id: 1, dog: 'Bello', owner: 'Max Mustermann', template: 'Welpen-Anamnese', created_at: '01.01.2026', status: 'completed' },
-      { id: 2, dog: 'Luna', owner: 'Anna Schmidt', template: 'Standard-Anamnese', created_at: '02.01.2026', status: 'pending' },
-      { id: 3, dog: 'Rex', owner: 'Peter Weber', template: 'Verhaltens-Anamnese', created_at: '03.01.2026', status: 'completed' }
-    ]
-
-    templates.value = [
-      { id: 1, name: 'Welpen-Anamnese', description: 'Anamnese für Welpen bis 6 Monate', questions_count: 15 },
-      { id: 2, name: 'Standard-Anamnese', description: 'Allgemeine Anamnese für alle Hunde', questions_count: 25 },
-      { id: 3, name: 'Verhaltens-Anamnese', description: 'Detaillierte Verhaltensanalyse', questions_count: 30 }
-    ]
-  } catch (error) {
-    console.error('Error loading anamnesis data:', error)
-  } finally {
-    loading.value = false
-    loadingTemplates.value = false
-  }
+  await Promise.all([
+    loadTemplates(),
+    loadResponses(),
+    loadDogs()
+  ])
 })
 
-function statusClass(status: string) {
-  const classes = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    completed: 'bg-green-100 text-green-800'
+async function loadTemplates() {
+  loadingTemplates.value = true
+  try {
+    const response = await anamnesisTemplatesApi.getAll()
+    templates.value = response.data
+  } catch (error) {
+    console.error('Error loading templates:', error)
+  } finally {
+    loadingTemplates.value = false
   }
-  return classes[status as keyof typeof classes] || classes.pending
 }
 
-function statusLabel(status: string) {
-  const labels = {
-    pending: 'Ausstehend',
-    completed: 'Abgeschlossen'
+async function loadResponses() {
+  loadingResponses.value = true
+  try {
+    const params: any = {}
+    if (filterTemplateId.value) params.templateId = Number(filterTemplateId.value)
+    if (filterCompleted.value) params.completed = filterCompleted.value === 'true'
+    
+    const response = await anamnesisResponsesApi.getAll(params)
+    responses.value = response.data
+  } catch (error) {
+    console.error('Error loading responses:', error)
+  } finally {
+    loadingResponses.value = false
   }
-  return labels[status as keyof typeof labels] || status
+}
+
+async function loadDogs() {
+  try {
+    const response = await apiClient.get('/api/v1/dogs')
+    dogs.value = response.data.data.map((dog: any) => ({
+      id: dog.id,
+      name: dog.name,
+      customerId: dog.customerId,
+      customerName: dog.customerName
+    }))
+  } catch (error) {
+    console.error('Error loading dogs:', error)
+  }
+}
+
+function openCreateModal() {
+  selectedResponse.value = null
+  showFormModal.value = true
+}
+
+function useTemplate(template: AnamnesisTemplate) {
+  selectedResponse.value = null
+  showFormModal.value = true
+  // The template will be auto-selected if needed
+}
+
+function editResponse(response: AnamnesisResponse) {
+  selectedResponse.value = response
+  showFormModal.value = true
+}
+
+function viewResponse(response: AnamnesisResponse) {
+  selectedResponse.value = response
+  showDetailModal.value = true
+}
+
+async function completeResponse(id: number) {
+  if (!confirm('Möchten Sie diese Anamnese als abgeschlossen markieren?')) return
+
+  try {
+    await anamnesisResponsesApi.complete(id)
+    await loadResponses()
+  } catch (error: any) {
+    alert(error.response?.data?.message || 'Fehler beim Abschließen')
+  }
+}
+
+async function deleteResponse(id: number) {
+  if (!confirm('Möchten Sie diese Anamnese wirklich löschen?')) return
+
+  try {
+    await anamnesisResponsesApi.delete(id)
+    await loadResponses()
+  } catch (error: any) {
+    alert(error.response?.data?.message || 'Fehler beim Löschen')
+  }
+}
+
+async function downloadPdf(id: number) {
+  try {
+    const blob = await anamnesisResponsesApi.downloadPdf(id)
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `anamnesis-${id}.pdf`
+    link.click()
+    window.URL.revokeObjectURL(url)
+  } catch (error: any) {
+    alert(error.response?.data?.message || 'Fehler beim Download')
+  }
+}
+
+function handleSaved() {
+  loadResponses()
+}
+
+function formatDate(dateString: string) {
+  return new Date(dateString).toLocaleDateString('de-DE')
+}
+
+function statusClass(completedAt: string | null) {
+  return completedAt
+    ? 'bg-green-100 text-green-800'
+    : 'bg-yellow-100 text-yellow-800'
+}
+
+function statusLabel(completedAt: string | null) {
+  return completedAt ? 'Abgeschlossen' : 'Ausstehend'
 }
 </script>

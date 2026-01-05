@@ -21,9 +21,10 @@ class AnamnesisQuestionResource extends JsonResource
             'templateId' => $this->template_id,
             'questionText' => $this->question_text,
             'questionType' => $this->question_type,
-            'options' => $this->options,
+            'options' => $this->options ? (is_array($this->options) ? $this->options : json_decode($this->options, true)) : null,
             'isRequired' => $this->is_required,
             'order' => $this->order,
+            'helpText' => $this->help_text ?? null,
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
         ];
