@@ -146,7 +146,6 @@ const emit = defineEmits<{
 }>()
 
 const loading = ref(false)
-const error = ref<string | null>(null)
 const customers = ref<any[]>([])
 
 const form = ref({
@@ -233,14 +232,16 @@ async function handleSubmit() {
 
     if (props.dog) {
       await apiClient.put(`/api/v1/dogs/${props.dog.id}`, payload)
+      showSuccess('Hund aktualisiert', `${form.value.name} wurde erfolgreich aktualisiert`)
     } else {
       await apiClient.post('/api/v1/dogs', payload)
+      showSuccess('Hund erstellt', `${form.value.name} wurde erfolgreich erstellt`)
     }
 
     emit('saved')
     closeModal()
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Ein Fehler ist aufgetreten'
+  } catch (err) {
+    handleApiError(err, 'Fehler beim Speichern des Hundes')
   } finally {
     loading.value = false
   }

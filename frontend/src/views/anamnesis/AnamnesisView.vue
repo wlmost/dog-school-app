@@ -204,6 +204,7 @@ import AnamnesisFormModal from '@/components/anamnesis/AnamnesisFormModal.vue'
 import AnamnesisDetailModal from '@/components/anamnesis/AnamnesisDetailModal.vue'
 import AnamnesisTemplateFormModal from '@/components/anamnesis/AnamnesisTemplateFormModal.vue'
 import apiClient from '@/api/client'
+import { handleApiError, showSuccess } from '@/utils/errorHandler'
 
 const loadingTemplates = ref(true)
 const loadingResponses = ref(true)
@@ -302,8 +303,9 @@ async function completeResponse(id: number) {
   try {
     await anamnesisResponsesApi.complete(id)
     await loadResponses()
-  } catch (error: any) {
-    alert(error.response?.data?.message || 'Fehler beim Abschließen')
+    showSuccess('Anamnese abgeschlossen', 'Die Anamnese wurde erfolgreich abgeschlossen')
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Abschließen')
   }
 }
 
@@ -313,8 +315,9 @@ async function deleteResponse(id: number) {
   try {
     await anamnesisResponsesApi.delete(id)
     await loadResponses()
-  } catch (error: any) {
-    alert(error.response?.data?.message || 'Fehler beim Löschen')
+    showSuccess('Anamnese gelöscht', 'Die Anamnese wurde erfolgreich gelöscht')
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Löschen')
   }
 }
 
@@ -327,8 +330,9 @@ async function downloadPdf(id: number) {
     link.download = `anamnesis-${id}.pdf`
     link.click()
     window.URL.revokeObjectURL(url)
-  } catch (error: any) {
-    alert(error.response?.data?.message || 'Fehler beim Download')
+    showSuccess('PDF heruntergeladen', 'Die Anamnese wurde erfolgreich heruntergeladen')
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Download')
   }
 }
 
@@ -353,8 +357,9 @@ async function duplicateTemplate(template: AnamnesisTemplate) {
   try {
     await anamnesisTemplatesApi.duplicate(template.id)
     await loadTemplates()
-  } catch (error: any) {
-    alert(error.response?.data?.message || 'Fehler beim Duplizieren')
+    showSuccess('Vorlage dupliziert', 'Die Vorlage wurde erfolgreich dupliziert')
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Duplizieren')
   }
 }
 
@@ -364,8 +369,9 @@ async function deleteTemplate(id: number) {
   try {
     await anamnesisTemplatesApi.delete(id)
     await loadTemplates()
-  } catch (error: any) {
-    alert(error.response?.data?.message || 'Fehler beim Löschen')
+    showSuccess('Vorlage gelöscht', 'Die Vorlage wurde erfolgreich gelöscht')
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Löschen')
   }
 }
 

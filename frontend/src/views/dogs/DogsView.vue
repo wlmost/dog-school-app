@@ -20,15 +20,9 @@
     </div>
 
     <!-- Dogs Grid -->
-    <div v-if="loading" class="text-center py-12">
-      <svg class="animate-spin h-12 w-12 text-primary-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-      </svg>
-      <p class="mt-4 text-gray-500">Lade Hundedaten...</p>
-    </div>
+    <SkeletonLoader v-if="loading" :count="6" :lines="3" avatar />
 
-    <div v-else-if="!dogs.length" class="card text-center py-12 text-gray-500">
+    <div v-else-if="!dogs.length" class="card text-center py-12 text-gray-500 dark:text-gray-400">
       Keine Hunde gefunden
     </div>
 
@@ -84,6 +78,8 @@
 import { ref, onMounted } from 'vue'
 import apiClient from '@/api/client'
 import DogFormModal from '@/components/DogFormModal.vue'
+import SkeletonLoader from '@/components/SkeletonLoader.vue'
+import { handleApiError, showSuccess } from '@/utils/errorHandler'
 
 const loading = ref(true)
 const searchQuery = ref('')
@@ -124,7 +120,7 @@ function editDog(dog: any) {
 
 function viewDog(dog: any) {
   // Could open a detail modal here
-  console.log('View dog:', dog)
+  selectedDog.value = dog
 }
 
 function closeFormModal() {
@@ -145,8 +141,9 @@ async function deleteDog(dog: any) {
   try {
     await apiClient.delete(`/api/v1/dogs/${dog.id}`)
     await loadDogs()
-  } catch (error: any) {
-    alert(error.response?.data?.message || 'Fehler beim Löschen des Hundes')
+    showSuccess('Hund gelöscht', `${dog.name} wurde erfolgreich gelöscht`)
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Löschen des Hundes')
   }
 }
 

@@ -87,11 +87,6 @@
                   <textarea v-model="form.notes" rows="3" class="input"></textarea>
                 </div>
 
-                <!-- Error Message -->
-                <div v-if="error" class="rounded-md bg-red-50 p-4">
-                  <p class="text-sm text-red-800">{{ error }}</p>
-                </div>
-
                 <!-- Buttons -->
                 <div class="flex justify-end space-x-3 pt-4">
                   <button type="button" @click="closeModal" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700">
@@ -115,6 +110,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 import apiClient from '@/api/client'
+import { handleApiError, showSuccess } from '@/utils/errorHandler'
 
 const props = defineProps<{
   isOpen: boolean
@@ -127,7 +123,6 @@ const emit = defineEmits<{
 }>()
 
 const loading = ref(false)
-const error = ref<string | null>(null)
 const dogs = ref<any[]>([])
 const courses = ref<any[]>([])
 const uniqueCourses = ref<any[]>([])
@@ -250,13 +245,12 @@ function resetForm() {
 
 async function handleSubmit() {
   loading.value = true
-  error.value = null
 
   try {
     // Get customer_id from selected dog
     const selectedDog = dogs.value.find((d: any) => d.id === form.value.dog_id)
     if (!selectedDog) {
-      error.value = 'Bitte wählen Sie einen Hund aus'
+      handleApiError(new Error('Bitte wählen Sie einen Hund aus'), 'Validierungsfehler')
       loading.value = false
       return
     }
@@ -276,14 +270,16 @@ async function handleSubmit() {
         notes: form.value.notes || null
       }
       await apiClient.put(`/api/v1/bookings/${props.booking.id}`, updatePayload)
+      showSuccess('Buchung aktualisiert', 'Die Buchung wurde erfolgreich aktualisiert')
     } else {
       await apiClient.post('/api/v1/bookings', payload)
+      showSuccess('Buchung erstellt', 'Die Buchung wurde erfolgreich erstellt')
     }
 
     emit('saved')
     closeModal()
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Ein Fehler ist aufgetreten'
+  } catch (err) {
+    handleApiError(err, 'Fehler beim Speichern der Buchung')
   } finally {
     loading.value = false
   }
@@ -291,7 +287,6 @@ async function handleSubmit() {
 
 function closeModal() {
   resetForm()
-  error.value = null
   emit('close')
 }
 </script>

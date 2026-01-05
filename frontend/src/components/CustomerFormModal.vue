@@ -227,11 +227,6 @@
                   </div>
                 </div>
 
-                <!-- Error Message -->
-                <div v-if="error" class="rounded-md bg-red-50 p-4">
-                  <p class="text-sm text-red-800">{{ error }}</p>
-                </div>
-
                 <!-- Buttons -->
                 <div class="flex justify-end space-x-3 pt-4">
                   <button type="button" @click="closeModal" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700">
@@ -256,6 +251,7 @@ import { ref, watch, computed } from 'vue'
 import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 import { useAuthStore } from '@/stores/auth'
 import apiClient from '@/api/client'
+import { handleApiError, showSuccess } from '@/utils/errorHandler'
 
 const props = defineProps<{
   isOpen: boolean
@@ -271,7 +267,6 @@ const authStore = useAuthStore()
 const currentUser = computed(() => authStore.user)
 
 const loading = ref(false)
-const error = ref<string | null>(null)
 const passwordError = ref<string | null>(null)
 const passwordConfirmError = ref<string | null>(null)
 const showPassword = ref(false)
@@ -410,10 +405,11 @@ async function saveDog() {
     }
     
     await apiClient.post('/api/v1/dogs', payload)
+    showSuccess('Hund hinzugefügt', 'Der Hund wurde erfolgreich hinzugefügt')
     await loadDogs()
     cancelDogForm()
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Fehler beim Hinzufügen des Hundes'
+  } catch (err) {
+    handleApiError(err, 'Fehler beim Hinzufügen des Hundes')
   }
 }
 
@@ -422,9 +418,10 @@ async function removeDog(dog: any) {
   
   try {
     await apiClient.delete(`/api/v1/dogs/${dog.id}`)
+    showSuccess('Hund gelöscht', 'Der Hund wurde erfolgreich gelöscht')
     await loadDogs()
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Fehler beim Löschen des Hundes'
+  } catch (err) {
+    handleApiError(err, 'Fehler beim Löschen des Hundes')
   }
 }
 
@@ -449,7 +446,6 @@ function validatePassword(password: string): string | null {
 
 async function handleSubmit() {
   loading.value = true
-  error.value = null
   passwordError.value = null
   passwordConfirmError.value = null
 
@@ -485,6 +481,7 @@ async function handleSubmit() {
         country: form.value.country,
         notes: form.value.notes
       })
+      showSuccess('Kunde aktualisiert', 'Der Kunde wurde erfolgreich aktualisiert')
     } else {
       // Create new customer with user
       const userResponse = await apiClient.post('/api/v1/auth/register', {
@@ -506,12 +503,13 @@ async function handleSubmit() {
         country: form.value.country,
         notes: form.value.notes
       })
+      showSuccess('Kunde erstellt', 'Der Kunde wurde erfolgreich erstellt')
     }
 
     emit('saved')
     closeModal()
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Ein Fehler ist aufgetreten'
+  } catch (err) {
+    handleApiError(err, 'Fehler beim Speichern des Kunden')
   } finally {
     loading.value = false
   }
@@ -519,7 +517,6 @@ async function handleSubmit() {
 
 function closeModal() {
   resetForm()
-  error.value = null
   emit('close')
 }
 </script>

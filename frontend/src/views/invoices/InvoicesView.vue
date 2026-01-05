@@ -105,6 +105,7 @@ import { ref, onMounted } from 'vue'
 import apiClient from '@/api/client'
 import InvoiceFormModal from '@/components/InvoiceFormModal.vue'
 import InvoiceDetailModal from '@/components/InvoiceDetailModal.vue'
+import { handleApiError, showSuccess } from '@/utils/errorHandler'
 
 const loading = ref(true)
 const filterStatus = ref<string | null>(null)
@@ -174,8 +175,9 @@ async function downloadPDF(invoice: any) {
     link.click()
     link.remove()
     window.URL.revokeObjectURL(url)
-  } catch (error: any) {
-    alert(error.response?.data?.message || 'Fehler beim Herunterladen der PDF')
+    showSuccess('PDF heruntergeladen', 'Die Rechnung wurde erfolgreich heruntergeladen')
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Herunterladen der PDF')
   }
 }
 
@@ -190,8 +192,9 @@ async function markAsPaid(invoice: any) {
     if (showDetailModal.value) {
       closeDetailModal()
     }
-  } catch (error: any) {
-    alert(error.response?.data?.message || 'Fehler beim Aktualisieren der Rechnung')
+    showSuccess('Rechnung aktualisiert', 'Die Rechnung wurde als bezahlt markiert')
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Aktualisieren der Rechnung')
   }
 }
 

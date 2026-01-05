@@ -120,11 +120,6 @@
                   <textarea v-model="form.notes" rows="3" class="input"></textarea>
                 </div>
 
-                <!-- Error Message -->
-                <div v-if="error" class="rounded-md bg-red-50 p-4">
-                  <p class="text-sm text-red-800">{{ error }}</p>
-                </div>
-
                 <!-- Buttons -->
                 <div class="flex justify-end space-x-3 pt-4">
                   <button type="button" @click="closeModal" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700">
@@ -148,6 +143,7 @@
 import { ref, watch, onMounted } from 'vue'
 import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 import apiClient from '@/api/client'
+import { handleApiError, showSuccess } from '@/utils/errorHandler'
 
 const props = defineProps<{
   isOpen: boolean
@@ -160,7 +156,6 @@ const emit = defineEmits<{
 }>()
 
 const loading = ref(false)
-const error = ref<string | null>(null)
 const customers = ref<any[]>([])
 
 const form = ref({
@@ -247,7 +242,6 @@ function resetForm() {
 
 async function handleSubmit() {
   loading.value = true
-  error.value = null
 
   try {
     const payload = {
@@ -265,14 +259,16 @@ async function handleSubmit() {
 
     if (props.invoice) {
       await apiClient.put(`/api/v1/invoices/${props.invoice.id}`, payload)
+      showSuccess('Rechnung aktualisiert', 'Die Rechnung wurde erfolgreich aktualisiert')
     } else {
       await apiClient.post('/api/v1/invoices', payload)
+      showSuccess('Rechnung erstellt', 'Die Rechnung wurde erfolgreich erstellt')
     }
 
     emit('saved')
     closeModal()
-  } catch (err: any) {
-    error.value = err.response?.data?.message || 'Ein Fehler ist aufgetreten'
+  } catch (err) {
+    handleApiError(err, 'Fehler beim Speichern der Rechnung')
   } finally {
     loading.value = false
   }
@@ -280,7 +276,6 @@ async function handleSubmit() {
 
 function closeModal() {
   resetForm()
-  error.value = null
   emit('close')
 }
 </script>

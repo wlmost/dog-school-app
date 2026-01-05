@@ -234,6 +234,7 @@
 import { ref, onMounted, computed } from 'vue'
 import apiClient from '@/api/client'
 import TrainerFormModal from '@/components/TrainerFormModal.vue'
+import { handleApiError, showSuccess } from '@/utils/errorHandler'
 
 const loading = ref(false)
 const trainers = ref<any[]>([])
@@ -322,8 +323,9 @@ async function deleteTrainer(trainer: any) {
   try {
     await apiClient.delete(`/api/v1/trainers/${trainer.id}`)
     await loadTrainers()
-  } catch (error: any) {
-    alert(error.response?.data?.message || 'Fehler beim Löschen des Trainers')
+    showSuccess('Trainer gelöscht', 'Der Trainer wurde erfolgreich gelöscht')
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Löschen des Trainers')
   }
 }
 

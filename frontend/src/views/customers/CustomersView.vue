@@ -96,10 +96,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import apiClient from '@/api/client'
 import CustomerFormModal from '@/components/CustomerFormModal.vue'
 import CustomerDetailModal from '@/components/CustomerDetailModal.vue'
+import { handleApiError, showSuccess } from '@/utils/errorHandler'
 
 const router = useRouter()
 const loading = ref(true)
@@ -169,8 +169,9 @@ async function deleteCustomer(customer: any) {
   try {
     await apiClient.delete(`/api/v1/customers/${customer.id}`)
     await loadCustomers()
-  } catch (error: any) {
-    alert(error.response?.data?.message || 'Fehler beim Löschen des Kunden')
+    showSuccess('Kunde gelöscht', `${customer.user?.fullName} wurde erfolgreich gelöscht`)
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Löschen des Kunden')
   }
 }
 </script>

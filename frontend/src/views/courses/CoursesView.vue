@@ -96,6 +96,7 @@
 import { ref, onMounted } from 'vue'
 import apiClient from '@/api/client'
 import CourseFormModal from '@/components/CourseFormModal.vue'
+import { handleApiError, showSuccess } from '@/utils/errorHandler'
 
 const loading = ref(true)
 const filterStatus = ref<string | null>(null)
@@ -194,8 +195,9 @@ async function deleteCourse(course: any) {
   try {
     await apiClient.delete(`/api/v1/courses/${course.id}`)
     await loadCourses()
-  } catch (error: any) {
-    alert(error.response?.data?.message || 'Fehler beim Löschen des Kurses')
+    showSuccess('Kurs gelöscht', 'Der Kurs wurde erfolgreich gelöscht')
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Löschen des Kurses')
   }
 }
 

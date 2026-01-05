@@ -95,6 +95,7 @@
 import { ref, onMounted } from 'vue'
 import apiClient from '@/api/client'
 import BookingFormModal from '@/components/BookingFormModal.vue'
+import { handleApiError, showSuccess } from '@/utils/errorHandler'
 
 const loading = ref(true)
 const filterStatus = ref<string | null>(null)
@@ -152,9 +153,9 @@ async function confirmBooking(booking: any) {
     await apiClient.post(`/api/v1/bookings/${booking.id}/confirm`)
     // Reload the entire list to ensure fresh data
     await loadBookings()
-  } catch (error: any) {
-    console.error('Error confirming booking:', error)
-    alert(error.response?.data?.message || 'Fehler beim Bestätigen der Buchung')
+    showSuccess('Buchung bestätigt', 'Die Buchung wurde erfolgreich bestätigt')
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Bestätigen der Buchung')
   }
 }
 
@@ -167,9 +168,9 @@ async function cancelBooking(booking: any) {
     await apiClient.post(`/api/v1/bookings/${booking.id}/cancel`)
     // Reload the entire list to ensure fresh data
     await loadBookings()
-  } catch (error: any) {
-    console.error('Error cancelling booking:', error)
-    alert(error.response?.data?.message || 'Fehler beim Stornieren der Buchung')
+    showSuccess('Buchung storniert', 'Die Buchung wurde erfolgreich storniert')
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Stornieren der Buchung')
   }
 }
 
