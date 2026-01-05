@@ -11,7 +11,7 @@
     </div>
 
     <!-- Statistics Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+    <div :class="statsGridClass">
       <!-- Customers Card - nur für Admin und Trainer -->
       <router-link 
         v-if="user?.role !== 'customer'" 
@@ -34,7 +34,7 @@
       <router-link :to="{ name: 'Dogs' }" class="card hover:shadow-lg transition-shadow cursor-pointer">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600 mb-1">Hunde</p>
+            <p class="text-sm text-gray-600 mb-1">{{ user?.role === 'customer' ? 'Meine Hunde' : 'Hunde' }}</p>
             <p class="text-3xl font-bold text-gray-900">{{ stats.dogs }}</p>
           </div>
           <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -46,7 +46,7 @@
       <router-link :to="{ name: 'Courses' }" class="card hover:shadow-lg transition-shadow cursor-pointer">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600 mb-1">Kurse</p>
+            <p class="text-sm text-gray-600 mb-1">{{ user?.role === 'customer' ? 'Verfügbare Kurse' : 'Kurse' }}</p>
             <p class="text-3xl font-bold text-gray-900">{{ stats.courses }}</p>
           </div>
           <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -60,7 +60,7 @@
       <router-link :to="{ name: 'Bookings' }" class="card hover:shadow-lg transition-shadow cursor-pointer">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600 mb-1">Buchungen</p>
+            <p class="text-sm text-gray-600 mb-1">{{ user?.role === 'customer' ? 'Meine Buchungen' : 'Buchungen' }}</p>
             <p class="text-3xl font-bold text-gray-900">{{ stats.bookings }}</p>
           </div>
           <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
@@ -74,7 +74,7 @@
       <router-link :to="{ name: 'Invoices' }" class="card hover:shadow-lg transition-shadow cursor-pointer">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm text-gray-600 mb-1">Rechnungen</p>
+            <p class="text-sm text-gray-600 mb-1">{{ user?.role === 'customer' ? 'Meine Rechnungen' : 'Rechnungen' }}</p>
             <p class="text-3xl font-bold text-gray-900">{{ stats.invoices }}</p>
           </div>
           <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
@@ -170,6 +170,16 @@ const stats = ref({
 
 const upcomingSessions = ref<any[]>([])
 const recentBookings = ref<any[]>([])
+
+// Computed grid class based on user role
+const statsGridClass = computed(() => {
+  // Customers see 4 cards (no Customers card)
+  if (user.value?.role === 'customer') {
+    return 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'
+  }
+  // Admin and Trainer see 5 cards
+  return 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6'
+})
 
 onMounted(async () => {
   try {
