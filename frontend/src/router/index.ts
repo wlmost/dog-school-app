@@ -62,6 +62,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/invoices/InvoicesView.vue'),
         meta: { title: 'Rechnungen' }
       },
+      {
+        path: 'settings',
+        name: 'Settings',
+        component: () => import('@/views/SettingsView.vue'),
+        meta: { title: 'Systemeinstellungen', requiresAdmin: true }
+      },
     ]
   },
   {
