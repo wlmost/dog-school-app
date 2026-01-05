@@ -27,7 +27,7 @@
         <li>Melden Sie sich mit Ihren Zugangsdaten an</li>
         <li>Ändern Sie Ihr Passwort</li>
         <li>Vervollständigen Sie Ihr Profil</li>
-        @if($user->hasRole('customer'))
+        @if($user->role === 'customer')
         <li>Registrieren Sie Ihre Hunde</li>
         <li>Buchen Sie Ihren ersten Kurs</li>
         @endif
