@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace App\Mail;
 
 use App\Models\Booking;
+use App\Models\Setting;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 
 class BookingConfirmation extends Mailable
 {
@@ -30,10 +32,16 @@ class BookingConfirmation extends Mailable
      */
     public function envelope(): Envelope
     {
+        $settings = Cache::remember('email_settings', 3600, function () {
+            return Setting::whereIn('key', ['company_email', 'company_name'])
+                ->pluck('value', 'key')
+                ->toArray();
+        });
+
         return new Envelope(
             from: new Address(
-                env('MAIL_FROM_ADDRESS', 'info@hundeschule-mustermann.de'),
-                env('MAIL_FROM_NAME', 'Hundeschule Mustermann')
+                $settings['company_email'] ?? env('MAIL_FROM_ADDRESS', 'info@hundeschule.de'),
+                $settings['company_name'] ?? env('MAIL_FROM_NAME', 'Hundeschule')
             ),
             subject: 'Buchungsbestätigung - ' . $this->booking->trainingSession->course->name,
         );
@@ -44,8 +52,13 @@ class BookingConfirmation extends Mailable
      */
     public function content(): Content
     {
+        $settings = Cache::remember('all_settings', 3600, function () {
+            return Setting::pluck('value', 'key')->toArray();
+        });
+
         return new Content(
             view: 'emails.booking-confirmation',
+            with: ['settings' => $settings]
         );
     }
 

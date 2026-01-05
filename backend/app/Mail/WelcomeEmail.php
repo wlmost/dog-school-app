@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
-use App\Models\Invoice;
+use App\Models\User;
 use App\Models\Setting;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -14,7 +14,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 
-class PaymentReminder extends Mailable
+class WelcomeEmail extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -22,7 +22,8 @@ class PaymentReminder extends Mailable
      * Create a new message instance.
      */
     public function __construct(
-        public Invoice $invoice
+        public User $user,
+        public string $temporaryPassword
     ) {
         //
     }
@@ -43,7 +44,7 @@ class PaymentReminder extends Mailable
                 $settings['company_email'] ?? env('MAIL_FROM_ADDRESS', 'info@hundeschule.de'),
                 $settings['company_name'] ?? env('MAIL_FROM_NAME', 'Hundeschule')
             ),
-            subject: 'Zahlungserinnerung - Rechnung ' . $this->invoice->invoice_number,
+            subject: 'Willkommen - Ihr Zugang zur Hundeschul-Verwaltung',
         );
     }
 
@@ -57,7 +58,7 @@ class PaymentReminder extends Mailable
         });
 
         return new Content(
-            view: 'emails.payment-reminder',
+            view: 'emails.welcome',
             with: ['settings' => $settings]
         );
     }
