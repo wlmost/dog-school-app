@@ -3,14 +3,41 @@ import { useAuthStore } from '@/stores/auth'
 import type { RouteRecordRaw } from 'vue-router'
 
 const routes: RouteRecordRaw[] = [
+  // Public routes with PublicLayout
+  {
+    path: '/',
+    component: () => import('@/layouts/PublicLayout.vue'),
+    meta: { requiresAuth: false },
+    children: [
+      {
+        path: '',
+        name: 'Home',
+        component: () => import('@/views/HomeView.vue'),
+        meta: { title: 'Hundeschule HomoCanis - Professionelles Hundetraining' }
+      },
+      {
+        path: 'contact',
+        name: 'Contact',
+        component: () => import('@/views/ContactView.vue'),
+        meta: { title: 'Kontakt - Hundeschule HomoCanis' }
+      },
+      {
+        path: 'legal',
+        name: 'Legal',
+        component: () => import('@/views/LegalView.vue'),
+        meta: { title: 'Impressum - Hundeschule HomoCanis' }
+      }
+    ]
+  },
   {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/auth/LoginView.vue'),
     meta: { requiresAuth: false, title: 'Anmelden' }
   },
+  // Authenticated routes with DefaultLayout
   {
-    path: '/',
+    path: '/app',
     component: () => import('@/layouts/DefaultLayout.vue'),
     meta: { requiresAuth: true },
     children: [
@@ -88,7 +115,7 @@ router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
   
   // Set page title
-  document.title = to.meta.title as string || 'Hundeschule Management'
+  document.title = to.meta.title as string || 'Hundeschule HomoCanis'
 
   // Check if route requires authentication
   if (to.meta.requiresAuth !== false) {
@@ -102,7 +129,7 @@ router.beforeEach(async (to, _from, next) => {
     }
   }
 
-  // Redirect to dashboard if already logged in and trying to access login
+  // Redirect logged-in users trying to access login page to dashboard
   if (to.name === 'Login' && authStore.isAuthenticated) {
     return next({ name: 'Dashboard' })
   }
