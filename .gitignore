@@ -1,25 +1,57 @@
-# CakePHP 3
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 
-/vendor/*
-/config/app.php
+# OS
+.DS_Store
+Thumbs.db
 
-/tmp/cache/models/*
-!/tmp/cache/models/empty
-/tmp/cache/persistent/*
-!/tmp/cache/persistent/empty
-/tmp/cache/views/*
-!/tmp/cache/views/empty
-/tmp/sessions/*
-!/tmp/sessions/empty
-/tmp/tests/*
-!/tmp/tests/empty
+# Environment files
+.env
+.env.local
+.env.*.local
+# Keep production template
+!backend/.env.production
 
-/logs/*
-!/logs/empty
+# Logs
+*.log
+logs/
+docker/nginx/logs/
 
-# CakePHP 2
+# Dependencies
+node_modules/
+vendor/
 
-/app/tmp/*
-/app/Config/core.php
-/app/Config/database.php
-/vendors/*
+# Build outputs
+dist/
+build/
+
+# Docker volumes
+postgres_data/
+redis_data/
+
+# Testing
+coverage/
+.phpunit.result.cache
+
+# Laravel specific
+backend/storage/*.key
+backend/.env
+backend/.env.backup
+backend/storage/framework/cache/*
+backend/storage/framework/sessions/*
+backend/storage/framework/views/*
+backend/storage/logs/*
+
+# Frontend specific
+frontend/.env
+frontend/.env.local
+frontend/dist/
+# Keep production htaccess template
+!frontend/dist/.htaccess
+
+# Package locks (keep composer.lock, remove package-lock if using yarn)
+package-lock.json
