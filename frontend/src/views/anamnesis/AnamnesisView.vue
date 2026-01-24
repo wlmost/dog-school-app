@@ -190,8 +190,9 @@
 
     <!-- Template Form Modal -->
     <AnamnesisTemplateFormModal
-      v-model="showTemplateModal"
+      :is-open="showTemplateModal"
       :template="selectedTemplate"
+      @close="showTemplateModal = false"
       @saved="handleTemplateSaved"
     />
   </div>

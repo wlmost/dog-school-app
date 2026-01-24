@@ -7,7 +7,7 @@
           Kontakt
         </h1>
         <p class="text-lg text-gray-600 dark:text-gray-300">
-          Haben Sie Fragen oder möchten Sie einen Termin vereinbaren? Wir freuen uns auf Ihre Nachricht!
+          Haben Sie Fragen oder möchten Sie einen Termin vereinbaren? Ich freue mich auf Ihre Nachricht!
         </p>
       </div>
 
@@ -31,8 +31,8 @@
                 <h3 class="text-lg font-medium text-gray-900 dark:text-white">Adresse</h3>
                 <p class="mt-1 text-gray-600 dark:text-gray-300">
                   Hundeschule HomoCanis<br>
-                  Musterstraße 123<br>
-                  12345 Musterstadt
+                  Alberichstr. 14<br>
+                  68199 Mannheim
                 </p>
               </div>
             </div>
@@ -47,8 +47,8 @@
               <div class="ml-4">
                 <h3 class="text-lg font-medium text-gray-900 dark:text-white">Telefon</h3>
                 <p class="mt-1 text-gray-600 dark:text-gray-300">
-                  <a href="tel:+49123456789" class="hover:text-primary-600 dark:hover:text-primary-400">
-                    +49 123 456789
+                  <a href="tel:+4917683099621" class="hover:text-primary-600 dark:hover:text-primary-400">
+                    +49 176 83099621
                   </a>
                 </p>
               </div>

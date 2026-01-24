@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\DatabaseHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCourseRequest;
 use App\Http\Requests\UpdateCourseRequest;
@@ -75,8 +76,8 @@ class CourseController extends Controller
         if ($request->has('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('description', 'ilike', "%{$search}%");
+                $q->where('name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
+                  ->orWhere('description', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
             });
         }
 

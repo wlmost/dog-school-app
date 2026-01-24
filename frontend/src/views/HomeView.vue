@@ -33,7 +33,7 @@
             Unsere Leistungen
           </h2>
           <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-            Wir bieten ein umfassendes Angebot für die Ausbildung Ihres Hundes und die Stärkung Ihrer Bindung
+            Ich biete ein umfassendes Angebot für die Ausbildung Ihres Hundes und die Stärkung Ihrer Bindung
           </p>
         </div>
 
@@ -125,19 +125,19 @@
         <div class="lg:grid lg:grid-cols-2 lg:gap-12 items-center">
           <div>
             <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-6">
-              Über Uns
+              Über die Hundeschule
             </h2>
             <p class="text-lg text-gray-600 dark:text-gray-300 mb-4">
               Die Hundeschule HomoCanis steht für professionelles, modernes Hundetraining auf wissenschaftlicher Basis. 
               Wir arbeiten mit positiver Verstärkung und legen großen Wert auf eine respektvolle Kommunikation zwischen Mensch und Hund.
             </p>
             <p class="text-lg text-gray-600 dark:text-gray-300 mb-4">
-              Unser Team besteht aus erfahrenen, zertifizierten Hundetrainern, die sich kontinuierlich weiterbilden 
-              und auf dem neuesten Stand der Verhaltensforschung bleiben.
+              Das Team besteht aus einem erfahrenen, zertifizierten Hundetrainer, der sich kontinuierlich weiterbildet 
+              und auf dem neuesten Stand der Verhaltensforschung bleibt.
             </p>
             <p class="text-lg text-gray-600 dark:text-gray-300">
-              Mit unserem modernen Online-Verwaltungssystem können Sie ganz einfach Termine buchen, 
-              den Trainingsfortschritt Ihres Hundes verfolgen und direkt mit uns kommunizieren.
+              Mit dem modernen Online-Verwaltungssystem können Sie ganz einfach Termine buchen, 
+              den Trainingsfortschritt Ihres Hundes verfolgen und direkt mit mir kommunizieren.
             </p>
           </div>
           <div class="mt-8 lg:mt-0">

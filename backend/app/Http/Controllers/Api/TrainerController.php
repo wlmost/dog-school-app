@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\DatabaseHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
 use App\Models\User;
@@ -26,9 +27,9 @@ class TrainerController extends Controller
         if ($request->has('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'ILIKE', "%{$search}%")
-                  ->orWhere('last_name', 'ILIKE', "%{$search}%")
-                  ->orWhere('email', 'ILIKE', "%{$search}%");
+                $q->where('first_name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
+                  ->orWhere('last_name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
+                  ->orWhere('email', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
             });
         }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\DatabaseHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCreditPackageRequest;
 use App\Http\Requests\UpdateCreditPackageRequest;
@@ -35,7 +36,7 @@ class CreditPackageController extends Controller
 
         // Search by name
         if ($request->has('search')) {
-            $query->where('name', 'ilike', '%' . $request->input('search') . '%');
+            $query->where('name', DatabaseHelper::caseInsensitiveLike(), '%' . $request->input('search') . '%');
         }
 
         // Filter by minimum credits

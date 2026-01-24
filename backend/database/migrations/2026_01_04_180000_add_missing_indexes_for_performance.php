@@ -85,13 +85,32 @@ return new class extends Migration
      */
     private function indexExists(string $table, string $index): bool
     {
-        $indexes = \DB::select("
-            SELECT indexname 
-            FROM pg_indexes 
-            WHERE tablename = ? AND indexname = ?
-        ", [$table, $index]);
+        $driver = Schema::getConnection()->getDriverName();
         
-        return count($indexes) > 0;
+        if ($driver === 'pgsql') {
+            $indexes = \DB::select("
+                SELECT indexname 
+                FROM pg_indexes 
+                WHERE tablename = ? AND indexname = ?
+            ", [$table, $index]);
+            
+            return count($indexes) > 0;
+        } elseif ($driver === 'sqlite') {
+            // SQLite: Use pragma to check for index
+            $indexes = \DB::select("SELECT name FROM sqlite_master WHERE type = 'index' AND name = ?", [$index]);
+            return count($indexes) > 0;
+        }
+        
+        // For MySQL and other databases, try to get indexes from Schema
+        try {
+            $conn = Schema::getConnection();
+            $doctrineSchemaManager = $conn->getDoctrineSchemaManager();
+            $indexes = $doctrineSchemaManager->listTableIndexes($table);
+            return isset($indexes[$index]);
+        } catch (\Exception $e) {
+            // If we can't check, assume it doesn't exist to allow creation
+            return false;
+        }
     }
 
     /**

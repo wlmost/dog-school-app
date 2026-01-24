@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\DatabaseHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Requests\UpdateBookingRequest;
@@ -89,14 +90,14 @@ class BookingController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->whereHas('customer.user', function ($q) use ($search) {
-                    $q->where('first_name', 'ILIKE', "%{$search}%")
-                      ->orWhere('last_name', 'ILIKE', "%{$search}%");
+                    $q->where('first_name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
+                      ->orWhere('last_name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
                 })
                 ->orWhereHas('dog', function ($q) use ($search) {
-                    $q->where('name', 'ILIKE', "%{$search}%");
+                    $q->where('name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
                 })
                 ->orWhereHas('trainingSession.course', function ($q) use ($search) {
-                    $q->where('name', 'ILIKE', "%{$search}%");
+                    $q->where('name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
                 });
             });
         }

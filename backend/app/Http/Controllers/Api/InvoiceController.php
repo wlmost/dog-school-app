@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\DatabaseHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
@@ -90,10 +91,10 @@ class InvoiceController extends Controller
         if ($request->has('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                $q->where('invoice_number', 'ILIKE', "%{$search}%")
+                $q->where('invoice_number', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
                   ->orWhereHas('customer.user', function ($q) use ($search) {
-                      $q->where('first_name', 'ILIKE', "%{$search}%")
-                        ->orWhere('last_name', 'ILIKE', "%{$search}%");
+                      $q->where('first_name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
+                        ->orWhere('last_name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
                   });
             });
         }

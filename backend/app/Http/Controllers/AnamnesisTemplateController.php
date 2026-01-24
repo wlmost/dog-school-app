@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Helpers\DatabaseHelper;
 use App\Http\Requests\StoreAnamnesisTemplateRequest;
 use App\Http\Requests\UpdateAnamnesisTemplateRequest;
 use App\Http\Resources\AnamnesisTemplateResource;
@@ -51,7 +52,7 @@ class AnamnesisTemplateController extends Controller
 
         // Search by name
         if ($request->has('search')) {
-            $query->where('name', 'ilike', '%' . $request->input('search') . '%');
+            $query->where('name', DatabaseHelper::caseInsensitiveLike(), '%' . $request->input('search') . '%');
         }
 
         // Order by name by default

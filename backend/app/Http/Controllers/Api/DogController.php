@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\DatabaseHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreDogRequest;
 use App\Http\Requests\UpdateDogRequest;
@@ -67,9 +68,9 @@ class DogController extends Controller
         if ($request->has('search')) {
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
-                $q->where('name', 'ilike', "%{$search}%")
-                  ->orWhere('breed', 'ilike', "%{$search}%")
-                  ->orWhere('chip_number', 'ilike', "%{$search}%");
+                $q->where('name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
+                  ->orWhere('breed', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
+                  ->orWhere('chip_number', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
             });
         }
 
@@ -80,7 +81,7 @@ class DogController extends Controller
 
         // Filter by breed
         if ($request->has('breed')) {
-            $query->where('breed', 'ilike', "%{$request->input('breed')}%");
+            $query->where('breed', DatabaseHelper::caseInsensitiveLike(), "%{$request->input('breed')}%");
         }
 
         return DogResource::collection(

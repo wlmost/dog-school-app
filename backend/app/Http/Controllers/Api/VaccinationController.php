@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Helpers\DatabaseHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreVaccinationRequest;
 use App\Http\Requests\UpdateVaccinationRequest;
@@ -40,7 +41,7 @@ class VaccinationController extends Controller
 
         // Filter by vaccination type
         if ($request->has('vaccinationType')) {
-            $query->where('vaccination_type', 'ilike', '%' . $request->input('vaccinationType') . '%');
+            $query->where('vaccination_type', DatabaseHelper::caseInsensitiveLike(), '%' . $request->input('vaccinationType') . '%');
         }
 
         // Filter vaccinations due soon (within 30 days)

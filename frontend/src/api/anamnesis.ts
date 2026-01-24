@@ -97,6 +97,58 @@ export const anamnesisTemplatesApi = {
 
   async delete(id: number) {
     await apiClient.delete(`/api/v1/anamnesis-templates/${id}`)
+  },
+
+  async createTemplate(data: {
+    name: string
+    description: string | null
+    isDefault: boolean
+    questions: Array<{
+      questionText: string
+      questionType: string
+      isRequired: boolean
+      options: string[] | null
+      order: number
+    }>
+  }) {
+    const response = await apiClient.post<{ data: AnamnesisTemplate }>('/api/v1/anamnesis-templates', data)
+    return response.data.data
+  },
+
+  async updateTemplate(id: number, data: {
+    name?: string
+    description?: string | null
+    questions?: Array<{
+      questionText: string
+      questionType: string
+      isRequired: boolean
+      options: string[] | null
+      order: number
+    }>
+  }) {
+    const response = await apiClient.put<{ data: AnamnesisTemplate }>(`/api/v1/anamnesis-templates/${id}`, data)
+    return response.data.data
+  },
+
+  async duplicate(id: number) {
+    const template = await apiClient.get<{ data: AnamnesisTemplate & { questions?: AnamnesisQuestion[] } }>(`/api/v1/anamnesis-templates/${id}`)
+    const questions = await apiClient.get<{ data: AnamnesisQuestion[] }>(`/api/v1/anamnesis-templates/${id}/questions`)
+    
+    const newTemplate = {
+      name: `${template.data.data.name} (Kopie)`,
+      description: template.data.data.description,
+      isDefault: false,
+      questions: questions.data.data.map((q, index) => ({
+        questionText: q.questionText,
+        questionType: q.questionType,
+        isRequired: q.isRequired,
+        options: q.options,
+        order: index
+      }))
+    }
+    
+    const response = await apiClient.post<{ data: AnamnesisTemplate }>('/api/v1/anamnesis-templates', newTemplate)
+    return response.data.data
   }
 }
 

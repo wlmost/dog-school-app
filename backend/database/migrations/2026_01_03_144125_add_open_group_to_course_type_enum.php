@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -10,11 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Drop old check constraint
-        DB::statement("ALTER TABLE courses DROP CONSTRAINT IF EXISTS courses_course_type_check");
+        $driver = Schema::getConnection()->getDriverName();
         
-        // Add new check constraint with 'open_group'
-        DB::statement("ALTER TABLE courses ADD CONSTRAINT courses_course_type_check CHECK (course_type IN ('group', 'individual', 'workshop', 'open_group'))");
+        if ($driver === 'pgsql') {
+            // PostgreSQL: Drop old check constraint and add new one
+            DB::statement("ALTER TABLE courses DROP CONSTRAINT IF EXISTS courses_course_type_check");
+            DB::statement("ALTER TABLE courses ADD CONSTRAINT courses_course_type_check CHECK (course_type IN ('group', 'individual', 'workshop', 'open_group'))");
+        } elseif ($driver === 'sqlite') {
+            // SQLite: Cannot alter constraints directly, would need table recreation
+            // Since SQLite doesn't enforce CHECK constraints strictly in older versions,
+            // and the original migration already has the column, we can skip this
+            // The constraint will be enforced at the application level
+        }
     }
 
     /**
@@ -22,7 +30,14 @@ return new class extends Migration
      */
     public function down(): void
     {
-        // Note: PostgreSQL doesn't support removing enum values easily
-        // You would need to recreate the enum type
+        $driver = Schema::getConnection()->getDriverName();
+        
+        if ($driver === 'pgsql') {
+            // PostgreSQL: Remove the constraint with 'open_group' and restore original
+            DB::statement("ALTER TABLE courses DROP CONSTRAINT IF EXISTS courses_course_type_check");
+            DB::statement("ALTER TABLE courses ADD CONSTRAINT courses_course_type_check CHECK (course_type IN ('group', 'individual', 'workshop'))");
+        } elseif ($driver === 'sqlite') {
+            // SQLite: No action needed
+        }
     }
 };
