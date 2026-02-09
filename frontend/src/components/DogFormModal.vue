@@ -56,7 +56,12 @@
                 <div class="grid grid-cols-3 gap-4">
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Geburtsdatum</label>
-                    <input v-model="form.date_of_birth" type="date" class="input" />
+                    <input 
+                      v-model="form.date_of_birth" 
+                      type="date" 
+                      class="input" 
+                      @click="$event.target.showPicker?.()" 
+                    />
                   </div>
 
                   <div>
@@ -95,7 +100,7 @@
 
                   <div>
                     <label class="flex items-center">
-                      <input v-model="form.is_neutered" type="checkbox" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
+                      <input v-model="form.neutered" type="checkbox" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
                       <span class="ml-2 text-sm text-gray-700">Kastriert/Sterilisiert</span>
                     </label>
                   </div>
@@ -131,9 +136,31 @@
 </template>
 
 <script setup lang="ts">
+/**
+ * DogFormModal Component
+ * 
+ * Modal dialog for creating and editing dog records.
+ * 
+ * Features:
+ * - Dual-mode operation: create new dog or edit existing
+ * - Inline error display with German translation of validation messages
+ * - Toast notifications for successful operations
+ * - Automatic customer dropdown population
+ * - Smart form state management preserving errors during validation failures
+ * 
+ * Error Handling:
+ * - Displays inline errors that persist until next submission attempt
+ * - Translates backend English validation messages to German
+ * - Shows toast notifications for both success and errors
+ * - Clears errors when modal reopens fresh
+ * 
+ * @emits close - Emitted when modal should close
+ * @emits saved - Emitted after successful dog creation/update
+ */
 import { ref, watch, onMounted } from 'vue'
 import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 import apiClient from '@/api/client'
+import { handleApiError, showSuccess } from '@/utils/errorHandler'
 
 const props = defineProps<{
   isOpen: boolean
@@ -146,6 +173,7 @@ const emit = defineEmits<{
 }>()
 
 const loading = ref(false)
+const error = ref<string | null>(null)
 const customers = ref<any[]>([])
 
 const form = ref({
@@ -158,7 +186,7 @@ const form = ref({
   chip_number: '',
   color: '',
   special_characteristics: '',
-  is_neutered: false,
+  neutered: false,
   notes: ''
 })
 
@@ -166,6 +194,11 @@ onMounted(() => {
   loadCustomers()
 })
 
+/**
+ * Watch for changes to the dog prop to populate the form.
+ * Important: Only reset form when modal is closing (!props.isOpen),
+ * not when dog is cleared while modal is still open (would lose validation state).
+ */
 watch(() => props.dog, (newDog) => {
   if (newDog) {
     form.value = {
@@ -178,20 +211,30 @@ watch(() => props.dog, (newDog) => {
       chip_number: newDog.chipNumber || '',
       color: newDog.color || '',
       special_characteristics: newDog.specialCharacteristics || '',
-      is_neutered: newDog.isNeutered || false,
+      neutered: newDog.neutered ?? false, // Use nullish coalescing to preserve false value
       notes: newDog.notes || ''
     }
-  } else {
+  } else if (!props.isOpen) {
     resetForm()
   }
 }, { immediate: true })
+
+/**
+ * Clear error message when modal reopens.
+ * This ensures users don't see stale errors from previous submissions.
+ */
+watch(() => props.isOpen, (isOpen) => {
+  if (isOpen) {
+    error.value = null
+  }
+})
 
 async function loadCustomers() {
   try {
     const response = await apiClient.get('/api/v1/customers')
     customers.value = response.data.data
-  } catch (err) {
-    console.error('Error loading customers:', err)
+  } catch (err: any) {
+    handleApiError(err, 'Fehler beim Laden der Besitzer')
   }
 }
 
@@ -206,9 +249,42 @@ function resetForm() {
     chip_number: '',
     color: '',
     special_characteristics: '',
-    is_neutered: false,
+    neutered: false,
     notes: ''
   }
+  error.value = null
+}
+
+/**
+ * Translate common English validation errors from backend to German.
+ * Backend validation messages are in English, but users expect German.
+ * Falls back to original message if no translation is found.
+ */
+function translateError(errorMessage: string): string {
+  const translations: Record<string, string> = {
+    'The gender field is required': 'Das Geschlecht ist erforderlich',
+    'The name field is required': 'Der Name ist erforderlich',
+    'The breed field is required': 'Die Rasse ist erforderlich',
+    'The customer id field is required': 'Der Besitzer ist erforderlich',
+    'The date of birth field is required': 'Das Geburtsdatum ist erforderlich',
+    'The date of birth must be a date before today': 'Das Geburtsdatum muss in der Vergangenheit liegen',
+    'The gender field must be male or female': 'Das Geschlecht muss Rüde oder Hündin sein',
+    'The chip number has already been taken': 'Diese Chipnummer wird bereits verwendet'
+  }
+  
+  // Check for exact match
+  if (translations[errorMessage]) {
+    return translations[errorMessage]
+  }
+  
+  // Check for partial matches
+  for (const [english, german] of Object.entries(translations)) {
+    if (errorMessage.includes(english)) {
+      return german
+    }
+  }
+  
+  return errorMessage
 }
 
 async function handleSubmit() {
@@ -226,7 +302,7 @@ async function handleSubmit() {
       chipNumber: form.value.chip_number || null,
       color: form.value.color || null,
       specialCharacteristics: form.value.special_characteristics || null,
-      isNeutered: form.value.is_neutered,
+      neutered: form.value.neutered,
       notes: form.value.notes || null
     }
 
@@ -240,16 +316,36 @@ async function handleSubmit() {
 
     emit('saved')
     closeModal()
-  } catch (err) {
-    handleApiError(err, 'Fehler beim Speichern des Hundes')
+  } catch (err: any) {
+    let errorMessage = err.response?.data?.message || 'Fehler beim Speichern des Hundes'
+    
+    // Extract first validation error if available
+    if (err.response?.data?.errors) {
+      const firstError = Object.values(err.response.data.errors)[0]?.[0]
+      if (firstError) {
+        errorMessage = firstError as string
+      }
+    }
+    
+    // Translate to German
+    errorMessage = translateError(errorMessage)
+    
+    error.value = errorMessage
+    handleApiError(err, errorMessage)
   } finally {
     loading.value = false
   }
 }
 
+/**
+ * Close modal and optionally reset form.
+ * Preserves error state if validation failed - allows user to see/fix errors.
+ * Only resets form if there's no error (successful save or cancel).
+ */
 function closeModal() {
-  resetForm()
-  error.value = null
+  if (!error.value) {
+    resetForm()
+  }
   emit('close')
 }
 </script>

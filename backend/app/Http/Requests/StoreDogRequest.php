@@ -41,6 +41,7 @@ class StoreDogRequest extends FormRequest
             'color' => ['nullable', 'string', 'max:100'],
             'specialNeeds' => ['nullable', 'string', 'max:1000'],
             'veterinarian' => ['nullable', 'string', 'max:255'],
+            'neutered' => ['nullable', 'boolean'],
             'isActive' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string'],
         ];
