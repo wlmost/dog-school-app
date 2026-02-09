@@ -78,6 +78,21 @@
         .info-box strong {
             color: #667eea;
         }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            padding: 8px 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #374151;
+            min-width: 150px;
+        }
         .warning-box {
             background-color: #fff3cd;
             border-left: 4px solid #ffc107;

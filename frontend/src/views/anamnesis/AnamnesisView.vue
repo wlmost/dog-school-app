@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <!-- Header -->
     <div class="flex justify-between items-center">
-      <h1 class="text-2xl font-bold text-gray-900">Anamnese-Verwaltung</h1>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Anamnese-Verwaltung</h1>
     </div>
 
     <!-- Header Actions -->
@@ -42,7 +42,7 @@
               <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
             </tr>
           </thead>
-          <tbody class="bg-white divide-y divide-gray-200">
+          <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             <tr v-if="loadingResponses">
               <td colspan="6" class="px-6 py-12 text-center text-gray-500">
                 <svg class="animate-spin h-8 w-8 text-primary-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -57,15 +57,15 @@
                 Keine Anamnese-Bögen gefunden
               </td>
             </tr>
-            <tr v-else v-for="response in responses" :key="response.id" class="hover:bg-gray-50">
+            <tr v-else v-for="response in responses" :key="response.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ response.dogName }}</div>
+                <div class="text-sm font-medium text-gray-900 dark:text-white">{{ response.dogName }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-600">{{ response.customerName }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ response.templateName }}</div>
+                <div class="text-sm text-gray-900 dark:text-white">{{ response.templateName }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-600">{{ formatDate(response.createdAt) }}</div>

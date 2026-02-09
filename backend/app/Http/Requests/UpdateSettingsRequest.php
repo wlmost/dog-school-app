@@ -40,6 +40,7 @@ class UpdateSettingsRequest extends FormRequest
             'company_website' => ['sometimes', 'nullable', 'url', 'max:255'],
             'company_tax_id' => ['sometimes', 'nullable', 'string', 'max:50'],
             'company_registration_number' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'company_small_business' => ['sometimes', 'nullable', 'in:true,false,1,0'],
             'company_logo' => ['sometimes', 'nullable', 'image', 'max:2048', 'mimes:png,jpg,jpeg,svg'],
             'company_favicon' => ['sometimes', 'nullable', 'image', 'max:512', 'mimes:png,ico'],
 
@@ -75,6 +76,7 @@ class UpdateSettingsRequest extends FormRequest
             'company_website' => 'Webseite',
             'company_tax_id' => 'Steuernummer',
             'company_registration_number' => 'Handelsregisternummer',
+            'company_small_business' => 'Kleinunternehmerregelung',
             'company_logo' => 'Logo',
             'company_favicon' => 'Favicon',
             'email_from_address' => 'Absender E-Mail',

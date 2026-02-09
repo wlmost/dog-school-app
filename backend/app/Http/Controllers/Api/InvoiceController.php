@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\InvoiceWasCreated;
 use App\Helpers\DatabaseHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
 use App\Http\Resources\InvoiceResource;
-use App\Mail\InvoiceCreated;
 use App\Models\Invoice;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -17,7 +17,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Mail;
 
 /**
  * Invoice Controller
@@ -117,10 +116,14 @@ class InvoiceController extends Controller
 
         $invoice = Invoice::create($request->validatedSnakeCase());
 
+        // Check if small business regulation applies (no VAT)
+        $isSmallBusiness = \App\Models\Setting::get('company_small_business', false);
+        $defaultTaxRate = $isSmallBusiness ? 0 : 19;
+
         // Create invoice items if provided
         if ($request->has('items')) {
             foreach ($request->input('items') as $item) {
-                $taxRate = $item['taxRate'] ?? 19; // Default 19% MwSt
+                $taxRate = $item['taxRate'] ?? $defaultTaxRate;
                 $unitPrice = $item['unitPrice'];
                 $quantity = $item['quantity'];
                 $amount = $unitPrice * $quantity;
@@ -137,9 +140,8 @@ class InvoiceController extends Controller
 
         $invoice->load(['customer.user', 'items', 'payments']);
 
-        // Send invoice email
-        Mail::to($invoice->customer->user->email)
-            ->queue(new InvoiceCreated($invoice));
+        // Dispatch event to send invoice email
+        InvoiceWasCreated::dispatch($invoice);
 
         return new InvoiceResource($invoice);
     }

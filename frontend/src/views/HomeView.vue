@@ -2,8 +2,8 @@
   <div>
     <!-- Hero Section -->
     <section 
-      class="relative bg-gradient-to-br from-primary-600 to-primary-800 text-white py-20 md:py-32"
-      style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.95), rgba(99, 102, 241, 0.9)), url('https://ausbildungszentrum.homocanis.de/wp-content/uploads/2020/09/pet-01.jpg'); background-size: cover; background-position: center;"
+      class="relative text-white py-20 md:py-32"
+      :style="heroStyle"
     >
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center">
@@ -14,10 +14,10 @@
             Professionelles Hundetraining mit Herz und Verstand – für eine harmonische Mensch-Hund-Beziehung
           </p>
           <div class="flex flex-col sm:flex-row gap-4 justify-center">
-            <RouterLink to="/contact" class="btn bg-white text-primary-700 hover:bg-gray-100 px-8 py-3 text-lg font-semibold">
+            <RouterLink to="/contact" class="btn text-white hover:opacity-90 px-8 py-3 text-lg font-semibold" style="background-color: #abb8c3;">
               Kontakt aufnehmen
             </RouterLink>
-            <RouterLink to="/login" class="btn bg-primary-800 hover:bg-primary-900 text-white border-2 border-white px-8 py-3 text-lg font-semibold">
+            <RouterLink to="/login" class="btn text-white hover:opacity-90 border-2 border-white px-8 py-3 text-lg font-semibold" style="background-color: #d29f68;">
               Zum Login
             </RouterLink>
           </div>
@@ -41,7 +41,7 @@
           <!-- Feature 1 -->
           <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 hover:shadow-lg transition-shadow">
             <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center mb-4">
-              <span class="text-2xl">🐕</span>
+              <AcademicCapIcon class="w-6 h-6 text-primary-600 dark:text-primary-400" />
             </div>
             <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               Welpenkurse
@@ -54,7 +54,7 @@
           <!-- Feature 2 -->
           <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 hover:shadow-lg transition-shadow">
             <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center mb-4">
-              <span class="text-2xl">📚</span>
+              <BookOpenIcon class="w-6 h-6 text-primary-600 dark:text-primary-400" />
             </div>
             <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               Grundausbildung
@@ -67,7 +67,7 @@
           <!-- Feature 3 -->
           <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 hover:shadow-lg transition-shadow">
             <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center mb-4">
-              <span class="text-2xl">🎯</span>
+              <ChatBubbleLeftRightIcon class="w-6 h-6 text-primary-600 dark:text-primary-400" />
             </div>
             <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               Verhaltensberatung
@@ -80,7 +80,7 @@
           <!-- Feature 4 -->
           <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 hover:shadow-lg transition-shadow">
             <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center mb-4">
-              <span class="text-2xl">🏃</span>
+              <UserIcon class="w-6 h-6 text-primary-600 dark:text-primary-400" />
             </div>
             <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               Einzeltraining
@@ -93,7 +93,7 @@
           <!-- Feature 5 -->
           <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 hover:shadow-lg transition-shadow">
             <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center mb-4">
-              <span class="text-2xl">👥</span>
+              <UserGroupIcon class="w-6 h-6 text-primary-600 dark:text-primary-400" />
             </div>
             <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               Gruppenkurse
@@ -106,7 +106,7 @@
           <!-- Feature 6 -->
           <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 hover:shadow-lg transition-shadow">
             <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center mb-4">
-              <span class="text-2xl">📱</span>
+              <DevicePhoneMobileIcon class="w-6 h-6 text-primary-600 dark:text-primary-400" />
             </div>
             <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               Online-Buchung
@@ -152,7 +152,7 @@
     </section>
 
     <!-- CTA Section -->
-    <section class="py-16 bg-primary-600 dark:bg-primary-700 text-white">
+    <section class="py-16 text-white" style="background-color: rgb(3, 15, 18);">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h2 class="text-3xl md:text-4xl font-bold mb-6">
           Bereit für den ersten Schritt?
@@ -161,7 +161,7 @@
           Nehmen Sie Kontakt mit uns auf und lassen Sie uns gemeinsam an einer harmonischen Beziehung zu Ihrem Hund arbeiten
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <RouterLink to="/contact" class="btn bg-white text-primary-700 hover:bg-gray-100 px-8 py-3 text-lg font-semibold">
+          <RouterLink to="/contact" class="btn text-white hover:opacity-90 px-8 py-3 text-lg font-semibold" style="background-color: rgb(201, 150, 98);">
             Jetzt Kontakt aufnehmen
           </RouterLink>
         </div>
@@ -172,7 +172,22 @@
 
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
-import { onMounted } from 'vue'
+import { onMounted, computed } from 'vue'
+import { 
+  AcademicCapIcon, 
+  BookOpenIcon, 
+  ChatBubbleLeftRightIcon, 
+  UserIcon, 
+  UserGroupIcon, 
+  DevicePhoneMobileIcon 
+} from '@heroicons/vue/24/outline'
+import backgroundImage from '@/assets/pet-01-1280x664.jpg'
+
+const heroStyle = computed(() => ({
+  background: `url(${backgroundImage})`,
+  backgroundSize: 'cover',
+  backgroundPosition: 'center'
+}))
 
 // SEO Meta Tags
 onMounted(() => {

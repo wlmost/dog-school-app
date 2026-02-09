@@ -146,7 +146,7 @@
     </div>
 
     <!-- Table View -->
-    <div v-else-if="viewMode === 'table' && !loading" class="bg-white rounded-lg shadow overflow-hidden">
+    <div v-else-if="viewMode === 'table' && !loading" class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-50">
           <tr>
@@ -159,7 +159,7 @@
             <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
           </tr>
         </thead>
-        <tbody class="bg-white divide-y divide-gray-200">
+        <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
           <tr v-for="trainer in filteredTrainers" :key="trainer.id" class="hover:bg-gray-50">
             <td class="px-6 py-4 whitespace-nowrap">
               <div class="flex items-center">

@@ -95,6 +95,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/views/SettingsView.vue'),
         meta: { title: 'Systemeinstellungen', requiresAdmin: true }
       },
+      {
+        path: 'training-logs',
+        name: 'TrainingLogs',
+        component: () => import('@/views/training/TrainingLogsView.vue'),
+        meta: { title: 'Trainings-Dokumentation' }
+      },
     ]
   },
   {

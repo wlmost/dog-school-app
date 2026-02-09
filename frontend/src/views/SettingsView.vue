@@ -1,8 +1,8 @@
 <template>
   <div class="settings-view">
     <div class="mb-6">
-      <h1 class="text-3xl font-bold text-gray-900">Systemeinstellungen</h1>
-      <p class="mt-2 text-gray-600">
+      <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Systemeinstellungen</h1>
+      <p class="mt-2 text-gray-600 dark:text-gray-400">
         Verwalten Sie die Stammdaten und E-Mail-Konfiguration Ihrer Hundeschule.
       </p>
     </div>
@@ -20,7 +20,7 @@
     <!-- Settings Form -->
     <form v-else @submit.prevent="saveSettings" class="space-y-8">
       <!-- Company Settings -->
-      <div class="bg-white shadow rounded-lg overflow-hidden">
+      <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
           <h2 class="text-xl font-semibold text-gray-900">Stammdaten</h2>
         </div>
@@ -157,6 +157,26 @@
             </div>
           </div>
 
+          <!-- Small Business Regulation -->
+          <div class="flex items-start">
+            <div class="flex items-center h-5">
+              <input
+                id="company_small_business"
+                v-model="formData.company_small_business"
+                type="checkbox"
+                class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300 rounded"
+              />
+            </div>
+            <div class="ml-3 text-sm">
+              <label for="company_small_business" class="font-medium text-gray-700">
+                Kleinunternehmerregelung (§19 UStG)
+              </label>
+              <p class="text-gray-500">
+                Als Kleinunternehmer wird keine Umsatzsteuer ausgewiesen. Rechnungen enthalten keine Mehrwertsteuer.
+              </p>
+            </div>
+          </div>
+
           <!-- Logo Upload -->
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
@@ -198,7 +218,7 @@
       </div>
 
       <!-- Email Settings -->
-      <div class="bg-white shadow rounded-lg overflow-hidden">
+      <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden">
         <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
           <h2 class="text-xl font-semibold text-gray-900">E-Mail-Konfiguration</h2>
         </div>
@@ -329,13 +349,19 @@
         </div>
       </div>
 
+      <!-- Email Template Editor -->
+      <EmailTemplateEditor
+        v-model="formData"
+        :company-data="formData"
+      />
+
       <!-- Action Buttons -->
       <div class="flex justify-end space-x-3">
         <button
           type="button"
           @click="loadSettings"
           :disabled="saving"
-          class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Zurücksetzen
         </button>
@@ -362,6 +388,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import EmailTemplateEditor from '@/components/EmailTemplateEditor.vue'
 import { settingsApi, type Setting } from '@/api/settings'
 
 // Form data
@@ -377,12 +404,23 @@ const formData = ref({
   company_website: '',
   company_tax_id: '',
   company_registration_number: '',
+  company_small_business: false,
   company_logo: null as File | null,
   company_favicon: null as File | null,
   // Email
   email_from_address: '',
   email_from_name: '',
   email_driver: 'smtp',
+  // Email Templates
+  email_booking_subject: '',
+  email_booking_message: '',
+  email_invoice_subject: '',
+  email_invoice_message: '',
+  email_welcome_subject: '',
+  email_welcome_message: '',
+  email_reminder_subject: '',
+  email_reminder_message: '',
+  email_logo: null as File | string | null,
   // SMTP
   smtp_host: '',
   smtp_port: 587,
@@ -425,6 +463,10 @@ const loadSettings = async () => {
           } else if (setting.key === 'company_favicon') {
             faviconPreview.value = setting.value as string
           }
+        } else if (setting.type === 'boolean' || setting.key === 'company_small_business') {
+          // Handle boolean values
+          const value = setting.value
+          formData.value[setting.key as keyof typeof formData.value] = (value === true || value === 'true' || value === 1 || value === '1') as any
         } else {
           formData.value[setting.key as keyof typeof formData.value] = setting.value as any
         }
@@ -451,12 +493,17 @@ const saveSettings = async () => {
     const settings: Record<string, any> = {}
 
     Object.entries(formData.value).forEach(([key, value]) => {
-      // Skip null values and empty passwords
+      // Skip null values and empty passwords, but keep false booleans
       if (value === null || (key === 'smtp_password' && value === '')) {
         return
       }
 
-      settings[key] = value
+      // Ensure boolean values are sent correctly
+      if (typeof value === 'boolean') {
+        settings[key] = value
+      } else {
+        settings[key] = value
+      }
     })
 
     const response = await settingsApi.updateSettings(settings)

@@ -74,6 +74,25 @@
                     </button>
                   </div>
 
+                  <!-- Column Headers -->
+                  <div class="grid grid-cols-12 gap-2 mb-2">
+                    <div class="col-span-5">
+                      <label class="block text-xs font-medium text-gray-700">Beschreibung</label>
+                    </div>
+                    <div class="col-span-2">
+                      <label class="block text-xs font-medium text-gray-700">Menge</label>
+                    </div>
+                    <div class="col-span-2">
+                      <label class="block text-xs font-medium text-gray-700">Einzelpreis</label>
+                    </div>
+                    <div class="col-span-2">
+                      <label class="block text-xs font-medium text-gray-700">Gesamt</label>
+                    </div>
+                    <div class="col-span-1">
+                      <label class="block text-xs font-medium text-gray-700">&nbsp;</label>
+                    </div>
+                  </div>
+
                   <div v-for="(item, index) in form.items" :key="index" class="grid grid-cols-12 gap-2 mb-2">
                     <div class="col-span-5">
                       <input v-model="item.description" type="text" placeholder="Beschreibung" required class="input" />
@@ -99,12 +118,15 @@
                   <div class="mt-4 pt-4 border-t border-gray-200 flex justify-end">
                     <div class="text-right">
                       <div class="flex justify-between gap-8 mb-1">
-                        <span class="text-sm text-gray-600">Zwischensumme:</span>
+                        <span class="text-sm text-gray-600">{{ isSmallBusiness ? 'Gesamt (netto)' : 'Zwischensumme' }}:</span>
                         <span class="text-sm font-medium">{{ formatCurrency(calculateSubtotal()) }}</span>
                       </div>
-                      <div class="flex justify-between gap-8 mb-1">
+                      <div v-if="!isSmallBusiness" class="flex justify-between gap-8 mb-1">
                         <span class="text-sm text-gray-600">MwSt (19%):</span>
                         <span class="text-sm font-medium">{{ formatCurrency(calculateTax()) }}</span>
+                      </div>
+                      <div v-if="isSmallBusiness" class="text-xs text-gray-500 mb-1 italic">
+                        Gemäß §19 UStG wird keine Umsatzsteuer berechnet
                       </div>
                       <div class="flex justify-between gap-8 pt-2 border-t border-gray-200">
                         <span class="text-base font-medium">Gesamt:</span>
@@ -157,6 +179,7 @@ const emit = defineEmits<{
 
 const loading = ref(false)
 const customers = ref<any[]>([])
+const isSmallBusiness = ref(false)
 
 const form = ref({
   customer_id: '',
@@ -171,6 +194,7 @@ const form = ref({
 
 onMounted(() => {
   loadCustomers()
+  loadSettings()
 })
 
 watch(() => props.invoice, (newInvoice) => {
@@ -201,6 +225,31 @@ async function loadCustomers() {
   }
 }
 
+async function loadSettings() {
+  try {
+    const response = await apiClient.get('/api/v1/settings')
+    const allSettings = [
+      ...(response.data.data.company || []),
+      ...(response.data.data.email || []),
+      ...(response.data.data.general || []),
+    ]
+    const smallBusinessSetting = allSettings.find((s: any) => s.key === 'company_small_business')
+    
+    // Robuste Boolean-Konvertierung
+    if (smallBusinessSetting) {
+      const value = smallBusinessSetting.value
+      isSmallBusiness.value = value === true || value === 'true' || value === 1 || value === '1'
+      console.log('Kleinunternehmerregelung:', isSmallBusiness.value, 'Raw value:', value)
+    } else {
+      isSmallBusiness.value = false
+      console.log('Kleinunternehmerregelung: Keine Einstellung gefunden, Standard: false')
+    }
+  } catch (err) {
+    console.error('Error loading settings:', err)
+    isSmallBusiness.value = false
+  }
+}
+
 function addItem() {
   form.value.items.push({ description: '', quantity: 1, unit_price: 0 })
 }
@@ -218,6 +267,9 @@ function calculateSubtotal() {
 }
 
 function calculateTax() {
+  if (isSmallBusiness.value) {
+    return 0
+  }
   return calculateSubtotal() * 0.19
 }
 
@@ -246,7 +298,7 @@ async function handleSubmit() {
   try {
     const payload = {
       customerId: form.value.customer_id,
-      invoiceDate: form.value.invoice_date,
+      issueDate: form.value.invoice_date,
       dueDate: form.value.due_date,
       status: form.value.status,
       items: form.value.items.map(item => ({

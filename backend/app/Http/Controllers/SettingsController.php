@@ -55,6 +55,13 @@ class SettingsController extends Controller
                 $value = $path;
             }
 
+            // Convert boolean strings to actual booleans
+            if ($value === 'true' || $value === 'false') {
+                $value = $value === 'true';
+            } elseif (in_array($key, ['company_small_business']) && ($value === '1' || $value === '0')) {
+                $value = $value === '1';
+            }
+
             // Determine type and group based on key
             [$type, $group] = $this->determineTypeAndGroup($key, $value);
 
@@ -82,6 +89,7 @@ class SettingsController extends Controller
     {
         // Determine type
         $type = match (true) {
+            $key === 'company_small_business' => 'boolean',
             is_bool($value) => 'boolean',
             is_int($value) => 'integer',
             is_array($value) => 'json',

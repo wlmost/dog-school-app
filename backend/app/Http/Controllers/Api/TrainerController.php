@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\UserRegistered;
 use App\Helpers\DatabaseHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\UserResource;
@@ -57,11 +58,13 @@ class TrainerController extends Controller
             'specializations' => ['nullable', 'string'],
         ]);
 
+        $password = $validated['password'];
+        
         $trainer = User::create([
             'first_name' => $validated['firstName'],
             'last_name' => $validated['lastName'],
             'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
+            'password' => Hash::make($password),
             'phone' => $validated['phone'] ?? null,
             'street' => $validated['street'] ?? null,
             'postal_code' => $validated['postalCode'] ?? null,
@@ -71,6 +74,9 @@ class TrainerController extends Controller
             'specializations' => $validated['specializations'] ?? null,
             'role' => 'trainer',
         ]);
+
+        // Dispatch event to send welcome email with credentials
+        UserRegistered::dispatch($trainer, $password);
 
         return response()->json([
             'message' => 'Trainer erfolgreich erstellt',

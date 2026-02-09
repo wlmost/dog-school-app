@@ -102,12 +102,17 @@
                     </tbody>
                     <tfoot class="bg-gray-50">
                       <tr>
-                        <td colspan="3" class="px-4 py-2 text-sm text-right font-medium">Zwischensumme:</td>
+                        <td colspan="3" class="px-4 py-2 text-sm text-right font-medium">{{ isSmallBusiness ? 'Gesamt (netto)' : 'Zwischensumme' }}:</td>
                         <td class="px-4 py-2 text-sm text-right font-medium">{{ formatCurrency(invoice.subtotalAmount) }}</td>
                       </tr>
-                      <tr>
+                      <tr v-if="!isSmallBusiness">
                         <td colspan="3" class="px-4 py-2 text-sm text-right">MwSt (19%):</td>
                         <td class="px-4 py-2 text-sm text-right">{{ formatCurrency(invoice.taxAmount) }}</td>
+                      </tr>
+                      <tr v-if="isSmallBusiness">
+                        <td colspan="4" class="px-4 py-2 text-xs text-gray-500 text-right italic">
+                          Gemäß §19 UStG wird keine Umsatzsteuer berechnet
+                        </td>
                       </tr>
                       <tr class="border-t-2 border-gray-300">
                         <td colspan="3" class="px-4 py-3 text-base text-right font-bold">Gesamtbetrag:</td>
@@ -158,7 +163,9 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted } from 'vue'
 import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
+import apiClient from '@/api/client'
 
 defineProps<{
   isOpen: boolean
@@ -170,6 +177,35 @@ defineEmits<{
   download: [invoice: any]
   'mark-paid': [invoice: any]
 }>()
+
+const isSmallBusiness = ref(false)
+
+onMounted(() => {
+  loadSettings()
+})
+
+async function loadSettings() {
+  try {
+    const response = await apiClient.get('/api/v1/settings')
+    const allSettings = [
+      ...(response.data.data.company || []),
+      ...(response.data.data.email || []),
+      ...(response.data.data.general || []),
+    ]
+    const smallBusinessSetting = allSettings.find((s: any) => s.key === 'company_small_business')
+    
+    // Robuste Boolean-Konvertierung
+    if (smallBusinessSetting) {
+      const value = smallBusinessSetting.value
+      isSmallBusiness.value = value === true || value === 'true' || value === 1 || value === '1'
+    } else {
+      isSmallBusiness.value = false
+    }
+  } catch (err) {
+    console.error('Error loading settings:', err)
+    isSmallBusiness.value = false
+  }
+}
 
 function formatDate(date: string) {
   if (!date) return '-'

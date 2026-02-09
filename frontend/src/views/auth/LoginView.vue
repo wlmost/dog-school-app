@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-gray-100 dark:bg-gray-900" style="background: linear-gradient(rgba(255,255,255,0.7), rgba(255,255,255,0.8)), url('https://ausbildungszentrum.homocanis.de/wp-content/uploads/2020/09/pet-01.jpg'); background-size: cover; background-position: center;">
+  <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8" style="background: url('https://ausbildungszentrum.homocanis.de/wp-content/uploads/2020/09/pet-01.jpg'); background-size: cover; background-position: center;">
     <div class="max-w-md w-full">
       <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
         <!-- Logo & Title -->

@@ -4,19 +4,18 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\BookingCreated;
 use App\Helpers\DatabaseHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Requests\UpdateBookingRequest;
 use App\Http\Resources\BookingResource;
-use App\Mail\BookingConfirmation;
 use App\Models\Booking;
 use App\Models\TrainingSession;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\Mail;
 
 /**
  * Booking Controller
@@ -154,9 +153,8 @@ class BookingController extends Controller
         $booking = Booking::create($data);
         $booking->load(['trainingSession.course', 'customer.user', 'dog']);
 
-        // Send confirmation email
-        Mail::to($booking->customer->user->email)
-            ->queue(new BookingConfirmation($booking));
+        // Dispatch event to send confirmation email
+        BookingCreated::dispatch($booking);
 
         return new BookingResource($booking);
     }
@@ -226,9 +224,8 @@ class BookingController extends Controller
         $booking->update(['status' => 'confirmed']);
         $booking->load(['trainingSession.course', 'customer.user', 'dog']);
 
-        // Send confirmation email
-        Mail::to($booking->customer->user->email)
-            ->queue(new BookingConfirmation($booking));
+        // Dispatch event to send confirmation email
+        BookingCreated::dispatch($booking);
 
         return new BookingResource($booking->fresh(['trainingSession', 'customer.user', 'dog']));
     }

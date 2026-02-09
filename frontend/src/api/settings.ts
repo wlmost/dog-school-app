@@ -25,7 +25,7 @@ export const settingsApi = {
    * Get all settings
    */
   async getSettings() {
-    const response = await apiClient.get<SettingsResponse>('/settings')
+    const response = await apiClient.get<SettingsResponse>('/api/v1/settings')
     return response.data
   },
 
@@ -45,7 +45,7 @@ export const settingsApi = {
       }
     })
 
-    const response = await apiClient.put<SettingsResponse>('/settings', formData, {
+    const response = await apiClient.put<SettingsResponse>('/api/v1/settings', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

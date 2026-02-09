@@ -77,12 +77,20 @@ class TrainingAttachmentController extends Controller
         $mimeType = $file->getMimeType();
         $fileType = $this->getFileTypeFromMime($mimeType);
 
-        // Generate unique filename
+        // Generate unique filename with additional security
         $originalName = $file->getClientOriginalName();
         $extension = $file->getClientOriginalExtension();
+        
+        // Validate extension against allowed list
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'avi', 'pdf', 'doc', 'docx'];
+        if (!in_array(strtolower($extension), $allowedExtensions)) {
+            abort(422, 'Invalid file extension');
+        }
+        
         $filename = pathinfo($originalName, PATHINFO_FILENAME);
         $filename = preg_replace('/[^A-Za-z0-9_-]/', '_', $filename);
-        $uniqueFilename = $filename . '_' . time() . '.' . $extension;
+        $filename = substr($filename, 0, 100); // Limit filename length
+        $uniqueFilename = $filename . '_' . uniqid() . '_' . time() . '.' . strtolower($extension);
 
         // Store file
         $path = $file->storeAs(

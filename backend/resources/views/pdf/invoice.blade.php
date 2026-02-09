@@ -124,6 +124,10 @@
     </style>
 </head>
 <body>
+    @php
+        $isSmallBusiness = \App\Models\Setting::get('company_small_business', false);
+    @endphp
+    
     <!-- Company Header -->
     <div class="company-info">
         <h1>Hundeschule Max Mustermann</h1>
@@ -169,7 +173,9 @@
                 <th>Beschreibung</th>
                 <th class="text-right">Menge</th>
                 <th class="text-right">Einzelpreis</th>
-                <th class="text-right">MwSt.</th>
+                @if(!$isSmallBusiness)
+                    <th class="text-right">MwSt.</th>
+                @endif
                 <th class="text-right">Gesamt</th>
             </tr>
         </thead>
@@ -179,7 +185,9 @@
                     <td>{{ $item->description }}</td>
                     <td class="text-right">{{ $item->quantity }}</td>
                     <td class="text-right">{{ number_format($item->unit_price, 2, ',', '.') }} €</td>
-                    <td class="text-right">{{ number_format($item->tax_rate, 0) }}%</td>
+                    @if(!$isSmallBusiness)
+                        <td class="text-right">{{ number_format($item->tax_rate, 0) }}%</td>
+                    @endif
                     <td class="text-right">{{ number_format($item->amount, 2, ',', '.') }} €</td>
                 </tr>
             @endforeach
@@ -189,22 +197,31 @@
     <!-- Totals -->
     <table class="totals-table">
         <tr>
-            <td>Zwischensumme:</td>
+            <td>{{ $isSmallBusiness ? 'Gesamt (netto):' : 'Zwischensumme:' }}</td>
             <td class="text-right"><strong>{{ number_format($invoice->items->sum('amount'), 2, ',', '.') }} €</strong></td>
         </tr>
-        @php
-            $taxGroups = $invoice->items->groupBy('tax_rate');
-        @endphp
-        @foreach($taxGroups as $taxRate => $items)
+        @if(!$isSmallBusiness)
             @php
-                $taxableAmount = $items->sum('amount');
-                $taxAmount = $taxableAmount * ($taxRate / 100);
+                $taxGroups = $invoice->items->groupBy('tax_rate');
             @endphp
+            @foreach($taxGroups as $taxRate => $items)
+                @php
+                    $taxableAmount = $items->sum('amount');
+                    $taxAmount = $taxableAmount * ($taxRate / 100);
+                @endphp
+                <tr>
+                    <td>MwSt. {{ number_format($taxRate, 0) }}%:</td>
+                    <td class="text-right"><strong>{{ number_format($taxAmount, 2, ',', '.') }} €</strong></td>
+                </tr>
+            @endforeach
+        @endif
+        @if($isSmallBusiness)
             <tr>
-                <td>MwSt. {{ number_format($taxRate, 0) }}%:</td>
-                <td class="text-right"><strong>{{ number_format($taxAmount, 2, ',', '.') }} €</strong></td>
+                <td colspan="2" style="font-size: 8pt; color: #666; font-style: italic; padding-top: 5px;">
+                    Gemäß §19 UStG wird keine Umsatzsteuer berechnet
+                </td>
             </tr>
-        @endforeach
+        @endif
         <tr class="total-row">
             <td><strong>Gesamtsumme:</strong></td>
             <td class="text-right"><strong>{{ number_format($invoice->total_amount, 2, ',', '.') }} €</strong></td>

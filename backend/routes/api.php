@@ -33,13 +33,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Public routes
-Route::prefix('v1')->group(function () {
-    // Authentication routes
+// Public routes with rate limiting
+Route::prefix('v1')->middleware('throttle:login')->group(function () {
+    // Authentication routes - stricter rate limits
     Route::post('/auth/login', [AuthController::class, 'login']);
     Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
 });
+
+// PayPal webhook - separate without rate limiting (PayPal needs reliable access)
+Route::post('/api/v1/payments/paypal/webhook', [PaymentController::class, 'handleWebhook']);
 
 // Protected routes
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
@@ -127,6 +130,10 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('/invoices/{invoice}/mark-paid', [InvoiceController::class, 'markAsPaid']);
     Route::get('/invoices/overdue/list', [InvoiceController::class, 'overdue']);
     
+    
+    // PayPal Integration
+    Route::post('/payments/paypal/create-order', [PaymentController::class, 'createPayPalOrder']);
+    Route::post('/payments/paypal/capture-order', [PaymentController::class, 'capturePayPalOrder']);
     // Payment Management
     Route::apiResource('payments', PaymentController::class);
     Route::post('/payments/{payment}/mark-completed', [PaymentController::class, 'markAsCompleted']);

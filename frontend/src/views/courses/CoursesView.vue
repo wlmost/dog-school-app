@@ -6,8 +6,9 @@
         <select v-model="filterStatus" @change="loadCourses" class="input max-w-xs">
           <option :value="null">Alle Kurse</option>
           <option value="active">Aktive Kurse</option>
-          <option value="upcoming">Bevorstehende Kurse</option>
+          <option value="planned">Geplante Kurse</option>
           <option value="completed">Abgeschlossene Kurse</option>
+          <option value="cancelled">Abgesagte Kurse</option>
         </select>
       </div>
       <button @click="openCreateModal" class="btn btn-primary">
@@ -104,50 +105,8 @@ const courses = ref<any[]>([])
 const showFormModal = ref(false)
 const selectedCourse = ref<any>(null)
 
-onMounted(async () => {
-  try {
-    // Placeholder - replace with actual API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    courses.value = [
-      {
-        id: 1,
-        name: 'Welpentraining',
-        description: 'Grundlagen für Welpen von 8-16 Wochen',
-        startDate: '05.01.2026',
-        endDate: '02.03.2026',
-        participants: 6,
-        maxParticipants: 8,
-        trainer: 'Anna Müller',
-        status: 'active'
-      },
-      {
-        id: 2,
-        name: 'Agility Fortgeschrittene',
-        description: 'Hindernislauf für erfahrene Hunde',
-        startDate: '10.01.2026',
-        endDate: '28.03.2026',
-        participants: 8,
-        maxParticipants: 10,
-        trainer: 'Max Schmidt',
-        status: 'active'
-      },
-      {
-        id: 3,
-        name: 'Grundgehorsam',
-        description: 'Basisbefehle und Leinenführigkeit',
-        startDate: '15.02.2026',
-        endDate: '15.04.2026',
-        participants: 4,
-        maxParticipants: 12,
-        trainer: 'Anna Müller',
-        status: 'upcoming'
-      }
-    ]
-  } catch (error) {
-    console.error('Error loading courses:', error)
-  } finally {
-    loading.value = false
-  }
+onMounted(() => {
+  loadCourses()
 })
 
 async function loadCourses() {
@@ -159,9 +118,10 @@ async function loadCourses() {
     }
     
     const response = await apiClient.get('/api/v1/courses', { params })
-    courses.value = response.data.data
+    courses.value = response.data.data || []
   } catch (error) {
-    console.error('Error loading courses:', error)
+    handleApiError(error, 'Fehler beim Laden der Kurse')
+    courses.value = []
   } finally {
     loading.value = false
   }
@@ -204,17 +164,19 @@ async function deleteCourse(course: any) {
 function courseStatusClass(status: string) {
   const classes = {
     active: 'bg-green-100 text-green-800',
-    upcoming: 'bg-blue-100 text-blue-800',
-    completed: 'bg-gray-100 text-gray-800'
+    planned: 'bg-blue-100 text-blue-800',
+    completed: 'bg-gray-100 text-gray-800',
+    cancelled: 'bg-red-100 text-red-800'
   }
-  return classes[status as keyof typeof classes] || classes.upcoming
+  return classes[status as keyof typeof classes] || 'bg-gray-100 text-gray-800'
 }
 
 function courseStatusLabel(status: string) {
   const labels = {
     active: 'Aktiv',
-    upcoming: 'Bevorstehend',
-    completed: 'Abgeschlossen'
+    planned: 'Geplant',
+    completed: 'Abgeschlossen',
+    cancelled: 'Abgesagt'
   }
   return labels[status as keyof typeof labels] || status
 }

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import apiClient from '@/api/client'
+import axios from 'axios'
 
 export interface User {
   id: number
@@ -21,6 +22,14 @@ export interface LoginCredentials {
 export interface LoginResponse {
   user: User
   token: string
+}
+
+export interface RegistrationData {
+  email: string
+  password: string
+  first_name: string
+  last_name: string
+  phone?: string
 }
 
 export const useAuthStore = defineStore('auth', () => {
@@ -49,8 +58,12 @@ export const useAuthStore = defineStore('auth', () => {
       
       // Save token to localStorage
       localStorage.setItem('auth_token', response.data.token)
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Anmeldung fehlgeschlagen'
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        error.value = err.response?.data?.message || 'Anmeldung fehlgeschlagen'
+      } else {
+        error.value = 'Anmeldung fehlgeschlagen'
+      }
       throw err
     } finally {
       loading.value = false
@@ -63,9 +76,9 @@ export const useAuthStore = defineStore('auth', () => {
       if (token.value) {
         await apiClient.post('/api/v1/auth/logout')
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Ignore 401 errors during logout - token may already be invalid
-      if (err.response?.status !== 401) {
+      if (axios.isAxiosError(err) && err.response?.status !== 401) {
         console.error('Logout error:', err)
       }
     } finally {
@@ -92,7 +105,7 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  async function register(userData: any): Promise<void> {
+  async function register(userData: RegistrationData): Promise<void> {
     loading.value = true
     error.value = null
 
@@ -103,8 +116,12 @@ export const useAuthStore = defineStore('auth', () => {
       token.value = response.data.token
       
       localStorage.setItem('auth_token', response.data.token)
-    } catch (err: any) {
-      error.value = err.response?.data?.message || 'Registrierung fehlgeschlagen'
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        error.value = err.response?.data?.message || 'Registrierung fehlgeschlagen'
+      } else {
+        error.value = 'Registrierung fehlgeschlagen'
+      }
       throw err
     } finally {
       loading.value = false

@@ -24,9 +24,7 @@
             <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ stats.customers }}</p>
           </div>
           <div class="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
-            <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-            </svg>
+            <UsersIcon class="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
         </div>
       </router-link>
@@ -38,7 +36,7 @@
             <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ stats.dogs }}</p>
           </div>
           <div class="w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
-            <span class="text-2xl">🐕</span>
+            <component :is="DogIcon" class="text-green-600 dark:text-green-400" />
           </div>
         </div>
       </router-link>
@@ -50,9 +48,7 @@
             <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ stats.courses }}</p>
           </div>
           <div class="w-12 h-12 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center">
-            <svg class="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-            </svg>
+            <AcademicCapIcon class="w-6 h-6 text-purple-600 dark:text-purple-400" />
           </div>
         </div>
       </router-link>
@@ -64,9 +60,7 @@
             <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ stats.bookings }}</p>
           </div>
           <div class="w-12 h-12 bg-indigo-100 dark:bg-indigo-900 rounded-lg flex items-center justify-center">
-            <svg class="w-6 h-6 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-            </svg>
+            <CalendarIcon class="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
           </div>
         </div>
       </router-link>
@@ -78,9 +72,7 @@
             <p class="text-3xl font-bold text-gray-900 dark:text-gray-100">{{ stats.invoices }}</p>
           </div>
           <div class="w-12 h-12 bg-yellow-100 dark:bg-yellow-900 rounded-lg flex items-center justify-center">
-            <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+            <DocumentTextIcon class="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
           </div>
         </div>
       </router-link>
@@ -152,9 +144,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, h } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import apiClient from '@/api/client'
+import {
+  UsersIcon,
+  AcademicCapIcon,
+  CalendarIcon,
+  DocumentTextIcon
+} from '@heroicons/vue/24/outline'
+
+// Custom Dog Icon component
+const DogIcon = () => h('svg', {
+  class: 'w-6 h-6',
+  fill: 'none',
+  stroke: 'currentColor',
+  viewBox: '0 0 24 24',
+  xmlns: 'http://www.w3.org/2000/svg'
+}, [
+  h('path', {
+    'stroke-linecap': 'round',
+    'stroke-linejoin': 'round',
+    'stroke-width': '2',
+    d: 'M7 4a1 1 0 011-1h1a1 1 0 011 1v1a1 1 0 01-1 1H8a1 1 0 01-1-1V4zm8 0a1 1 0 011-1h1a1 1 0 011 1v1a1 1 0 01-1 1h-1a1 1 0 01-1-1V4zM5 8a2 2 0 012-2h10a2 2 0 012 2v2a2 2 0 01-2 2h-.5a.5.5 0 00-.5.5 3 3 0 01-6 0 .5.5 0 00-.5-.5H7a2 2 0 01-2-2V8zm1 7a1 1 0 011-1h1a1 1 0 011 1v1a1 1 0 01-1 1H7a1 1 0 01-1-1v-1zm9 0a1 1 0 011-1h1a1 1 0 011 1v1a1 1 0 01-1 1h-1a1 1 0 01-1-1v-1z'
+  })
+])
 
 const authStore = useAuthStore()
 const user = computed(() => authStore.user)
