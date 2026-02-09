@@ -40,7 +40,7 @@
 
 ## 6. Git Commit and Archive
 
-- [ ] 6.1 Stage modified AnamnesisResponseResource.php file
-- [ ] 6.2 Commit with descriptive message referencing this OpenSpec change
-- [ ] 6.3 Push changes to remote repository
+- [x] 6.1 Stage modified AnamnesisResponseResource.php file
+- [x] 6.2 Commit with descriptive message referencing this OpenSpec change
+- [x] 6.3 Push changes to remote repository
 - [ ] 6.4 Archive this OpenSpec change using /opsx:archive
