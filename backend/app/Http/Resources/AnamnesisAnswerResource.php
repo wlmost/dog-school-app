@@ -20,6 +20,7 @@ class AnamnesisAnswerResource extends JsonResource
             'id' => $this->id,
             'responseId' => $this->response_id,
             'questionId' => $this->question_id,
+            'questionText' => $this->question?->question_text ?? null,
             'answerValue' => $this->answer_value,
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
