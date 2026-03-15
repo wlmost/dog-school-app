@@ -1,7 +1,7 @@
 # Dog School Management - Makefile
 # Simplified commands for Docker and Laravel operations
 
-.PHONY: help build up down restart logs shell composer artisan migrate test clean install
+.PHONY: help build up down restart rebuild update logs shell composer artisan migrate test clean install
 
 # Colors for output
 BLUE := \033[0;34m
@@ -28,6 +28,30 @@ down: ## Stop all Docker containers
 	docker-compose down
 
 restart: down up ## Restart all Docker containers
+
+rebuild: ## Rebuild containers from scratch using current branch (--no-cache)
+	@echo '$(BLUE)Rebuilding Docker containers from current branch...$(NC)'
+	docker-compose down
+	docker-compose build --no-cache
+	docker-compose up -d
+	@echo '$(GREEN)Containers rebuilt and started.$(NC)'
+
+update: ## Pull latest code, rebuild containers, reinstall deps and clear caches
+	@echo '$(BLUE)Pulling latest changes from current branch...$(NC)'
+	git pull
+	@echo '$(BLUE)Rebuilding containers...$(NC)'
+	docker-compose build --no-cache
+	docker-compose up -d
+	@echo '$(BLUE)Installing Composer dependencies...$(NC)'
+	docker-compose exec php composer install --no-interaction --prefer-dist --optimize-autoloader
+	@echo '$(BLUE)Running database migrations...$(NC)'
+	docker-compose exec php php artisan migrate --force
+	@echo '$(BLUE)Clearing all caches...$(NC)'
+	docker-compose exec php php artisan cache:clear
+	docker-compose exec php php artisan config:clear
+	docker-compose exec php php artisan route:clear
+	docker-compose exec php php artisan view:clear
+	@echo '$(GREEN)Update complete! Application is running.$(NC)'
 
 logs: ## Show logs from all containers
 	docker-compose logs -f

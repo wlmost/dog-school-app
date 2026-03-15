@@ -1,0 +1,76 @@
+name: CI – Build & Test
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  build-and-test:
+    name: Build Docker image & run tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+
+      # ── Build the PHP image from the current branch ─────────────────────────
+      - name: Build PHP Docker image
+        run: docker build --no-cache -t dog-school-php ./docker/php
+
+      # ── Backend: install dependencies ───────────────────────────────────────
+      - name: Install Composer dependencies
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/backend:/var/www/html" \
+            -w /var/www/html \
+            dog-school-php \
+            composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      # ── Backend: configure .env for testing (SQLite in-memory) ──────────────
+      - name: Prepare test environment
+        working-directory: backend
+        run: |
+          cp .env.example .env
+          sed -i "s|^APP_KEY=.*|APP_KEY=|" .env
+
+      - name: Generate application key
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/backend:/var/www/html" \
+            -w /var/www/html \
+            dog-school-php \
+            php artisan key:generate
+
+      # ── Ensure dompdf font cache directory is writable ──────────────────────
+      - name: Ensure storage directories exist and are writable
+        run: |
+          mkdir -p "${{ github.workspace }}/backend/storage/fonts"
+          chmod -R 777 "${{ github.workspace }}/backend/storage"
+          chmod -R 777 "${{ github.workspace }}/backend/bootstrap/cache"
+
+      # ── Backend: run all tests (including PDF generation tests) ─────────────
+      - name: Run backend tests
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}/backend:/var/www/html" \
+            -w /var/www/html \
+            -e APP_ENV=testing \
+            -e DB_CONNECTION=sqlite \
+            -e DB_DATABASE=":memory:" \
+            -e CACHE_STORE=array \
+            -e SESSION_DRIVER=array \
+            -e QUEUE_CONNECTION=sync \
+            dog-school-php \
+            ./vendor/bin/pest --no-coverage
+
+      # ── Upload test artifacts on failure ────────────────────────────────────
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: laravel-logs
+          path: backend/storage/logs/
+          retention-days: 3
+
