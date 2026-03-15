@@ -15,6 +15,13 @@ jobs:
       - name: Checkout current branch
         uses: actions/checkout@v4
 
+      # ── Fix volume permissions so the container's www user (uid 1000) ────────
+      # ── can write into the mounted backend directory ──────────────────────────
+      - name: Set backend directory permissions
+        run: |
+          mkdir -p "${{ github.workspace }}/backend/storage/fonts"
+          chmod -R 777 "${{ github.workspace }}/backend"
+
       # ── Build the PHP image from the current branch ─────────────────────────
       - name: Build PHP Docker image
         run: docker build --no-cache -t dog-school-php ./docker/php
@@ -42,13 +49,6 @@ jobs:
             -w /var/www/html \
             dog-school-php \
             php artisan key:generate
-
-      # ── Ensure dompdf font cache directory is writable ──────────────────────
-      - name: Ensure storage directories exist and are writable
-        run: |
-          mkdir -p "${{ github.workspace }}/backend/storage/fonts"
-          chmod -R 777 "${{ github.workspace }}/backend/storage"
-          chmod -R 777 "${{ github.workspace }}/backend/bootstrap/cache"
 
       # ── Backend: run all tests (including PDF generation tests) ─────────────
       - name: Run backend tests
