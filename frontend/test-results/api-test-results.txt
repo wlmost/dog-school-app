@@ -1,0 +1,36 @@
+═══════════════════════════════════════
+API Testing Results - Sat Jan 24 21:22:51 CET 2026
+═══════════════════════════════════════
+
+
+=== ADMIN ROLE ===
+✓ PASS: Admin login successful
+✗ FAIL: Admin role correct - Role: 
+✓ PASS: Admin can access settings
+⚠ INFO: Kleinunternehmerregelung setting exists - Value: 
+⚠ INFO: Company name setting exists - Value: 
+✗ FAIL: Set Kleinunternehmerregelung to true - Einstellungen erfolgreich aktualisiert.
+✗ FAIL: Kleinunternehmerregelung persisted - Value: 
+✗ FAIL: Set Kleinunternehmerregelung to false - 
+✓ PASS: Admin can view customers
+✗ FAIL: Create customer - 
+✓ PASS: Admin can view invoices
+
+=== TRAINER ROLE ===
+✓ PASS: Trainer login successful
+✗ FAIL: Trainer role correct - Role: 
+✓ PASS: Trainer can access customers
+✓ PASS: Trainer can access invoices
+✓ PASS: Trainer cannot access settings
+
+=== CUSTOMER ROLE ===
+✓ PASS: Customer login successful
+✗ FAIL: Customer role correct - Role: 
+✓ PASS: Customer cannot access all customers
+✓ PASS: Customer can view own invoices
+✓ PASS: Customer cannot access settings
+
+=== SUMMARY ===
+✓ Passed: 12
+✗ Failed: 7
+Total: 21
