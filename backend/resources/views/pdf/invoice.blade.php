@@ -13,20 +13,20 @@
         }
         
         h1 {
-            color: #2563eb;
+            color: #7a5030;
             font-size: 18pt;
             margin-bottom: 5px;
         }
         
         h2 {
             font-size: 14pt;
-            color: #1e40af;
+            color: #7a5030;
             margin: 20px 0 10px 0;
         }
         
         h3 {
             font-size: 11pt;
-            color: #1e40af;
+            color: #7a5030;
             margin: 15px 0 8px 0;
         }
         
@@ -37,7 +37,7 @@
         }
         
         table.items th {
-            background-color: #2563eb;
+            background-color: #d29f68;
             color: white;
             padding: 8px;
             text-align: left;
@@ -87,15 +87,15 @@
         .total-row {
             font-size: 12pt;
             font-weight: bold;
-            color: #1e40af;
-            border-top: 2px solid #2563eb;
+            color: #7a5030;
+            border-top: 2px solid #d29f68;
         }
         
         .payment-box {
             margin-top: 30px;
             padding: 15px;
-            background-color: #f3f4f6;
-            border-left: 3px solid #2563eb;
+            background-color: #fdf6ec;
+            border-left: 3px solid #d29f68;
         }
         
         .notes-box {
@@ -129,11 +129,18 @@
     @endphp
     
     <!-- Company Header -->
-    <div class="company-info">
-        <h1>Hundeschule Max Mustermann</h1>
-        <p>Musterstraße 123 • 12345 Musterstadt</p>
-        <p>Tel: +49 123 456789 • E-Mail: info@hundeschule-mustermann.de</p>
-    </div>
+    <table style="width: 100%; margin-bottom: 20px; border: none;">
+        <tr>
+            <td style="width: 40%; vertical-align: middle; border: none; padding: 0;">
+                <img src="file://{{ public_path('images/HomoCanis.jpg') }}" alt="Hundeschule HomoCanis" style="max-width: 180px; max-height: 100px;">
+            </td>
+            <td class="company-info" style="vertical-align: middle; border: none; padding: 0;">
+                <h1>Hundeschule Max Mustermann</h1>
+                <p>Musterstraße 123 • 12345 Musterstadt</p>
+                <p>Tel: +49 123 456789 • E-Mail: info@hundeschule-mustermann.de</p>
+            </td>
+        </tr>
+    </table>
 
     <h2>RECHNUNG</h2>
 
