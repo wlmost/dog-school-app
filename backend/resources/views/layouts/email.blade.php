@@ -21,7 +21,7 @@
             background-color: #ffffff;
         }
         .email-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #8c5a23 0%, #673b15 100%);
             padding: 30px 20px;
             text-align: center;
         }

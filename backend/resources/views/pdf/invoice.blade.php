@@ -126,13 +126,19 @@
 <body>
     @php
         $isSmallBusiness = \App\Models\Setting::get('company_small_business', false);
+        $logoPath = public_path('images/HomoCanis.jpg');
+        $logoSrc = file_exists($logoPath)
+            ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($logoPath))
+            : null;
     @endphp
     
     <!-- Company Header -->
     <table style="width: 100%; margin-bottom: 20px; border: none;">
         <tr>
             <td style="width: 40%; vertical-align: middle; border: none; padding: 0;">
-                <img src="file://{{ public_path('images/HomoCanis.jpg') }}" alt="Hundeschule HomoCanis" style="max-width: 180px; max-height: 100px;">
+                @if($logoSrc)
+                    <img src="{{ $logoSrc }}" alt="Hundeschule HomoCanis" style="max-width: 180px; max-height: 100px;">
+                @endif
             </td>
             <td class="company-info" style="vertical-align: middle; border: none; padding: 0;">
                 <h1>Hundeschule Max Mustermann</h1>
