@@ -86,6 +86,15 @@
               Anmeldung läuft...
             </span>
           </button>
+
+          <button
+            type="button"
+            :disabled="loading"
+            class="btn btn-secondary w-full disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="handleCancel"
+          >
+            Abbrechen
+          </button>
         </form>
 
         <!-- Footer -->
@@ -128,5 +137,9 @@ async function handleLogin() {
   } finally {
     loading.value = false
   }
+}
+
+function handleCancel() {
+  router.push({ name: 'Home' })
 }
 </script>
