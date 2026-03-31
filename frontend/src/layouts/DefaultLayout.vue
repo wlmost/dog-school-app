@@ -89,7 +89,8 @@ import {
   Cog6ToothIcon,
   ArrowRightOnRectangleIcon,
   SunIcon,
-  MoonIcon
+  MoonIcon,
+  EnvelopeIcon
 } from '@heroicons/vue/24/outline'
 import { h } from 'vue'
 import backgroundImage from '@/assets/pet-01-1280x664.jpg'
@@ -195,6 +196,12 @@ const navigation = computed(() => {
       to: { name: 'Settings' },
       icon: Cog6ToothIcon,
       roles: ['admin']
+    },
+    {
+      name: 'Kontakt',
+      to: { name: 'Contact' },
+      icon: EnvelopeIcon,
+      roles: ['customer']
     }
   ]
 

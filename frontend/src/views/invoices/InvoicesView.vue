@@ -12,7 +12,7 @@
           <option value="cancelled">Storniert</option>
         </select>
       </div>
-      <button @click="openCreateModal" class="btn btn-primary">
+      <button v-if="!authStore.isCustomer" @click="openCreateModal" class="btn btn-primary">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
@@ -73,7 +73,7 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2" @click.stop>
                 <button @click="downloadPDF(invoice)" class="text-primary-600 hover:text-primary-900">PDF</button>
-                <button v-if="invoice.status === 'draft' || invoice.status === 'sent'" @click="markAsPaid(invoice)" class="text-green-600 hover:text-green-900">Bezahlt</button>
+                <button v-if="!authStore.isCustomer && (invoice.status === 'draft' || invoice.status === 'sent')" @click="markAsPaid(invoice)" class="text-green-600 hover:text-green-900">Bezahlt</button>
               </td>
             </tr>
           </tbody>
@@ -106,6 +106,9 @@ import apiClient from '@/api/client'
 import InvoiceFormModal from '@/components/InvoiceFormModal.vue'
 import InvoiceDetailModal from '@/components/InvoiceDetailModal.vue'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
 
 const loading = ref(true)
 const filterStatus = ref<string | null>(null)
