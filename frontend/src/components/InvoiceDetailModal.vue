@@ -149,7 +149,7 @@
                   <button @click="$emit('download', invoice)" class="btn bg-blue-600 hover:bg-blue-700 text-white">
                     PDF herunterladen
                   </button>
-                  <button v-if="invoice.status === 'draft' || invoice.status === 'sent'" @click="$emit('mark-paid', invoice)" class="btn bg-green-600 hover:bg-green-700 text-white">
+                  <button v-if="!authStore.isCustomer && (invoice.status === 'draft' || invoice.status === 'sent')" @click="$emit('mark-paid', invoice)" class="btn bg-green-600 hover:bg-green-700 text-white">
                     Als bezahlt markieren
                   </button>
                 </div>
@@ -166,6 +166,9 @@
 import { ref, onMounted } from 'vue'
 import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 import apiClient from '@/api/client'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
 
 defineProps<{
   isOpen: boolean
