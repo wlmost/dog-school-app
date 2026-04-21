@@ -1,0 +1,19 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    
+    # Set up the base for the rewrite rules
+    RewriteBase /
+    
+    # Allow direct access to install.php (installation wizard)
+    RewriteRule ^install\.php$ - [L]
+    
+    # Redirect all other requests to backend/public/
+    # This includes the root request (/)
+    RewriteRule ^(.*)$ backend/public/$1 [L,QSA]
+</IfModule>
+
+# Disable directory browsing
+Options -Indexes
+
+# Set DirectoryIndex for backend/public
+DirectoryIndex backend/public/index.php
