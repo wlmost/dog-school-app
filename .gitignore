@@ -58,3 +58,13 @@ package-lock.json
 
 # HomoCanis Webseite
 HomoCanis
+
+# Deployment archives
+*.tar.gz
+
+# Test artifacts
+frontend/playwright-report/
+frontend/test-results/
+
+# Test extraction folder
+test-extract/
