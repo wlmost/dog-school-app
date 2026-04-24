@@ -22,24 +22,9 @@ class RegisterRequest extends FormRequest
     public function authorize(): bool
     {
         $user = $this->user();
-        
-        // No authenticated user
-        if (!$user) {
-            return false;
-        }
-        
-        // Admins can register any user
-        if ($user->isAdmin()) {
-            return true;
-        }
-        
-        // Trainers can only register customers
-        if ($user->isTrainer()) {
-            $role = $this->input('role');
-            return $role === 'customer';
-        }
-        
-        return false;
+
+        // Only authenticated admins may register new users
+        return $user && $user->isAdmin();
     }
 
     /**

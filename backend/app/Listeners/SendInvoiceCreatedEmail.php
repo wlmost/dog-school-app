@@ -33,9 +33,9 @@ class SendInvoiceCreatedEmail implements ShouldQueue
             'items'
         ]);
 
-        // Send invoice created email to customer
+        // Queue invoice created email to customer
         Mail::to($event->invoice->customer->user->email)
-            ->send(new InvoiceCreated($event->invoice));
+            ->queue(new InvoiceCreated($event->invoice));
     }
 
     /**

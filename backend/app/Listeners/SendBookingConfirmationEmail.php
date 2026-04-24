@@ -33,9 +33,9 @@ class SendBookingConfirmationEmail implements ShouldQueue
             'dog.customer.user'
         ]);
 
-        // Send booking confirmation email to customer
+        // Queue booking confirmation email to customer
         Mail::to($event->booking->dog->customer->user->email)
-            ->send(new BookingConfirmation($event->booking));
+            ->queue(new BookingConfirmation($event->booking));
     }
 
     /**
