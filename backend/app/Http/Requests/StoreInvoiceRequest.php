@@ -62,14 +62,18 @@ class StoreInvoiceRequest extends FormRequest
     public function validatedSnakeCase(): array
     {
         $validated = $this->validated();
-        
+
+        // Determine default tax rate based on small business regulation
+        $isSmallBusiness = \App\Models\Setting::get('company_small_business', false);
+        $defaultTaxRate = $isSmallBusiness ? 0 : 19;
+
         // Calculate totals from items
         $subtotal = 0;
         $taxAmount = 0;
         foreach ($validated['items'] as $item) {
             $itemAmount = $item['quantity'] * $item['unitPrice'];
             $subtotal += $itemAmount;
-            $taxRate = $item['taxRate'] ?? 19; // Default 19% MwSt
+            $taxRate = $item['taxRate'] ?? $defaultTaxRate;
             $taxAmount += $itemAmount * ($taxRate / 100);
         }
         $totalAmount = $subtotal + $taxAmount;
