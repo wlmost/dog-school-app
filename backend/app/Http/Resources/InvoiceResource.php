@@ -31,7 +31,7 @@ class InvoiceResource extends JsonResource
             'subtotalAmount' => $this->whenLoaded(
                 'items',
                 fn (): float => (float) $this->items->sum('amount'),
-                (float) $this->total_amount,
+                null,
             ),
             'taxAmount' => $this->whenLoaded(
                 'items',

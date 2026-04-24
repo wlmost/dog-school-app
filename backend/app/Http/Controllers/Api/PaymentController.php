@@ -188,8 +188,8 @@ class PaymentController extends Controller
 
         if ($totalPaid >= $invoice->total_amount) {
             $invoice->update([
-                'status' => 'paid',
-                'paid_at' => now(),
+                'status'    => 'paid',
+                'paid_date' => now(),
             ]);
         }
 

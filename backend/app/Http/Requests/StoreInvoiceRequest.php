@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Models\Setting;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreInvoiceRequest extends FormRequest
@@ -64,7 +65,7 @@ class StoreInvoiceRequest extends FormRequest
         $validated = $this->validated();
 
         // Determine default tax rate based on small business regulation
-        $isSmallBusiness = \App\Models\Setting::get('company_small_business', false);
+        $isSmallBusiness = Setting::get('company_small_business', false);
         $defaultTaxRate = $isSmallBusiness ? 0 : 19;
 
         // Calculate totals from items

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -21,8 +22,8 @@ class TrainingSessionResource extends JsonResource
             'courseId' => $this->course_id,
             'trainerId' => $this->trainer_id,
             'sessionDate' => $this->session_date?->format('Y-m-d'),
-            'startTime' => $this->start_time,
-            'endTime' => $this->end_time,
+            'startTime' => $this->start_time ? Carbon::parse($this->start_time)->format('H:i:s') : null,
+            'endTime' => $this->end_time ? Carbon::parse($this->end_time)->format('H:i:s') : null,
             'duration' => $this->duration,
             'maxParticipants' => $this->max_participants,
             'location' => $this->location,
