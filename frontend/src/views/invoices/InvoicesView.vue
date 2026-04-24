@@ -73,6 +73,7 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2" @click.stop>
                 <button @click="downloadPDF(invoice)" class="text-primary-600 hover:text-primary-900">PDF</button>
+                <button v-if="!authStore.isCustomer && invoice.status === 'draft'" @click="editInvoice(invoice)" class="text-yellow-600 hover:text-yellow-900">Bearbeiten</button>
                 <button v-if="!authStore.isCustomer && (invoice.status === 'draft' || invoice.status === 'sent')" @click="markAsPaid(invoice)" class="text-green-600 hover:text-green-900">Bezahlt</button>
               </td>
             </tr>
@@ -95,6 +96,7 @@
       :invoice="selectedInvoice"
       @close="closeDetailModal"
       @download="downloadPDF"
+      @edit="editFromDetail"
       @mark-paid="markAsPaid"
     />
   </div>
@@ -141,6 +143,16 @@ async function loadInvoices() {
 function openCreateModal() {
   selectedInvoice.value = null
   showFormModal.value = true
+}
+
+function editInvoice(invoice: any) {
+  selectedInvoice.value = invoice
+  showFormModal.value = true
+}
+
+function editFromDetail(invoice: any) {
+  closeDetailModal()
+  editInvoice(invoice)
 }
 
 function viewInvoice(invoice: any) {
