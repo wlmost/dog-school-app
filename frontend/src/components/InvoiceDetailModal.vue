@@ -149,6 +149,9 @@
                   <button @click="$emit('download', invoice)" class="btn bg-blue-600 hover:bg-blue-700 text-white">
                     PDF herunterladen
                   </button>
+                  <button v-if="!authStore.isCustomer && invoice.status === 'draft'" @click="$emit('edit', invoice)" class="btn bg-yellow-500 hover:bg-yellow-600 text-white">
+                    Bearbeiten
+                  </button>
                   <button v-if="!authStore.isCustomer && (invoice.status === 'draft' || invoice.status === 'sent')" @click="$emit('mark-paid', invoice)" class="btn bg-green-600 hover:bg-green-700 text-white">
                     Als bezahlt markieren
                   </button>
@@ -178,6 +181,7 @@ defineProps<{
 defineEmits<{
   close: []
   download: [invoice: any]
+  edit: [invoice: any]
   'mark-paid': [invoice: any]
 }>()
 
