@@ -22,7 +22,7 @@ class InvoiceItemResource extends JsonResource
             'description' => $this->description,
             'quantity' => $this->quantity,
             'unitPrice' => $this->unit_price,
-            'totalPrice' => $this->total_price,
+            'totalPrice' => $this->amount,
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
         ];

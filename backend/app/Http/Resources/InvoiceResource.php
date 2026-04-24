@@ -28,6 +28,16 @@ class InvoiceResource extends JsonResource
             'customerId' => $this->customer_id,
             'invoiceNumber' => $this->invoice_number,
             'status' => $this->status,
+            'subtotalAmount' => $this->whenLoaded(
+                'items',
+                fn (): float => (float) $this->items->sum('amount'),
+                null,
+            ),
+            'taxAmount' => $this->whenLoaded(
+                'items',
+                fn (): float => (float) $this->items->sum('tax_amount'),
+                0.0,
+            ),
             'totalAmount' => (float) $this->total_amount,
             'totalPaid' => (float) $this->total_paid,
             'remainingBalance' => (float) $this->remaining_balance,
@@ -39,7 +49,7 @@ class InvoiceResource extends JsonResource
             'isOverdue' => $this->isOverdue(),
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
-            
+
             // Conditional relationships
             'customer' => new CustomerResource($this->whenLoaded('customer')),
             'items' => InvoiceItemResource::collection($this->whenLoaded('items')),
