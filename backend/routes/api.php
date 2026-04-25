@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\CustomerCreditController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DogController;
+use App\Http\Controllers\Api\DogRegistrationRequestController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\TrainerController;
@@ -75,6 +76,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/dogs/{dog}/vaccinations', [DogController::class, 'vaccinations']);
     Route::get('/dogs/{dog}/training-logs', [DogController::class, 'trainingLogs']);
     Route::get('/dogs/{dog}/bookings', [DogController::class, 'bookings']);
+
+    // Dog Registration Requests
+    Route::apiResource('dog-registration-requests', DogRegistrationRequestController::class)->only(['index', 'store', 'show']);
+    Route::post('/dog-registration-requests/{dogRegistrationRequest}/approve', [DogRegistrationRequestController::class, 'approve']);
+    Route::post('/dog-registration-requests/{dogRegistrationRequest}/reject', [DogRegistrationRequestController::class, 'reject']);
     
     // Training Session Management
     Route::get('/training-sessions', [TrainingSessionController::class, 'index']);

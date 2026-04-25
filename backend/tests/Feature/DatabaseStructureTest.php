@@ -147,3 +147,13 @@ test('payments table exists with required columns', function () {
         'payment_method', 'transaction_id', 'status'
     ]))->toBeTrue();
 });
+
+test('dog_registration_requests table exists with required columns', function () {
+    expect(Schema::hasTable('dog_registration_requests'))->toBeTrue();
+    expect(Schema::hasColumns('dog_registration_requests', [
+        'id', 'customer_id', 'name', 'breed', 'gender',
+        'date_of_birth', 'neutered', 'chip_number', 'notes',
+        'status', 'reviewed_by', 'reviewed_at',
+        'created_at', 'updated_at',
+    ]))->toBeTrue();
+});

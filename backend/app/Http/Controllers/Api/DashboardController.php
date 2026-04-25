@@ -9,6 +9,7 @@ use App\Models\Booking;
 use App\Models\Course;
 use App\Models\Customer;
 use App\Models\Dog;
+use App\Models\DogRegistrationRequest;
 use App\Models\Invoice;
 use App\Models\TrainingSession;
 use Illuminate\Http\JsonResponse;
@@ -55,11 +56,12 @@ class DashboardController extends Controller
     private function getAdminDashboard(): JsonResponse
     {
         $stats = [
-            'customers' => Customer::count(),
-            'dogs' => Dog::count(),
-            'courses' => Course::where('status', 'active')->count(),
-            'invoices' => Invoice::whereIn('status', ['draft', 'sent', 'overdue'])->count(),
-            'bookings' => Booking::whereIn('status', ['pending', 'confirmed'])->count(),
+            'customers'          => Customer::count(),
+            'dogs'               => Dog::count(),
+            'courses'            => Course::where('status', 'active')->count(),
+            'invoices'           => Invoice::whereIn('status', ['draft', 'sent', 'overdue'])->count(),
+            'bookings'           => Booking::whereIn('status', ['pending', 'confirmed'])->count(),
+            'pendingDogRequests' => DogRegistrationRequest::where('status', 'pending')->count(),
         ];
 
         $upcomingSessions = TrainingSession::with(['course', 'bookings'])
@@ -93,9 +95,22 @@ class DashboardController extends Controller
             });
 
         return response()->json([
-            'stats' => $stats,
-            'upcomingSessions' => $upcomingSessions,
-            'recentBookings' => $recentBookings,
+            'stats'                   => $stats,
+            'upcomingSessions'        => $upcomingSessions,
+            'recentBookings'          => $recentBookings,
+            'pendingDogRegistrations' => DogRegistrationRequest::with('customer.user')
+                ->where('status', 'pending')
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get()
+                ->map(fn (DogRegistrationRequest $r) => [
+                    'id'           => $r->id,
+                    'customerName' => $r->customer->user->full_name ?? 'Unbekannt',
+                    'dogName'      => $r->name,
+                    'breed'        => $r->breed,
+                    'gender'       => $r->gender,
+                    'createdAt'    => $r->created_at?->toISOString(),
+                ]),
         ]);
     }
 
