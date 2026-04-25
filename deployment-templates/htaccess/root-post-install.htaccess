@@ -17,9 +17,8 @@
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]
 
-    # Serve existing static assets from frontend/dist/
-    RewriteCond %{DOCUMENT_ROOT}/frontend/dist%{REQUEST_URI} -f
-    RewriteRule ^ frontend/dist%{REQUEST_URI} [L]
+    # Serve existing static assets from frontend/dist/ (use $1 not REQUEST_URI - works for subdirectory installs)
+    RewriteRule ^(.+\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|map|webp|json|txt|xml))$ frontend/dist/$1 [L]
 
     # Everything else -> Vue SPA (handles client-side routing)
     RewriteRule ^ frontend/dist/index.html [L]
