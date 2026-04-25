@@ -43,6 +43,9 @@ class UpdateCustomerRequest extends FormRequest
             'lastName' => ['sometimes', 'nullable', 'string', 'max:255'],
             'email' => ['sometimes', 'nullable', 'email', 'max:255', 'unique:users,email,' . $customer->user_id],
             'phone' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'mobilePhone' => ['sometimes', 'nullable', 'string', 'max:50'],
+            'password' => ['sometimes', 'nullable', 'string', 'min:8', 'confirmed', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d])/'],
+            'password_confirmation' => ['sometimes', 'nullable', 'string'],
             'trainerId' => ['sometimes', 'nullable', 'exists:users,id'],
             'addressLine1' => ['sometimes', 'nullable', 'string', 'max:255'],
             'addressLine2' => ['sometimes', 'nullable', 'string', 'max:255'],
@@ -51,6 +54,10 @@ class UpdateCustomerRequest extends FormRequest
             'country' => ['sometimes', 'nullable', 'string', 'max:100'],
             'emergencyContact' => ['sometimes', 'nullable', 'string', 'max:255'],
             'notes' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'paymentMethod' => ['sometimes', 'nullable', 'string', 'in:cash,invoice,direct_debit'],
+            'bankAccountHolder' => ['sometimes', 'required_if:paymentMethod,direct_debit', 'nullable', 'string', 'max:255'],
+            'bankIban' => ['sometimes', 'required_if:paymentMethod,direct_debit', 'nullable', 'string', 'max:34', 'regex:/^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/'],
+            'bankBic' => ['sometimes', 'nullable', 'string', 'max:11', 'regex:/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/'],
         ];
     }
 
@@ -62,6 +69,7 @@ class UpdateCustomerRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'mobilePhone' => 'Mobiltelefon',
             'addressLine1' => 'Adresszeile 1',
             'addressLine2' => 'Adresszeile 2',
             'postalCode' => 'Postleitzahl',
@@ -69,6 +77,10 @@ class UpdateCustomerRequest extends FormRequest
             'country' => 'Land',
             'emergencyContact' => 'Notfallkontakt',
             'notes' => 'Notizen',
+            'paymentMethod' => 'Zahlungsmethode',
+            'bankAccountHolder' => 'Kontoinhaber',
+            'bankIban' => 'IBAN',
+            'bankBic' => 'BIC',
         ];
     }
 
@@ -106,6 +118,18 @@ class UpdateCustomerRequest extends FormRequest
         if (isset($validated['notes'])) {
             $data['notes'] = $validated['notes'];
         }
+        if (array_key_exists('paymentMethod', $validated)) {
+            $data['payment_method'] = $validated['paymentMethod'];
+        }
+        if (array_key_exists('bankAccountHolder', $validated)) {
+            $data['bank_account_holder'] = $validated['bankAccountHolder'];
+        }
+        if (array_key_exists('bankIban', $validated)) {
+            $data['bank_iban'] = $validated['bankIban'];
+        }
+        if (array_key_exists('bankBic', $validated)) {
+            $data['bank_bic'] = $validated['bankBic'];
+        }
         
         return $data;
     }
@@ -131,6 +155,12 @@ class UpdateCustomerRequest extends FormRequest
         }
         if (isset($validated['phone'])) {
             $data['phone'] = $validated['phone'];
+        }
+        if (isset($validated['mobilePhone'])) {
+            $data['mobile_phone'] = $validated['mobilePhone'];
+        }
+        if (!empty($validated['password'])) {
+            $data['password'] = \Illuminate\Support\Facades\Hash::make($validated['password']);
         }
         
         return $data;

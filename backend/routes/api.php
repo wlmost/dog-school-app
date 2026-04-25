@@ -63,6 +63,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index']);
     
     // Customer Management
+    Route::get('/customers/profile', [CustomerController::class, 'profile']);
     Route::apiResource('customers', CustomerController::class);
     Route::get('/customers/{customer}/dogs', [CustomerController::class, 'dogs']);
     Route::get('/customers/{customer}/bookings', [CustomerController::class, 'bookings']);

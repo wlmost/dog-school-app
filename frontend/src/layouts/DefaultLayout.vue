@@ -90,7 +90,8 @@ import {
   ArrowRightOnRectangleIcon,
   SunIcon,
   MoonIcon,
-  EnvelopeIcon
+  EnvelopeIcon,
+  IdentificationIcon
 } from '@heroicons/vue/24/outline'
 import { h } from 'vue'
 import backgroundImage from '@/assets/pet-01-1280x664.jpg'
@@ -201,6 +202,12 @@ const navigation = computed(() => {
       name: 'Kontakt',
       to: { name: 'Contact' },
       icon: EnvelopeIcon,
+      roles: ['customer']
+    },
+    {
+      name: 'Mein Profil',
+      to: { name: 'Profile' },
+      icon: IdentificationIcon,
       roles: ['customer']
     }
   ]

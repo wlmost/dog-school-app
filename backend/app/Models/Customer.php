@@ -24,6 +24,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $country
  * @property string|null $emergency_contact
  * @property string|null $notes
+ * @property string|null $payment_method
+ * @property string|null $bank_account_holder
+ * @property string|null $bank_iban
+ * @property string|null $bank_bic
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read User $user
@@ -51,6 +55,10 @@ class Customer extends Model
         'country',
         'emergency_contact',
         'notes',
+        'payment_method',
+        'bank_account_holder',
+        'bank_iban',
+        'bank_bic',
     ];
 
     /**
