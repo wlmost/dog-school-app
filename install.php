@@ -611,6 +611,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'force
     exit;
 }
 
+// Handle delete_installer BEFORE the lock check: install.lock already exists at this point
+// (created by stepComplete), so the lock check would block the POST otherwise.
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete_installer') {
+    $appUrl = getSessionData('app_url', '/');
+    $newName = __FILE__ . '.completed';
+    if (@rename(__FILE__, $newName)) {
+        logMessage('Installer renamed to: ' . $newName);
+    } else {
+        logMessage('Could not rename installer – deleting instead', 'WARN');
+        @unlink(__FILE__);
+    }
+    header('Location: ' . $appUrl);
+    exit;
+}
+
 checkInstallationLock();
 
 // Handle POST requests
