@@ -78,6 +78,79 @@
       </router-link>
     </div>
 
+    <!-- Pending Dog Registration Requests (admin only) -->
+    <div v-if="user?.role === 'admin'" class="card">
+      <div class="flex items-center justify-between mb-4">
+        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          Ausstehende Hundeanmeldungen
+        </h4>
+        <span
+          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+          :class="stats.pendingDogRequests > 0
+            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'"
+        >
+          {{ stats.pendingDogRequests ?? 0 }}
+        </span>
+      </div>
+
+      <div v-if="loading" class="text-center py-8">
+        <svg class="animate-spin h-8 w-8 text-primary-600 dark:text-primary-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="text-gray-500 dark:text-gray-400 mt-2">Lade Daten...</p>
+      </div>
+
+      <div
+        v-else-if="!pendingDogRegistrations.length"
+        class="text-center py-8 text-gray-500 dark:text-gray-400"
+      >
+        Keine ausstehenden Anfragen
+      </div>
+
+      <div v-else class="divide-y divide-gray-200 dark:divide-gray-700">
+        <div
+          v-for="request in pendingDogRegistrations"
+          :key="request.id"
+          class="flex items-center justify-between py-3"
+        >
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-gray-900 dark:text-gray-100 truncate">
+              {{ request.dogName }}
+              <span v-if="request.breed" class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">
+                ({{ request.breed }})
+              </span>
+            </p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+              {{ request.customerName }} &middot;
+              {{ formatDate(request.createdAt) }}
+            </p>
+          </div>
+          <div class="flex items-center space-x-2 ml-4 shrink-0">
+            <button
+              @click="approveRequest(request.id)"
+              :disabled="processingRequestId === request.id"
+              class="btn text-sm bg-green-100 hover:bg-green-200 text-green-800 disabled:opacity-50"
+              aria-label="Anfrage annehmen"
+            >
+              <span v-if="processingRequestId === request.id">...</span>
+              <span v-else>Annehmen</span>
+            </button>
+            <button
+              @click="rejectRequest(request.id)"
+              :disabled="processingRequestId === request.id"
+              class="btn text-sm bg-red-100 hover:bg-red-200 text-red-700 disabled:opacity-50"
+              aria-label="Anfrage ablehnen"
+            >
+              <span v-if="processingRequestId === request.id">...</span>
+              <span v-else>Ablehnen</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Recent Activity -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- Upcoming Sessions -->
@@ -147,6 +220,7 @@
 import { ref, computed, onMounted, h } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import apiClient from '@/api/client'
+import { handleApiError, showSuccess } from '@/utils/errorHandler'
 import {
   UsersIcon,
   AcademicCapIcon,
@@ -170,6 +244,15 @@ const DogIcon = () => h('svg', {
   })
 ])
 
+interface PendingDogRegistration {
+  id: number
+  customerName: string
+  dogName: string
+  breed: string | null
+  gender: string | null
+  createdAt: string
+}
+
 const authStore = useAuthStore()
 const user = computed(() => authStore.user)
 
@@ -179,11 +262,14 @@ const stats = ref({
   dogs: 0,
   courses: 0,
   invoices: 0,
-  bookings: 0
+  bookings: 0,
+  pendingDogRequests: 0
 })
 
 const upcomingSessions = ref<any[]>([])
 const recentBookings = ref<any[]>([])
+const pendingDogRegistrations = ref<PendingDogRegistration[]>([])
+const processingRequestId = ref<number | null>(null)
 
 // Computed grid class based on user role
 const statsGridClass = computed(() => {
@@ -195,20 +281,56 @@ const statsGridClass = computed(() => {
   return 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6'
 })
 
-onMounted(async () => {
+async function loadDashboard() {
+  loading.value = true
   try {
-    // Load dashboard data from API
     const response = await apiClient.get('/api/v1/dashboard')
-    
+
     stats.value = response.data.stats
     upcomingSessions.value = response.data.upcomingSessions
     recentBookings.value = response.data.recentBookings
+    pendingDogRegistrations.value = response.data.pendingDogRegistrations ?? []
   } catch (error) {
     console.error('Error loading dashboard data:', error)
   } finally {
     loading.value = false
   }
+}
+
+onMounted(async () => {
+  await loadDashboard()
 })
+
+async function approveRequest(id: number) {
+  processingRequestId.value = id
+  try {
+    await apiClient.post(`/api/v1/dog-registration-requests/${id}/approve`)
+    showSuccess('Hund angelegt', 'Der Hund wurde erfolgreich angelegt')
+    await loadDashboard()
+  } catch (err) {
+    handleApiError(err, 'Fehler beim Annehmen der Anfrage')
+  } finally {
+    processingRequestId.value = null
+  }
+}
+
+async function rejectRequest(id: number) {
+  processingRequestId.value = id
+  try {
+    await apiClient.post(`/api/v1/dog-registration-requests/${id}/reject`)
+    showSuccess('Anfrage abgelehnt', 'Die Anfrage wurde abgelehnt')
+    await loadDashboard()
+  } catch (err) {
+    handleApiError(err, 'Fehler beim Ablehnen der Anfrage')
+  } finally {
+    processingRequestId.value = null
+  }
+}
+
+function formatDate(date: string) {
+  if (!date) return '-'
+  return new Date(date).toLocaleDateString('de-DE')
+}
 
 function bookingStatusClass(status: string) {
   const classes = {

@@ -11,11 +11,19 @@
           class="input max-w-md"
         />
       </div>
-      <button @click="openCreateModal" class="btn btn-primary">
+      <!-- Admin / Trainer: open full DogFormModal -->
+      <button v-if="user?.role !== 'customer'" @click="openCreateModal" class="btn btn-primary">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
         Neuer Hund
+      </button>
+      <!-- Customer: open registration-request modal -->
+      <button v-else @click="showCustomerRequestModal = true" class="btn btn-primary">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+        </svg>
+        Hund anmelden
       </button>
     </div>
 
@@ -64,28 +72,41 @@
       </div>
     </div>
 
-    <!-- Dog Form Modal -->
+    <!-- Dog Form Modal (admin/trainer) -->
     <DogFormModal 
       :is-open="showFormModal" 
       :dog="selectedDog"
       @close="closeFormModal"
       @saved="handleDogSaved"
     />
+
+    <!-- Customer Dog Registration Request Modal -->
+    <CustomerDogRequestModal
+      :is-open="showCustomerRequestModal"
+      @close="showCustomerRequestModal = false"
+      @saved="loadDogs"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useAuthStore } from '@/stores/auth'
 import apiClient from '@/api/client'
 import DogFormModal from '@/components/DogFormModal.vue'
+import CustomerDogRequestModal from '@/components/CustomerDogRequestModal.vue'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
+
+const authStore = useAuthStore()
+const user = computed(() => authStore.user)
 
 const loading = ref(true)
 const searchQuery = ref('')
 const dogs = ref<any[]>([])
 const showFormModal = ref(false)
 const selectedDog = ref<any>(null)
+const showCustomerRequestModal = ref(false)
 
 onMounted(() => {
   loadDogs()
