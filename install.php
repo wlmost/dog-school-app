@@ -1136,23 +1136,46 @@ function createEnvFile() {
         // Generate APP_KEY
         $appKey = 'base64:' . base64_encode(random_bytes(32));
         
-        // Replace placeholders
+        // Simple key=value replacements for lines that exist uncommented
         $replacements = [
             'APP_NAME=Laravel' => 'APP_NAME="' . getSessionData('app_name', 'HomoCanis') . '"',
-            'APP_ENV=local' => 'APP_ENV=' . getSessionData('app_env', 'production'),
-            'APP_DEBUG=true' => 'APP_DEBUG=' . (getSessionData('app_env') === 'production' ? 'false' : 'true'),
+            'APP_ENV=local'    => 'APP_ENV=' . getSessionData('app_env', 'production'),
+            'APP_DEBUG=true'   => 'APP_DEBUG=' . (getSessionData('app_env') === 'production' ? 'false' : 'true'),
             'APP_URL=http://localhost' => 'APP_URL=' . getSessionData('app_url', 'http://localhost'),
-            'APP_KEY=' => 'APP_KEY=' . $appKey,
+            'APP_KEY='         => 'APP_KEY=' . $appKey,
             'APP_TIMEZONE=UTC' => 'APP_TIMEZONE=' . getSessionData('app_timezone', 'Europe/Berlin'),
-            'DB_HOST=127.0.0.1' => 'DB_HOST=' . getSessionData('db_host', 'localhost'),
-            'DB_PORT=3306' => 'DB_PORT=' . getSessionData('db_port', '3306'),
-            'DB_DATABASE=laravel' => 'DB_DATABASE=' . getSessionData('db_name', ''),
-            'DB_USERNAME=root' => 'DB_USERNAME=' . getSessionData('db_user', ''),
-            'DB_PASSWORD=' => 'DB_PASSWORD=' . getSessionData('db_pass', ''),
         ];
         
         foreach ($replacements as $search => $replace) {
             $template = str_replace($search, $replace, $template);
+        }
+        
+        // Force-set DB settings via regex, handling both commented (#) and uncommented variants,
+        // and also covering sqlite/pgsql/mysql defaults in DB_CONNECTION.
+        $dbConnection = 'mysql';
+        $dbHost       = getSessionData('db_host', 'localhost');
+        $dbPort       = getSessionData('db_port', '3306');
+        $dbName       = getSessionData('db_name', '');
+        $dbUser       = getSessionData('db_user', '');
+        $dbPass       = getSessionData('db_pass', '');
+        
+        $dbReplacements = [
+            '/^#?\s*DB_CONNECTION\s*=.*$/m' => 'DB_CONNECTION=' . $dbConnection,
+            '/^#?\s*DB_HOST\s*=.*$/m'       => 'DB_HOST=' . $dbHost,
+            '/^#?\s*DB_PORT\s*=.*$/m'       => 'DB_PORT=' . $dbPort,
+            '/^#?\s*DB_DATABASE\s*=.*$/m'   => 'DB_DATABASE=' . $dbName,
+            '/^#?\s*DB_USERNAME\s*=.*$/m'   => 'DB_USERNAME=' . $dbUser,
+            '/^#?\s*DB_PASSWORD\s*=.*$/m'   => 'DB_PASSWORD=' . $dbPass,
+        ];
+        
+        foreach ($dbReplacements as $pattern => $replace) {
+            $new = preg_replace($pattern, $replace, $template);
+            // If the key didn't exist at all, append it
+            if ($new === $template && strpos($template, ltrim(explode('=', $replace)[0])) === false) {
+                $template .= "\n" . $replace;
+            } else {
+                $template = $new;
+            }
         }
         
         // Write .env file
@@ -1160,6 +1183,7 @@ function createEnvFile() {
         chmod(ENV_FILE, 0600);
         
         logMessage('.env file created successfully');
+        logMessage("DB settings: connection=$dbConnection host=$dbHost port=$dbPort db=$dbName user=$dbUser");
         
         return [
             'success' => true,
