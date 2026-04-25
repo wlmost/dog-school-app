@@ -578,6 +578,23 @@ function stepWelcome() {
 }
 
 // Main execution
+
+// Handle force_unlock BEFORE the lock check, so the POST can always reach it
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'force_unlock') {
+    if (file_exists(INSTALL_LOCK_FILE)) {
+        @unlink(INSTALL_LOCK_FILE);
+        logMessage('Force unlock: Removed install.lock');
+    }
+    if (file_exists(ENV_FILE)) {
+        @unlink(ENV_FILE);
+        logMessage('Force unlock: Removed .env');
+    }
+    session_destroy();
+    session_start();
+    header('Location: ' . $_SERVER['PHP_SELF']);
+    exit;
+}
+
 checkInstallationLock();
 
 // Handle POST requests
