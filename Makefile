@@ -34,6 +34,8 @@ rebuild: ## Rebuild containers from scratch using current branch (--no-cache)
 	docker-compose down
 	docker-compose build --no-cache
 	docker-compose up -d
+	@echo '$(BLUE)Installing Composer dependencies (incl. dev)...$(NC)'
+	docker-compose exec php composer install --no-interaction --prefer-dist --optimize-autoloader
 	@echo '$(GREEN)Containers rebuilt and started.$(NC)'
 
 update: ## Pull latest code, rebuild containers, reinstall deps and clear caches

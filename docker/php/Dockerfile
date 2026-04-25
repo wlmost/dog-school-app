@@ -55,8 +55,15 @@ RUN addgroup -g 1000 www \
 COPY php.ini /usr/local/etc/php/php.ini
 COPY xdebug.ini /usr/local/etc/php/conf.d/xdebug.ini
 
+# Copy and configure entrypoint
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
 # Set permissions
 RUN chown -R www:www /var/www/html
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["php-fpm"]
 
 # Change current user to www
 USER www
