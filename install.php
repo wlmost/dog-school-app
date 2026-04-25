@@ -98,7 +98,10 @@ function checkInstallationLock() {
     // and the user still needs to proceed to STEP_MIGRATE (step 6) and STEP_COMPLETE (step 7).
     if ($envExists) {
         $activeStep = isset($_SESSION['install_step']) ? (int)$_SESSION['install_step'] : 0;
-        $installationInProgress = $activeStep > STEP_WELCOME && $activeStep < STEP_COMPLETE;
+        // Include STEP_COMPLETE itself: the .env is written at step 5, but the lock file
+        // is only created when stepComplete() actually runs. Until then the user must
+        // be allowed to reach step 7 without being locked out.
+        $installationInProgress = $activeStep > STEP_WELCOME && $activeStep <= STEP_COMPLETE;
         if (!$installationInProgress) {
             showLockedScreen();
             exit;
