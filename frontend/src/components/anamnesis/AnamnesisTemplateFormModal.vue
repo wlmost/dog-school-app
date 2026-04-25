@@ -167,7 +167,7 @@
                 </label>
                 <div class="space-y-2">
                   <div
-                    v-for="(option, optIndex) in question.options"
+                    v-for="(_option, optIndex) in question.options"
                     :key="optIndex"
                     class="flex items-center space-x-2"
                   >
@@ -337,8 +337,8 @@ function removeQuestion(index: number) {
 
 function moveQuestionUp(index: number) {
   if (index === 0) return
-  const temp = form.value.questions[index]
-  form.value.questions[index] = form.value.questions[index - 1]
+  const temp = form.value.questions[index]!
+  form.value.questions[index] = form.value.questions[index - 1]!
   form.value.questions[index - 1] = temp
   // Update order
   form.value.questions.forEach((q, i) => {
@@ -348,8 +348,8 @@ function moveQuestionUp(index: number) {
 
 function moveQuestionDown(index: number) {
   if (index === form.value.questions.length - 1) return
-  const temp = form.value.questions[index]
-  form.value.questions[index] = form.value.questions[index + 1]
+  const temp = form.value.questions[index]!
+  form.value.questions[index] = form.value.questions[index + 1]!
   form.value.questions[index + 1] = temp
   // Update order
   form.value.questions.forEach((q, i) => {
@@ -359,6 +359,7 @@ function moveQuestionDown(index: number) {
 
 function onQuestionTypeChange(index: number) {
   const question = form.value.questions[index]
+  if (!question) return
   // Initialize options for selection types
   if (['radio', 'select', 'checkbox'].includes(question.question_type)) {
     if (question.options.length === 0) {
@@ -370,11 +371,11 @@ function onQuestionTypeChange(index: number) {
 }
 
 function addOption(questionIndex: number) {
-  form.value.questions[questionIndex].options.push('')
+  form.value.questions[questionIndex]?.options.push('')
 }
 
 function removeOption(questionIndex: number, optionIndex: number) {
-  form.value.questions[questionIndex].options.splice(optionIndex, 1)
+  form.value.questions[questionIndex]?.options.splice(optionIndex, 1)
 }
 
 async function save() {

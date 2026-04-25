@@ -170,7 +170,8 @@ const form = ref({
   end_time: '',
   price_per_session: 25,
   total_sessions: 8,
-  duration_minutes: 60
+  duration_minutes: 60,
+  notes: ''
 })
 
 async function loadTrainers() {
@@ -196,7 +197,8 @@ watch(() => props.course, (newCourse) => {
       end_time: '',
       price_per_session: newCourse.pricePerSession || 25,
       total_sessions: newCourse.totalSessions || 8,
-      duration_minutes: newCourse.durationMinutes || 60
+      duration_minutes: newCourse.durationMinutes || 60,
+      notes: newCourse.notes || ''
     }
   } else {
     resetForm()
@@ -216,7 +218,8 @@ function resetForm() {
     end_time: '',
     price_per_session: 25,
     total_sessions: 8,
-    duration_minutes: 60
+    duration_minutes: 60,
+    notes: ''
   }
 }
 

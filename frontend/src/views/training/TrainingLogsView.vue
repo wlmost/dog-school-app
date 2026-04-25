@@ -172,7 +172,7 @@ async function loadAttachments() {
     console.error('Fehler beim Laden der Anhänge:', error)
     // Don't show error if training log doesn't exist
     if (error.response?.status !== 404) {
-      toastStore.showError('Fehler beim Laden der Anhänge')
+      toastStore.error('Fehler beim Laden der Anhänge')
     }
   } finally {
     loadingAttachments.value = false
@@ -182,7 +182,7 @@ async function loadAttachments() {
 async function handleUpload(files: File[]) {
   for (const file of files) {
     try {
-      toastStore.showInfo(`Uploading ${file.name}...`)
+      toastStore.info(`Uploading ${file.name}...`)
       
       const attachment = await trainingAttachmentsApi.uploadAttachment({
         trainingLogId: MOCK_TRAINING_LOG_ID,
@@ -190,35 +190,35 @@ async function handleUpload(files: File[]) {
       })
       
       attachments.value.unshift(attachment)
-      toastStore.showSuccess(`${file.name} erfolgreich hochgeladen`)
+      toastStore.success(`${file.name} erfolgreich hochgeladen`)
     } catch (error: any) {
       console.error('Upload error:', error)
       
       if (error.response?.status === 404) {
-        toastStore.showError(
+        toastStore.error(
           'TrainingLog nicht gefunden. Bitte erstellen Sie zuerst einen TrainingLog-Eintrag oder verwenden Sie eine gültige ID.'
         )
       } else if (error.response?.data?.message) {
-        toastStore.showError(error.response.data.message)
+        toastStore.error(error.response.data.message)
       } else {
-        toastStore.showError(`Fehler beim Hochladen von ${file.name}`)
+        toastStore.error(`Fehler beim Hochladen von ${file.name}`)
       }
     }
   }
 }
 
 function handleUploadError(message: string) {
-  toastStore.showError(message)
+  toastStore.error(message)
 }
 
 async function handleDelete(attachment: TrainingAttachment) {
   try {
     await trainingAttachmentsApi.deleteAttachment(attachment.id)
     attachments.value = attachments.value.filter(a => a.id !== attachment.id)
-    toastStore.showSuccess('Datei erfolgreich gelöscht')
+    toastStore.success('Datei erfolgreich gelöscht')
   } catch (error) {
     console.error('Delete error:', error)
-    toastStore.showError('Fehler beim Löschen der Datei')
+    toastStore.error('Fehler beim Löschen der Datei')
   }
 }
 

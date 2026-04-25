@@ -96,13 +96,11 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
 import apiClient from '@/api/client'
 import CustomerFormModal from '@/components/CustomerFormModal.vue'
 import CustomerDetailModal from '@/components/CustomerDetailModal.vue'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
 
-const router = useRouter()
 const loading = ref(true)
 const searchQuery = ref('')
 const customers = ref<any[]>([])

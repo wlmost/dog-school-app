@@ -282,7 +282,7 @@ function openCreateModal() {
   showFormModal.value = true
 }
 
-function useTemplate(template: AnamnesisTemplate) {
+function useTemplate(_template: AnamnesisTemplate) {
   selectedResponse.value = null
   showFormModal.value = true
   // The template will be auto-selected if needed

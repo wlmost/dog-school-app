@@ -139,7 +139,7 @@ const close = () => {
   emit('close');
 };
 
-const handlePaymentSuccess = (payment: any) => {
+const handlePaymentSuccess = (_payment: any) => {
   toast.success('Zahlung erfolgreich! Die Rechnung wurde aktualisiert.');
   emit('payment-success');
   close();

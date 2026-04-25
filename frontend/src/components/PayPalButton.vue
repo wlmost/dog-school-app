@@ -98,7 +98,7 @@ const initPayPalButton = () => {
 
       } catch (err: any) {
         error.value = err.response?.data?.message || 'PayPal-Bestellung konnte nicht erstellt werden';
-        toast.error(error.value);
+        toast.error(error.value!);
         throw err;
       } finally {
         processing.value = false;
@@ -118,8 +118,8 @@ const initPayPalButton = () => {
 
       } catch (err: any) {
         error.value = err.response?.data?.message || 'Zahlung konnte nicht abgeschlossen werden';
-        toast.error(error.value);
-        emit('error', error.value);
+        toast.error(error.value!);
+        emit('error', error.value!);
       } finally {
         processing.value = false;
       }
@@ -134,8 +134,8 @@ const initPayPalButton = () => {
     // Handle errors
     onError: (err: any) => {
       error.value = 'Ein Fehler ist bei der Zahlung aufgetreten';
-      toast.error(error.value);
-      emit('error', error.value);
+      toast.error(error.value!);
+      emit('error', error.value!);
       console.error('PayPal error:', err);
     },
 
@@ -153,7 +153,7 @@ const setupPayPal = async () => {
 
   } catch (err: any) {
     error.value = err.message || 'PayPal konnte nicht initialisiert werden';
-    toast.error(error.value);
+    toast.error(error.value!);
   } finally {
     loading.value = false;
   }

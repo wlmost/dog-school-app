@@ -60,7 +60,7 @@
                       v-model="form.date_of_birth" 
                       type="date" 
                       class="input" 
-                      @click="$event.target.showPicker?.()" 
+                      @click="($event.target as HTMLInputElement).showPicker?.()" 
                     />
                   </div>
 
@@ -321,7 +321,7 @@ async function handleSubmit() {
     
     // Extract first validation error if available
     if (err.response?.data?.errors) {
-      const firstError = Object.values(err.response.data.errors)[0]?.[0]
+      const firstError = (Object.values(err.response.data.errors)[0] as string[])?.[0]
       if (firstError) {
         errorMessage = firstError as string
       }

@@ -465,10 +465,10 @@ const loadSettings = async () => {
           }
         } else if (setting.type === 'boolean' || setting.key === 'company_small_business') {
           // Handle boolean values
-          const value = setting.value
-          formData.value[setting.key as keyof typeof formData.value] = (value === true || value === 'true' || value === 1 || value === '1') as any
+          const settingValue = setting.value
+          ;(formData.value as Record<string, any>)[setting.key] = (settingValue === true || settingValue === 'true' || settingValue === 1 || settingValue === '1')
         } else {
-          formData.value[setting.key as keyof typeof formData.value] = setting.value as any
+          (formData.value as Record<string, any>)[setting.key] = setting.value
         }
       }
     })

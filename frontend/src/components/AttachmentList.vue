@@ -8,7 +8,7 @@
       <div v-if="showFilters" class="flex gap-2">
         <button
           v-for="type in fileTypes"
-          :key="type.value"
+          :key="type.value ?? 'all'"
           @click="filterByType(type.value)"
           :class="[
             'px-3 py-1 text-sm rounded-md transition-colors',

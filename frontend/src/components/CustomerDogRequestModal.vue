@@ -254,7 +254,7 @@ async function handleSubmit() {
     let errorMessage = err.response?.data?.message || 'Fehler beim Senden der Anfrage'
 
     if (err.response?.data?.errors) {
-      const firstError = Object.values(err.response.data.errors)[0]?.[0]
+      const firstError = (Object.values(err.response.data.errors)[0] as string[])?.[0]
       if (firstError) {
         errorMessage = firstError as string
       }
