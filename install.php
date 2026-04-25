@@ -1424,13 +1424,6 @@ function runMigrations() {
             $output = ob_get_clean();
             
             logMessage("Migration command completed with status: $status");
-        }
-    } catch (Exception $e) {
-        logMessage('Outer migration error: ' . $e->getMessage(), 'ERROR');
-        return [
-            'success' => false,
-            'message' => 'Migration error: ' . $e->getMessage(),
-            'output' => $e->getTraceAsString()
             
             // Check if migration was successful
             if ($output && (
@@ -1451,9 +1444,16 @@ function runMigrations() {
                     'output' => $output ?: 'Command may have failed silently. Check if shell_exec is enabled.'
                 ];
             }
+        } catch (Exception $e) {
+            logMessage('Inner migration error: ' . $e->getMessage(), 'ERROR');
+            return [
+                'success' => false,
+                'message' => 'Migration error: ' . $e->getMessage(),
+                'output' => $e->getTraceAsString()
+            ];
         }
     } catch (Exception $e) {
-        logMessage('Migration error: ' . $e->getMessage(), 'ERROR');
+        logMessage('Outer migration error: ' . $e->getMessage(), 'ERROR');
         return [
             'success' => false,
             'message' => 'Migration error: ' . $e->getMessage(),
