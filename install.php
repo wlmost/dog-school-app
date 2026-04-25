@@ -1221,56 +1221,80 @@ function createEnvFile() {
 
 /**
  * Configure .htaccess files based on APP_URL
+ *
+ * Replaces the install-mode root .htaccess (which routes everything to
+ * backend/public/) with a production .htaccess that:
+ *  - Routes /api/*, /sanctum/*, /broadcasting/* to Laravel
+ *  - Routes /storage/* to the backend public storage symlink
+ *  - Serves static assets directly from frontend/dist/
+ *  - Falls back to frontend/dist/index.html for Vue SPA routing
  */
 function configureHtaccess() {
     try {
         $appUrl = getSessionData('app_url', '');
-        
-        // Parse URL to get the path
+
+        // Parse URL to get the base path (empty for root installs)
         $parsedUrl = parse_url($appUrl);
         $path = isset($parsedUrl['path']) ? rtrim($parsedUrl['path'], '/') : '';
-        
-        // If path is empty, we're in root, otherwise we're in a subdirectory
         $rewriteBase = $path ?: '/';
-        
+
         logMessage("Configuring .htaccess with RewriteBase: $rewriteBase");
-        
-        // Configure root .htaccess
+
+        // Write production root .htaccess (replaces the install-mode routing)
         $rootHtaccess = dirname(__FILE__) . '/.htaccess';
-        if (file_exists($rootHtaccess)) {
-            $content = file_get_contents($rootHtaccess);
-            
-            // Update RewriteBase
-            $content = preg_replace(
-                '/RewriteBase\s+\/.*$/m',
-                'RewriteBase ' . $rewriteBase,
-                $content
-            );
-            
-            file_put_contents($rootHtaccess, $content);
-            logMessage("Updated root .htaccess");
-        }
-        
-        // Configure backend/public/.htaccess
+        $rootContent = '<IfModule mod_rewrite.c>' . "\n"
+            . '    RewriteEngine On' . "\n"
+            . '    RewriteBase ' . $rewriteBase . "\n"
+            . "\n"
+            . '    # Allow direct access to install.php (shows locked screen post-install)' . "\n"
+            . '    RewriteRule ^install\.php$ - [L]' . "\n"
+            . "\n"
+            . '    # Route storage requests to backend public storage symlink' . "\n"
+            . '    RewriteRule ^storage/(.*)$ backend/public/storage/$1 [L]' . "\n"
+            . "\n"
+            . '    # Route API and backend-specific paths to Laravel' . "\n"
+            . '    RewriteRule ^api/(.*)$ backend/public/index.php [L,QSA]' . "\n"
+            . '    RewriteRule ^sanctum/(.*)$ backend/public/index.php [L,QSA]' . "\n"
+            . '    RewriteRule ^broadcasting/(.*)$ backend/public/index.php [L,QSA]' . "\n"
+            . "\n"
+            . '    # Serve existing files/directories from root directly (robots.txt, etc.)' . "\n"
+            . '    RewriteCond %{REQUEST_FILENAME} -f [OR]' . "\n"
+            . '    RewriteCond %{REQUEST_FILENAME} -d' . "\n"
+            . '    RewriteRule ^ - [L]' . "\n"
+            . "\n"
+            . '    # Serve existing static assets from frontend/dist/' . "\n"
+            . '    RewriteCond %{DOCUMENT_ROOT}/frontend/dist%{REQUEST_URI} -f' . "\n"
+            . '    RewriteRule ^ frontend/dist%{REQUEST_URI} [L]' . "\n"
+            . "\n"
+            . '    # Everything else -> Vue SPA (handles client-side routing)' . "\n"
+            . '    RewriteRule ^ frontend/dist/index.html [L]' . "\n"
+            . '</IfModule>' . "\n"
+            . "\n"
+            . '# Disable directory browsing' . "\n"
+            . 'Options -Indexes' . "\n"
+            . "\n"
+            . 'DirectoryIndex frontend/dist/index.html' . "\n";
+
+        file_put_contents($rootHtaccess, $rootContent);
+        logMessage("Wrote production root .htaccess");
+
+        // Update RewriteBase in backend/public/.htaccess
         $backendHtaccess = BACKEND_DIR . '/public/.htaccess';
         if (file_exists($backendHtaccess)) {
             $content = file_get_contents($backendHtaccess);
-            
-            // Update RewriteBase
             $content = preg_replace(
                 '/RewriteBase\s+\/.*$/m',
                 'RewriteBase ' . $rewriteBase,
                 $content
             );
-            
             file_put_contents($backendHtaccess, $content);
             logMessage("Updated backend/public/.htaccess");
         }
-        
+
         return [
             'success' => true,
-            'message' => '.htaccess files configured',
-            'details' => 'RewriteBase set to: ' . $rewriteBase
+            'message' => '.htaccess files configured for production',
+            'details' => 'RewriteBase: ' . $rewriteBase . ' | Frontend SPA routing active',
         ];
     } catch (Exception $e) {
         logMessage('Failed to configure .htaccess: ' . $e->getMessage(), 'ERROR');

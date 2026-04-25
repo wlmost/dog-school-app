@@ -1,0 +1,32 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Allow direct access to install.php (shows locked screen post-install)
+    RewriteRule ^install\.php$ - [L]
+
+    # Route storage requests to backend public storage symlink
+    RewriteRule ^storage/(.*)$ backend/public/storage/$1 [L]
+
+    # Route API and backend-specific paths to Laravel
+    RewriteRule ^api/(.*)$ backend/public/index.php [L,QSA]
+    RewriteRule ^sanctum/(.*)$ backend/public/index.php [L,QSA]
+    RewriteRule ^broadcasting/(.*)$ backend/public/index.php [L,QSA]
+
+    # Serve existing files/directories from root directly (robots.txt, etc.)
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
+
+    # Serve existing static assets from frontend/dist/
+    RewriteCond %{DOCUMENT_ROOT}/frontend/dist%{REQUEST_URI} -f
+    RewriteRule ^ frontend/dist%{REQUEST_URI} [L]
+
+    # Everything else -> Vue SPA (handles client-side routing)
+    RewriteRule ^ frontend/dist/index.html [L]
+</IfModule>
+
+# Disable directory browsing
+Options -Indexes
+
+DirectoryIndex frontend/dist/index.html
