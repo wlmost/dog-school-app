@@ -86,10 +86,23 @@ function checkInstallationLock() {
     // Check for lock files
     $lockExists = file_exists(INSTALL_LOCK_FILE);
     $envExists = file_exists(ENV_FILE);
-    
-    if ($lockExists || $envExists) {
+
+    // install.lock always means fully completed → lock
+    if ($lockExists) {
         showLockedScreen();
         exit;
+    }
+
+    // .env exists: only lock if there is NO active installation session in progress.
+    // During a running installation the .env is written at STEP_SETUP (step 5)
+    // and the user still needs to proceed to STEP_MIGRATE (step 6) and STEP_COMPLETE (step 7).
+    if ($envExists) {
+        $activeStep = isset($_SESSION['install_step']) ? (int)$_SESSION['install_step'] : 0;
+        $installationInProgress = $activeStep > STEP_WELCOME && $activeStep < STEP_COMPLETE;
+        if (!$installationInProgress) {
+            showLockedScreen();
+            exit;
+        }
     }
     
     // Auto-reset session if no lock files exist but session indicates completion
