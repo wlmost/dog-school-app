@@ -2,6 +2,445 @@
 
 Dieser Guide beschreibt das Deployment der Hundeschule-Verwaltungsanwendung auf einem Webhoster mit PHP 8.4 und MySQL.
 
+---
+
+## 🚀 Quick Start: Shared Hosting Installation
+
+**NEU**: Für Shared Hosting Umgebungen (z.B. Strato, 1&1, ALL-INKL) steht jetzt ein automatisierter Installations-Prozess zur Verfügung!
+
+### Übersicht
+
+Der automatisierte Shared Hosting Installer besteht aus zwei Komponenten:
+1. **Build-Script** (`build-deployment.sh`) - Erstellt ein deployment-fertiges Archiv
+2. **Installation-Wizard** (`install.php`) - Web-basierter Installations-Assistent
+
+### Voraussetzungen
+
+- PHP 8.4+ mit benötigten Extensions
+- MySQL 8.0+ Datenbank
+- FTP oder Web-Dateimanager Zugriff
+- Composer und npm (nur für Build-Prozess auf lokalem Rechner)
+
+---
+
+### Schritt 1: Deployment-Paket erstellen
+
+**Auf Ihrem lokalen Entwicklungsrechner:**
+
+```bash
+# Build-Script ausführbar machen (einmalig)
+chmod +x build-deployment.sh
+
+# Deployment-Paket erstellen
+./build-deployment.sh
+```
+
+Das Script führt automatisch folgende Schritte aus:
+- ✓ Prüft ob Composer und npm verfügbar sind
+- ✓ Installiert Backend Production Dependencies
+- ✓ Installiert und baut Frontend Assets
+- ✓ Kopiert Anwendungsdateien (ohne Development-Files)
+- ✓ Generiert .htaccess Dateien für Apache
+- ✓ Erstellt tar.gz Archiv mit Zeitstempel
+
+**Ausgabe:**
+```
+✓ Build Completed Successfully!
+
+Archive:      homocanis-deployment-20260215-143000.tar.gz
+Size:         45.2M
+Files:        3,847
+
+Next steps:
+  1. Upload homocanis-deployment-20260215-143000.tar.gz to your shared hosting server
+  2. Extract the archive in your desired directory
+  3. Access install.php in your browser to complete installation
+```
+
+---
+
+### Schritt 2: Archiv auf Server hochladen
+
+**Via FTP oder Web-Dateimanager:**
+
+1. **Verbinden Sie sich mit Ihrem Shared Hosting**
+   - Verwenden Sie FTP (FileZilla, Cyberduck) oder Web-Dateimanager
+   
+2. **Navigieren Sie zum Zielverzeichnis**
+   - Typischerweise: `public_html/` oder `htdocs/`
+   - Für Subdomain: `public_html/hundeschule/` oder ähnlich
+
+3. **Laden Sie das tar.gz Archiv hoch**
+   - Upload: `homocanis-deployment-YYYYMMDD-HHMMSS.tar.gz`
+
+4. **Entpacken Sie das Archiv**
+   ```bash
+   # Via SSH (wenn verfügbar)
+   tar -xzf homocanis-deployment-YYYYMMDD-HHMMSS.tar.gz
+   
+   # Oder via Web-Dateimanager "Extract" Funktion
+   ```
+
+5. **Löschen Sie das Archiv**
+   ```bash
+   rm homocanis-deployment-YYYYMMDD-HHMMSS.tar.gz
+   ```
+
+---
+
+### Schritt 3: Installation-Wizard ausführen
+
+**Im Browser:**
+
+1. **Öffnen Sie den Installer**
+   - Navigieren Sie zu: `https://ihre-domain.de/hundeschule/install.php`
+   - Der Wizard startet automatisch
+
+2. **Schritt 1: Willkommen**
+   - Lesen Sie die Übersicht
+   - Klicken Sie "Start Installation"
+
+3. **Schritt 2: Server-Anforderungen**
+   - Der Wizard prüft automatisch:
+     - ✓ PHP Version (8.4+)
+     - ✓ Alle benötigten PHP Extensions
+     - ✓ Empfohlene Extensions
+   - Bei kritischen Fehlern: Kontaktieren Sie Ihren Hoster
+   - Bei Warnungen: Sie können fortfahren (Features evtl. eingeschränkt)
+   - Klicken Sie "Next: Database Configuration"
+
+4. **Schritt 3: Datenbank-Konfiguration**
+   - Geben Sie Ihre MySQL-Zugangsdaten ein:
+     - **Host**: `localhost` (Standard bei Shared Hosting)
+     - **Port**: `3306` (Standard MySQL Port)
+     - **Datenbankname**: Ihr MySQL Datenbankname (z.B. `db123456_homocanis`)
+     - **Benutzername**: Ihr MySQL Benutzername
+     - **Passwort**: Ihr MySQL Passwort
+   - Klicken Sie "Test Connection" - Der Wizard testet die Verbindung
+   - Bei Erfolg: Klicken Sie "Next: Application Settings"
+   - Bei Fehler: Prüfen Sie Zugangsdaten und versuchen Sie erneut
+
+5. **Schritt 4: Anwendungs-Einstellungen**
+   - **Application Name**: `HomoCanis` (oder Ihr gewünschter Name)
+   - **Application URL**: Auto-erkannt, ggf. anpassen (z.B. `https://hundeschule.ihre-domain.de`)
+     - ⚠️ **Wichtig**: Die URL wird verwendet, um die `.htaccess` Dateien automatisch zu konfigurieren
+     - Für Subdomain: `https://hundeschule.ihre-domain.de` → RewriteBase `/`
+     - Für Unterverzeichnis: `https://ihre-domain.de/hundeschule` → RewriteBase `/hundeschule`
+   - **Environment**: `production` (für Live-Server)
+   - **Timezone**: `Europe/Berlin` oder Ihre Zeitzone
+   - Klicken Sie "Next: Environment Setup"
+
+6. **Schritt 5: Umgebung einrichten**
+   - Der Wizard führt automatisch aus:
+     - ✓ Erstellt .env Datei mit Ihren Einstellungen
+     - ✓ Generiert APP_KEY (Verschlüsselungsschlüssel)
+     - ✓ Konfiguriert .htaccess Dateien basierend auf Application URL
+     - ✓ Erstellt benötigte Verzeichnisse (storage/, bootstrap/cache/)
+     - ✓ Setzt Berechtigungen (775)
+     - ✓ Prüft Schreibrechte
+   - Bei Fehlern: "Rollback Installation" möglich
+   - Bei Erfolg: Klicken Sie "Next: Database Migration"
+
+7. **Schritt 6: Datenbank-Migration**
+   - Der Wizard führt automatisch aus:
+     - ✓ Erstellt alle Datenbank-Tabellen
+     - ✓ Führt Migrationen aus
+     - ✓ Optional: Installiert Demo-Daten (Checkbox aktivieren)
+   - Fortschritt wird angezeigt
+   - Klicken Sie "Complete Installation"
+
+8. **Schritt 7: Installation abgeschlossen! 🎉**
+   - ✓ Storage Symlink erstellt
+   - ✓ Lock-Datei erstellt (verhindert erneute Installation)
+   - ✓ Installation-Log gespeichert
+   
+   **WICHTIG - Sicherheit:**
+   - Klicken Sie "🗑 Delete Installer Now" um install.php zu löschen
+   - Oder löschen Sie es manuell via FTP
+   
+   **→ Klicken Sie "Go to Application"** um Ihre Anwendung zu öffnen!
+
+---
+
+### Directory Structure (Shared Hosting)
+
+Nach der Installation haben Sie folgende Struktur:
+
+```
+public_html/hundeschule/
+├── .htaccess                  # Root .htaccess (leitet zu backend/public/)
+├── install.php               # Installer (LÖSCHEN nach Installation!)
+├── install.lock              # Lock-Datei (verhindert Re-Installation)
+├── install.log               # Installations-Log
+├── backend/
+│   ├── .htaccess             # Schützt Backend-Code (deny all)
+│   ├── .env                  # Konfiguration (WICHTIG: nicht öffentlich!)
+│   ├── .env.template         # Template für .env
+│   ├── app/                  # Laravel Application Code
+│   ├── bootstrap/
+│   │   └── cache/            # Writable (775)
+│   ├── config/               # Laravel Config
+│   ├── database/             # Migrations, Seeders
+│   ├── public/               # Web Root!
+│   │   ├── .htaccess         # Laravel Routing + Security Headers
+│   │   ├── index.php         # Application Entry Point
+│   │   └── storage -> ../../storage/app/public (Symlink)
+│   ├── routes/               # API + Web Routes
+│   ├── storage/              # Writable (775)
+│   │   ├── .htaccess         # Schützt Storage (deny all)
+│   │   ├── app/
+│   │   ├── framework/
+│   │   └── logs/
+│   └── vendor/               # Composer Dependencies
+├── frontend/
+│   ├── .htaccess             # Schützt Frontend Source (deny all)
+│   └── dist/                 # Gebaute Frontend Assets
+│       ├── assets/
+│       └── index.html
+└── LICENSE, README.md
+```
+
+**Wichtige Hinweise:**
+- Der **Web Root** sollte auf `backend/public/` zeigen
+- Die root `.htaccess` leitet automatisch alle Anfragen zu `backend/public/`
+- `install.php` MUSS nach erfolgreicher Installation gelöscht werden!
+- `.env` enthält sensible Daten und darf NICHT öffentlich zugänglich sein
+
+---
+
+### Troubleshooting (Shared Hosting)
+
+#### Problem: "Installation Locked" obwohl nicht installiert
+
+**Ursache:** Lock-Datei oder .env existiert bereits
+
+**Lösung:**
+```bash
+# Via FTP oder SSH
+rm -f install.lock
+rm -f backend/.env
+
+# Oder via Web-Dateimanager löschen
+```
+
+Dann Installer erneut aufrufen.
+
+#### Problem: "Permission denied" Fehler bei Verzeichnis-Erstellung
+
+**Ursache:** Webserver hat keine Schreibrechte
+
+**Lösung via FTP:**
+```bash
+# Setzen Sie Berechtigungen manuell:
+chmod 775 backend/storage
+chmod 775 backend/storage/app
+chmod 775 backend/storage/framework
+chmod 775 backend/storage/logs
+chmod 775 backend/bootstrap/cache
+```
+
+**Lösung via SSH:**
+```bash
+find backend/storage -type d -exec chmod 775 {} \;
+find backend/bootstrap/cache -type d -exec chmod 775 {} \;
+```
+
+#### Problem: Datenbank-Verbindung schlägt fehl
+
+**Ursache:** Falsche Zugangsdaten oder Host
+
+**Lösung:**
+1. Prüfen Sie Ihre MySQL-Zugangsdaten im Hosting-Control-Panel
+2. Host ist oft `localhost`, kann aber auch sein:
+   - `mysql.ihre-domain.de`
+   - `db123.hosting-provider.de`
+3. Stellen Sie sicher, dass die Datenbank existiert
+4. Prüfen Sie Benutzername und Passwort (Copy-Paste empfohlen)
+
+#### Problem: 500 Internal Server Error
+
+**Ursache 1:** .htaccess nicht kompatibel
+
+**Lösung:** Prüfen Sie `storage/logs/laravel.log` (falls zugänglich) oder kontaktieren Sie Support
+
+**Ursache 2:** PHP-Version zu alt
+
+**Lösung:** Stellen Sie sicher, dass PHP 8.4+ aktiv ist. Im Hosting-Panel:
+- cPanel: "Select PHP Version"
+- Plesk: "PHP Settings"
+- Prüfen via: `<?php phpinfo(); ?>` in Datei `info.php`
+
+#### Problem: Assets (CSS/JS) werden nicht geladen
+
+**Ursache:** Frontend nicht korrekt gebaut oder deployed
+
+**Lösung:**
+1. Prüfen Sie ob `frontend/dist/` Verzeichnis existiert
+2. Bauen Sie Frontend lokal neu: `cd frontend && npm run build`
+3. Laden Sie `frontend/dist/` erneut hoch
+
+#### Problem: HTTP 403 Forbidden beim Zugriff auf die Hauptseite
+
+**Ursache:** `.htaccess` nicht korrekt konfiguriert für Unterverzeichnis
+
+**Lösung:**
+Der Wizard konfiguriert die `.htaccess` automatisch basierend auf der eingegebenen URL. Falls dies fehlschlägt:
+
+**Für Root-Installation** (`https://hundeschule.ihre-domain.de`):
+```apache
+# In .htaccess (Root)
+RewriteBase /
+
+# In backend/public/.htaccess
+RewriteBase /
+```
+
+**Für Unterverzeichnis** (`https://ihre-domain.de/hundeschule`):
+```apache
+# In .htaccess (Root)
+RewriteBase /hundeschule
+
+# In backend/public/.htaccess  
+RewriteBase /hundeschule
+```
+
+**Manuelle Anpassung:**
+1. Öffnen Sie `.htaccess` im Root-Verzeichnis
+2. Suchen Sie die Zeile `RewriteBase /`
+3. Ersetzen Sie `/` mit dem Pfad aus Ihrer URL (z.B. `/hundeschule`)
+4. Wiederholen Sie für `backend/public/.htaccess`
+
+#### Problem: Installer lässt sich nicht laden
+
+**Ursache:** Datei-Berechtigungen oder PHP nicht verfügbar
+
+**Lösung:**
+```bash
+# Berechtigungen setzen
+chmod 755 install.php
+
+# PHP-Version prüfen (erstellen Sie test.php):
+<?php phpinfo(); ?>
+```
+
+#### Problem: Migration schlägt fehl
+
+**Ursache:** Unvollständige Datenbank-Rechte
+
+**Lösung:**
+- Stellen Sie sicher, dass der MySQL-User CREATE, DROP, ALTER Rechte hat
+- Im Control-Panel: MySQL User Permissions prüfen/setzen
+
+#### Problem: Nach Installation "Page not found"
+
+**Ursache:** .htaccess Regeln nicht aktiv
+
+**Lösung:**
+1. Prüfen Sie ob Apache `mod_rewrite` aktiviert ist (fragen Sie Ihren Hoster)
+2. Testen Sie ob `.htaccess` gelesen wird:
+   ```
+   # Fügen Sie in .htaccess ein:
+   # TEST
+   
+   # Wenn Sie 500 Error bekommen, wird .htaccess gelesen
+   ```
+
+---
+
+### Post-Installation Schritte
+
+Nach erfolgreicher Installation:
+
+1. **Installer löschen**
+   ```bash
+   rm install.php install.lock install.log
+   ```
+
+2. **Erste Schritte**
+   - Melden Sie sich beim Admin-Account an
+   - Ändern Sie das Admin-Passwort
+   - Konfigurieren Sie E-Mail-Einstellungen (in `.env`)
+
+3. **Sicherheit**
+   - Prüfen Sie, dass `.env` nicht über Web zugänglich ist
+   - Testen Sie: `https://ihre-domain.de/hundeschule/backend/.env` sollte 403 Forbidden zeigen
+   - Prüfen Sie, dass `storage/` geschützt ist
+
+4. **Backup einrichten**
+   - Richten Sie regelmäßige Datenbank-Backups ein (oft im Hosting-Panel verfügbar)
+   - Sichern Sie `.env` Datei lokal
+
+5. **Optional: Demo-Daten entfernen**
+   ```bash
+   # Falls Sie Demo-Daten installiert haben und diese löschen möchten:
+   php artisan migrate:fresh --force
+   # ACHTUNG: Löscht ALLE Daten!
+   ```
+
+---
+
+### Build-Script Anpassungen
+
+Falls Sie den Build-Prozess anpassen möchten:
+
+**Dateien ausschließen** (in `build-deployment.sh`):
+```bash
+# Zeile ~120: Fügen Sie weitere Ausschlüsse hinzu
+rsync -a --exclude='node_modules' \
+         --exclude='.git' \
+         --exclude='your-custom-exclusion' \
+         backend/ "$BUILD_DIR/backend/"
+```
+
+**.htaccess Templates anpassen** (in `deployment-templates/htaccess/`):
+```bash
+# Bearbeiten Sie die Templates:
+deployment-templates/htaccess/root.htaccess
+deployment-templates/htaccess/backend-public.htaccess
+deployment-templates/htaccess/backend-root.htaccess
+deployment-templates/htaccess/storage.htaccess
+deployment-templates/htaccess/frontend.htaccess
+```
+
+---
+
+## Server-Anforderungen überprüfen
+
+**WICHTIG**: Bevor Sie mit dem Deployment beginnen, überprüfen Sie, ob Ihr Server alle Anforderungen erfüllt.
+
+### Automatische Überprüfung mit requirements-check.php
+
+Die Anwendung enthält ein Validierungsskript, das alle Server-Anforderungen automatisch überprüft.
+
+**So verwenden Sie das Skript:**
+
+1. **Laden Sie die Datei hoch**:
+   - Kopieren Sie `backend/requirements-check.php` auf Ihren Server
+   - Platzieren Sie es im `backend/`-Verzeichnis
+
+2. **Führen Sie das Skript aus**:
+   - Öffnen Sie in Ihrem Browser: `https://ihre-domain.de/requirements-check.php`
+   - Das Skript überprüft automatisch:
+     - ✓ PHP Version (8.4.x erforderlich)
+     - ✓ Alle benötigten PHP-Extensions
+     - ✓ Schreibrechte für Storage-Verzeichnisse
+     - ✓ MySQL-Datenbank-Konnektivität (optional)
+
+3. **Beheben Sie alle gemeldeten Probleme**:
+   - Das Skript zeigt detaillierte Fehlermeldungen und Lösungsvorschläge
+   - Rot markierte Einträge MÜSSEN behoben werden
+   - Gelb markierte Einträge sind Warnungen (empfohlen)
+
+4. **WICHTIG - Löschen Sie das Skript nach der Überprüfung**:
+   ```bash
+   rm backend/requirements-check.php
+   ```
+   Das Skript enthält Systeminformationen und sollte nicht in der Produktivumgebung verbleiben.
+
+**Alternative manuelle Überprüfung:**
+
+Falls Sie das Skript nicht verwenden können, überprüfen Sie die folgenden Anforderungen manuell:
+
 ## Systemvoraussetzungen
 
 ### Server-Anforderungen

@@ -8,6 +8,11 @@ schema: spec-driven
 #     Tech stack: TypeScript, React, Node.js
 #     We use conventional commits
 #     Domain: e-commerce platform
+context: |
+  Tech stack: Php, Laravel, MySQL, Vue.js
+  We follow PSR-12 coding standards
+  We follow RESTful API design principles
+  We follow cllean code principles
 
 # Per-artifact rules (optional)
 # Add custom rules for specific artifacts.
@@ -18,3 +23,4 @@ schema: spec-driven
 #       - Always include a "Non-goals" section
 #     tasks:
 #       - Break tasks into chunks of max 2 hours
+rules:

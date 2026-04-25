@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HomoCanis Server Requirements Check</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #2d3748;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            color: #1a202c;
+            margin-bottom: 10px;
+        }
+        
+        .warning-banner {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            color: #856404;
+        }
+        
+        .warning-banner strong {
+            display: block;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+        }
+        
+        .summary {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .summary h2 {
+            margin-bottom: 20px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+        
+        .status-pass {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .status-fail {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .section {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        
+        .section h3 {
+            margin-bottom: 20px;
+            color: #1a202c;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        
+        .check-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 6px;
+            background: #f7fafc;
+            border-left: 4px solid #cbd5e0;
+        }
+        
+        .check-item.pass {
+            background: #f0fff4;
+            border-left-color: #48bb78;
+        }
+        
+        .check-item.warning {
+            background: #fffef0;
+            border-left-color: #f6ad55;
+        }
+        
+        .check-item.fail {
+            background: #fff5f5;
+            border-left-color: #f56565;
+        }
+        
+        .check-item-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .status-icon {
+            font-size: 1.4em;
+            margin-right: 12px;
+            font-weight: bold;
+        }
+        
+        .status-icon.pass { color: #48bb78; }
+        .status-icon.warning { color: #f6ad55; }
+        .status-icon.fail { color: #f56565; }
+        
+        .check-item-title {
+            font-weight: 600;
+            font-size: 1.05em;
+        }
+        
+        .check-item-description {
+            color: #4a5568;
+            font-size: 0.95em;
+            margin-left: 32px;
+        }
+        
+        .remediation {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 10px;
+            margin-left: 32px;
+        }
+        
+        .remediation strong {
+            display: block;
+            margin-bottom: 8px;
+            color: #2d3748;
+        }
+        
+        .remediation code {
+            background: #2d3748;
+            color: #68d391;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        .extension-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .extension-item {
+            padding: 12px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            font-size: 0.95em;
+        }
+        
+        .db-form {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        
+        .db-form h4 {
+            margin-bottom: 15px;
+            color: #2d3748;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        .form-group input {
+            padding: 10px;
+            border: 1px solid #cbd5e0;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+        
+        .btn {
+            background: #4299e1;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        
+        .btn:hover {
+            background: #3182ce;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #718096;
+            font-size: 0.9em;
+        }
+        
+        .timestamp {
+            color: #718096;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+        
+        details {
+            margin-top: 10px;
+        }
+        
+        summary {
+            cursor: pointer;
+            font-weight: 600;
+            padding: 10px;
+            background: #edf2f7;
+            border-radius: 4px;
+            user-select: none;
+        }
+        
+        summary:hover {
+            background: #e2e8f0;
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
+            .header, .summary, .section {
+                padding: 20px;
+            }
+            
+            .extension-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐕 HomoCanis Server Requirements Check</h1>
+            <p>Validation performed on 2026-02-15 12:56:32</p>
+        </div>
+        
+        <div class="warning-banner">
+            <strong>⚠️ SECURITY WARNING</strong>
+            DELETE THIS FILE after completing your installation. This script reveals system information and should not be accessible in production.
+        </div>
+        
+        <div class="summary">
+            <h2>Overall Status</h2>
+            <div class="status-badge status-fail">
+                ✗ CHECKS FAILED            </div>
+        </div>
+        
+        <!-- PHP VERSION -->
+        <div class="section">
+            <h3>PHP Version</h3>
+            <div class="check-item fail">
+                <div class="check-item-header">
+                    <span class="status-icon fail">
+                        ✗                    </span>
+                    <span class="check-item-title">PHP 8.3.25</span>
+                </div>
+                <div class="check-item-description">
+                    PHP 8.4.0 or higher is required                </div>
+                
+                                <div class="remediation">
+                    <strong>How to fix:</strong>
+                                            <p>Contact your hosting provider to upgrade to PHP 8.4.x. Most control panels (cPanel, Plesk) allow PHP version selection.</p>
+                        <p>Required: PHP 8.4.0 or higher</p>
+                                    </div>
+                            </div>
+        </div>
+        
+        <!-- PHP EXTENSIONS -->
+        <div class="section">
+            <h3>PHP Extensions</h3>
+            
+            <h4 style="margin-top: 0;">Required Extensions</h4>
+            <div class="extension-grid">
+                                <div class="extension-item check-item pass">
+                    <span class="status-icon pass">
+                        ✓                    </span>
+                    <div>
+                        <strong>json</strong><br>
+                        <small>JSON parsing</small>
+                    </div>
+                </div>
+                                <div class="extension-item check-item pass">
+                    <span class="status-icon pass">
+                        ✓                    </span>
+                    <div>
+                        <strong>mbstring</strong><br>
+                        <small>Multi-byte string handling</small>
+                    </div>
+                </div>
+                                <div class="extension-item check-item pass">
+                    <span class="status-icon pass">
+                        ✓                    </span>
+                    <div>
+                        <strong>openssl</strong><br>
+                        <small>Encryption and secure connections</small>
+                    </div>
+                </div>
+                                <div class="extension-item check-item pass">
+                    <span class="status-icon pass">
+                        ✓                    </span>
+                    <div>
+                        <strong>pdo</strong><br>
+                        <small>Database abstraction layer</small>
+                    </div>
+                </div>
+                                <div class="extension-item check-item pass">
+                    <span class="status-icon pass">
+                        ✓                    </span>
+                    <div>
+                        <strong>pdo_mysql</strong><br>
+                        <small>MySQL database driver</small>
+                    </div>
+                </div>
+                                <div class="extension-item check-item pass">
+                    <span class="status-icon pass">
+                        ✓                    </span>
+                    <div>
+                        <strong>tokenizer</strong><br>
+                        <small>PHP tokenization</small>
+                    </div>
+                </div>
+                                <div class="extension-item check-item pass">
+                    <span class="status-icon pass">
+                        ✓                    </span>
+                    <div>
+                        <strong>xml</strong><br>
+                        <small>XML processing</small>
+                    </div>
+                </div>
+                                <div class="extension-item check-item pass">
+                    <span class="status-icon pass">
+                        ✓                    </span>
+                    <div>
+                        <strong>ctype</strong><br>
+                        <small>Character type checking</small>
+                    </div>
+                </div>
+                                <div class="extension-item check-item pass">
+                    <span class="status-icon pass">
+                        ✓                    </span>
+                    <div>
+                        <strong>fileinfo</strong><br>
+                        <small>File type detection</small>
+                    </div>
+                </div>
+                                <div class="extension-item check-item pass">
+                    <span class="status-icon pass">
+                        ✓                    </span>
+                    <div>
+                        <strong>filter</strong><br>
+                        <small>Input filtering</small>
+                    </div>
+                </div>
+                                <div class="extension-item check-item pass">
+                    <span class="status-icon pass">
+                        ✓                    </span>
+                    <div>
+                        <strong>hash</strong><br>
+                        <small>Hash functions</small>
+                    </div>
+                </div>
+                                <div class="extension-item check-item pass">
+                    <span class="status-icon pass">
+                        ✓                    </span>
+                    <div>
+                        <strong>curl</strong><br>
+                        <small>HTTP requests (PayPal SDK)</small>
+                    </div>
+                </div>
+                                <div class="extension-item check-item pass">
+                    <span class="status-icon pass">
+                        ✓                    </span>
+                    <div>
+                        <strong>zip</strong><br>
+                        <small>Archive handling (dompdf)</small>
+                    </div>
+                </div>
+                            </div>
+            
+                        
+            <h4 style="margin-top: 25px;">Recommended Extensions</h4>
+            <div class="extension-grid">
+                                <div class="extension-item check-item pass">
+                    <span class="status-icon pass">
+                        ✓                    </span>
+                    <div>
+                        <strong>bcmath</strong><br>
+                        <small>Arbitrary precision mathematics</small>
+                    </div>
+                </div>
+                                <div class="extension-item check-item pass">
+                    <span class="status-icon pass">
+                        ✓                    </span>
+                    <div>
+                        <strong>gd</strong><br>
+                        <small>Image processing (alternative: imagick)</small>
+                    </div>
+                </div>
+                                <div class="extension-item check-item pass">
+                    <span class="status-icon pass">
+                        ✓                    </span>
+                    <div>
+                        <strong>imagick</strong><br>
+                        <small>Image processing (alternative: gd)</small>
+                    </div>
+                </div>
+                            </div>
+            
+                    </div>
+        
+        <!-- FILE PERMISSIONS -->
+        <div class="section">
+            <h3>File Permissions</h3>
+            
+                        <div class="check-item fail">
+                <div class="check-item-header">
+                    <span class="status-icon fail">
+                        ✗                    </span>
+                    <span class="check-item-title">storage</span>
+                </div>
+                <div class="check-item-description">
+                    Directory does not exist                                    </div>
+                
+                                <div class="remediation">
+                    <strong>How to fix:</strong>
+                                            <p>Create the directory:</p>
+                        <code>mkdir -p /var/www/vhosts/hbkm6dfx.web149.alfahosting-server.de/storage</code>
+                                    </div>
+                            </div>
+                        <div class="check-item fail">
+                <div class="check-item-header">
+                    <span class="status-icon fail">
+                        ✗                    </span>
+                    <span class="check-item-title">bootstrap/cache</span>
+                </div>
+                <div class="check-item-description">
+                    Directory does not exist                                    </div>
+                
+                                <div class="remediation">
+                    <strong>How to fix:</strong>
+                                            <p>Create the directory:</p>
+                        <code>mkdir -p /var/www/vhosts/hbkm6dfx.web149.alfahosting-server.de/bootstrap/cache</code>
+                                    </div>
+                            </div>
+                        <div class="check-item fail">
+                <div class="check-item-header">
+                    <span class="status-icon fail">
+                        ✗                    </span>
+                    <span class="check-item-title">public/storage</span>
+                </div>
+                <div class="check-item-description">
+                    Directory does not exist                                    </div>
+                
+                                <div class="remediation">
+                    <strong>How to fix:</strong>
+                                            <p>Create the directory:</p>
+                        <code>mkdir -p /var/www/vhosts/hbkm6dfx.web149.alfahosting-server.de/public/storage</code>
+                                    </div>
+                            </div>
+                    </div>
+        
+        <!-- DATABASE -->
+        <div class="section">
+            <h3>Database Connectivity</h3>
+            
+                            <p style="color: #718096; margin-bottom: 20px;">
+                    Database connectivity test was not performed. Enter credentials below to test your MySQL connection.
+                </p>
+                        
+            <details open>
+                <summary>Test Database Connection</summary>
+                <div class="db-form">
+                    <h4>Enter Database Credentials</h4>
+                    <form method="POST">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Host:</label>
+                                <input type="text" name="db_host" value="localhost" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Port:</label>
+                                <input type="text" name="db_port" value="3306" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Database Name:</label>
+                                <input type="text" name="db_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Username:</label>
+                                <input type="text" name="db_user" required>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Password:</label>
+                                <input type="password" name="db_pass">
+                            </div>
+                        </div>
+                        <button type="submit" name="test_database" class="btn">Test Connection</button>
+                    </form>
+                    <p style="margin-top: 15px; color: #718096; font-size: 0.9em;">
+                        <strong>Note:</strong> Credentials are not stored. They are only used for this connection test.
+                    </p>
+                </div>
+            </details>
+        </div>
+        
+        <div class="footer">
+            <p><strong>HomoCanis Server Requirements Check v1.0.0</strong></p>
+            <p>Generated: 2026-02-15 12:56:32 | PHP 8.3.25</p>
+            <p style="margin-top: 10px;">
+                <a href="https://www.php.net/manual/en/extensions.php" target="_blank" style="color: #4299e1;">PHP Extensions Documentation</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
