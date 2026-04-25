@@ -68,12 +68,12 @@ check_dependencies() {
     
     local missing_deps=()
     
-    if ! command -v composer &> /dev/null; then
-        missing_deps+=("composer")
+    if ! command -v docker &> /dev/null; then
+        missing_deps+=("docker")
     fi
     
-    if ! command -v npm &> /dev/null; then
-        missing_deps+=("npm")
+    if ! command -v rsync &> /dev/null; then
+        missing_deps+=("rsync")
     fi
     
     if ! command -v tar &> /dev/null; then
@@ -88,33 +88,41 @@ check_dependencies() {
         error_exit "Missing required dependencies: ${missing_deps[*]}\nPlease install them and try again."
     fi
     
+    # Verify the required containers are running
+    if ! docker inspect dog-school-php &> /dev/null; then
+        error_exit "PHP container 'dog-school-php' is not running. Start it with: docker-compose up -d"
+    fi
+    
+    if ! docker inspect dog-school-node &> /dev/null; then
+        error_exit "Node container 'dog-school-node' is not running. Start it with: docker-compose up -d"
+    fi
+    
     success_msg "All dependencies available"
 }
 
 # Install backend production dependencies
 install_backend_dependencies() {
-    info_msg "Installing backend production dependencies..."
-    cd backend
-    composer install --no-dev --optimize-autoloader || error_exit "Backend dependency installation failed"
-    cd ..
+    info_msg "Installing backend production dependencies (via docker)..."
+    docker exec dog-school-php sh -c \
+        "composer install --no-dev --optimize-autoloader --no-interaction --working-dir=/var/www/html" \
+        || error_exit "Backend dependency installation failed"
     success_msg "Backend dependencies installed"
 }
 
 # Install frontend dependencies and build
 install_frontend_dependencies() {
-    info_msg "Installing frontend dependencies..."
-    cd frontend
-    npm ci || error_exit "Frontend dependency installation failed"
+    info_msg "Installing frontend dependencies (via docker)..."
+    docker exec dog-school-node sh -c "npm ci" \
+        || error_exit "Frontend dependency installation failed"
     success_msg "Frontend dependencies installed"
 }
 
 # Build frontend assets
 build_frontend() {
-    info_msg "Building frontend assets..."
-    cd frontend
-    npm run build || error_exit "Frontend build failed"
+    info_msg "Building frontend assets (via docker)..."
+    docker exec dog-school-node sh -c "npm run build" \
+        || error_exit "Frontend build failed"
     success_msg "Frontend build complete"
-    cd ..
 }
 
 # Verify production dependencies
@@ -161,6 +169,9 @@ copy_application_files() {
              --exclude='storage/framework/cache/*' \
              --exclude='storage/framework/sessions/*' \
              --exclude='storage/framework/views/*' \
+             --exclude='._*' \
+             --exclude='.DS_Store' \
+             --exclude='__MACOSX' \
              backend/ "$BUILD_DIR/backend/" || error_exit "Failed to copy backend files"
     
     # Copy frontend dist
@@ -277,7 +288,11 @@ copy_installer() {
 create_archive() {
     info_msg "Creating deployment archive..."
     
-    tar -czf "$ARCHIVE_NAME" -C "$BUILD_DIR" . || error_exit "Failed to create archive"
+    tar -czf "$ARCHIVE_NAME" -C "$BUILD_DIR" \
+        --exclude='._*' \
+        --exclude='.DS_Store' \
+        --exclude='__MACOSX' \
+        . || error_exit "Failed to create archive"
     
     success_msg "Archive created: $ARCHIVE_NAME"
 }
@@ -299,7 +314,7 @@ verify_archive() {
     )
     
     for file in "${critical_files[@]}"; do
-        if ! tar -tzf "$ARCHIVE_NAME" | grep -q "^${file#./}$"; then
+        if ! tar -tzf "$ARCHIVE_NAME" | grep -qF "$file"; then
             error_exit "Critical file missing from archive: $file"
         fi
     done
