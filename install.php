@@ -1257,9 +1257,8 @@ function configureHtaccess() {
             . '    RewriteRule ^sanctum/(.*)$ backend/public/index.php [L,QSA]' . "\n"
             . '    RewriteRule ^broadcasting/(.*)$ backend/public/index.php [L,QSA]' . "\n"
             . "\n"
-            . '    # Serve existing files/directories from root directly (robots.txt, etc.)' . "\n"
-            . '    RewriteCond %{REQUEST_FILENAME} -f [OR]' . "\n"
-            . '    RewriteCond %{REQUEST_FILENAME} -d' . "\n"
+            . '    # Serve existing files from root directly (robots.txt, etc.)' . "\n"
+            . '    RewriteCond %{REQUEST_FILENAME} -f' . "\n"
             . '    RewriteRule ^ - [L]' . "\n"
             . "\n"
             . '    # Serve existing static assets from frontend/dist/' . "\n"
@@ -1271,22 +1270,51 @@ function configureHtaccess() {
             . '</IfModule>' . "\n"
             . "\n"
             . '# Disable directory browsing' . "\n"
-            . 'Options -Indexes' . "\n"
-            . "\n"
-            . 'DirectoryIndex frontend/dist/index.html' . "\n";
+            . 'Options -Indexes' . "\n";
 
         file_put_contents($rootHtaccess, $rootContent);
         logMessage("Wrote production root .htaccess");
 
-        // Update RewriteBase in backend/public/.htaccess
+        // Write frontend/dist/.htaccess to override parent "Deny from all"
+        $frontendDistDir = dirname(__FILE__) . '/frontend/dist';
+        if (is_dir($frontendDistDir)) {
+            $frontendDistHtaccess = $frontendDistDir . '/.htaccess';
+            $frontendDistContent = '# Override parent "Deny from all" - allow serving built frontend assets' . "\n"
+                . '<IfModule mod_authz_core.c>' . "\n"
+                . '  Require all granted' . "\n"
+                . '</IfModule>' . "\n"
+                . '<IfModule !mod_authz_core.c>' . "\n"
+                . '  Order allow,deny' . "\n"
+                . '  Allow from all' . "\n"
+                . '</IfModule>' . "\n";
+            file_put_contents($frontendDistHtaccess, $frontendDistContent);
+            logMessage("Wrote frontend/dist/.htaccess");
+        } else {
+            logMessage("frontend/dist directory not found – skipping frontend/dist/.htaccess", 'WARN');
+        }
+
+        // Update RewriteBase in backend/public/.htaccess and ensure grant override is present
         $backendHtaccess = BACKEND_DIR . '/public/.htaccess';
         if (file_exists($backendHtaccess)) {
             $content = file_get_contents($backendHtaccess);
+            // Update RewriteBase
             $content = preg_replace(
                 '/RewriteBase\s+\/.*$/m',
                 'RewriteBase ' . $rewriteBase,
                 $content
             );
+            // Prepend grant override if not already present (overrides parent "Deny from all")
+            if (strpos($content, 'Require all granted') === false && strpos($content, 'Allow from all') === false) {
+                $grantBlock = '# Override parent "Deny from all" - allow serving Laravel public directory' . "\n"
+                    . '<IfModule mod_authz_core.c>' . "\n"
+                    . '  Require all granted' . "\n"
+                    . '</IfModule>' . "\n"
+                    . '<IfModule !mod_authz_core.c>' . "\n"
+                    . '  Order allow,deny' . "\n"
+                    . '  Allow from all' . "\n"
+                    . '</IfModule>' . "\n\n";
+                $content = $grantBlock . $content;
+            }
             file_put_contents($backendHtaccess, $content);
             logMessage("Updated backend/public/.htaccess");
         }

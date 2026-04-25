@@ -13,9 +13,8 @@
     RewriteRule ^sanctum/(.*)$ backend/public/index.php [L,QSA]
     RewriteRule ^broadcasting/(.*)$ backend/public/index.php [L,QSA]
 
-    # Serve existing files/directories from root directly (robots.txt, etc.)
-    RewriteCond %{REQUEST_FILENAME} -f [OR]
-    RewriteCond %{REQUEST_FILENAME} -d
+    # Serve existing files from root directly (robots.txt, etc.)
+    RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]
 
     # Serve existing static assets from frontend/dist/
@@ -28,5 +27,3 @@
 
 # Disable directory browsing
 Options -Indexes
-
-DirectoryIndex frontend/dist/index.html
