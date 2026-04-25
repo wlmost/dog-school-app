@@ -1491,27 +1491,22 @@ function runMigrations() {
                 ];
             }
             
-            // Start output buffering
-            ob_start();
-            
             logMessage('Running migrate:fresh command...');
             
-            // Run fresh migration command (drops all tables and re-runs all migrations)
+            // Run fresh migration command (drops all tables and re-runs all migrations).
+            // kernel->call() writes to an internal BufferedOutput, not PHP's output buffer,
+            // so we must use $kernel->output() to retrieve the captured output.
             $status = $kernel->call('migrate:fresh', [
                 '--force' => true,
             ]);
             
-            $output = ob_get_clean();
+            $output = $kernel->output();
             
             logMessage("Migration command completed with status: $status");
+            logMessage("Migration output: " . substr($output, 0, 500));
             
-            // Check if migration was successful
-            if ($output && (
-                strpos($output, 'Migration table created successfully') !== false ||
-                strpos($output, 'Migrating:') !== false ||
-                strpos($output, 'Dropped all tables') !== false ||
-                strpos($output, 'migrated') !== false
-            )) {
+            // Check if migration was successful (status 0 = success)
+            if ($status === 0) {
                 return [
                     'success' => true,
                     'message' => 'Database migrations completed successfully',
