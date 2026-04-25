@@ -176,8 +176,11 @@ copy_application_files() {
     
     # Copy frontend dist
     info_msg "Copying frontend build assets..."
-    mkdir -p "$BUILD_DIR/frontend"
-    cp -r frontend/dist "$BUILD_DIR/frontend/" || error_exit "Failed to copy frontend dist"
+    mkdir -p "$BUILD_DIR/frontend/dist"
+    rsync -a --exclude='._*' \
+             --exclude='.DS_Store' \
+             --exclude='__MACOSX' \
+             frontend/dist/ "$BUILD_DIR/frontend/dist/" || error_exit "Failed to copy frontend dist"
     
     # Copy .env.example as .env.template
     info_msg "Copying .env.example as .env.template..."
@@ -288,7 +291,9 @@ copy_installer() {
 create_archive() {
     info_msg "Creating deployment archive..."
     
-    tar -czf "$ARCHIVE_NAME" -C "$BUILD_DIR" \
+    # COPYFILE_DISABLE=1 prevents macOS tar from embedding resource forks
+    # as ._* AppleDouble files inside the archive.
+    COPYFILE_DISABLE=1 tar -czf "$ARCHIVE_NAME" -C "$BUILD_DIR" \
         --exclude='._*' \
         --exclude='.DS_Store' \
         --exclude='__MACOSX' \
