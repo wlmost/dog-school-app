@@ -1,12 +1,3 @@
-# Override parent "Deny from all" - allow serving Laravel public directory
-<IfModule mod_authz_core.c>
-  Require all granted
-</IfModule>
-<IfModule !mod_authz_core.c>
-  Order allow,deny
-  Allow from all
-</IfModule>
-
 <IfModule mod_negotiation.c>
     Options -MultiViews -Indexes
 </IfModule>

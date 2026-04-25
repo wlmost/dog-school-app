@@ -1275,46 +1275,15 @@ function configureHtaccess() {
         file_put_contents($rootHtaccess, $rootContent);
         logMessage("Wrote production root .htaccess");
 
-        // Write frontend/dist/.htaccess to override parent "Deny from all"
-        $frontendDistDir = dirname(__FILE__) . '/frontend/dist';
-        if (is_dir($frontendDistDir)) {
-            $frontendDistHtaccess = $frontendDistDir . '/.htaccess';
-            $frontendDistContent = '# Override parent "Deny from all" - allow serving built frontend assets' . "\n"
-                . '<IfModule mod_authz_core.c>' . "\n"
-                . '  Require all granted' . "\n"
-                . '</IfModule>' . "\n"
-                . '<IfModule !mod_authz_core.c>' . "\n"
-                . '  Order allow,deny' . "\n"
-                . '  Allow from all' . "\n"
-                . '</IfModule>' . "\n";
-            file_put_contents($frontendDistHtaccess, $frontendDistContent);
-            logMessage("Wrote frontend/dist/.htaccess");
-        } else {
-            logMessage("frontend/dist directory not found – skipping frontend/dist/.htaccess", 'WARN');
-        }
-
-        // Update RewriteBase in backend/public/.htaccess and ensure grant override is present
+        // Update RewriteBase in backend/public/.htaccess
         $backendHtaccess = BACKEND_DIR . '/public/.htaccess';
         if (file_exists($backendHtaccess)) {
             $content = file_get_contents($backendHtaccess);
-            // Update RewriteBase
             $content = preg_replace(
                 '/RewriteBase\s+\/.*$/m',
                 'RewriteBase ' . $rewriteBase,
                 $content
             );
-            // Prepend grant override if not already present (overrides parent "Deny from all")
-            if (strpos($content, 'Require all granted') === false && strpos($content, 'Allow from all') === false) {
-                $grantBlock = '# Override parent "Deny from all" - allow serving Laravel public directory' . "\n"
-                    . '<IfModule mod_authz_core.c>' . "\n"
-                    . '  Require all granted' . "\n"
-                    . '</IfModule>' . "\n"
-                    . '<IfModule !mod_authz_core.c>' . "\n"
-                    . '  Order allow,deny' . "\n"
-                    . '  Allow from all' . "\n"
-                    . '</IfModule>' . "\n\n";
-                $content = $grantBlock . $content;
-            }
             file_put_contents($backendHtaccess, $content);
             logMessage("Updated backend/public/.htaccess");
         }

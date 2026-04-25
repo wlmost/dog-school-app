@@ -1,1 +1,9 @@
-Deny from all
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Allow access to public directory only
+    RewriteRule ^public(/.*)?$ - [L]
+    # Block direct access to all other backend files
+    RewriteRule ^ - [F,L]
+</IfModule>
+
+Options -Indexes
