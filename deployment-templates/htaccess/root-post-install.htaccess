@@ -5,19 +5,25 @@
     # Allow direct access to install.php (shows locked screen post-install)
     RewriteRule ^install\.php$ - [L]
 
-    # Route storage requests to backend public storage symlink
+    # Route storage requests to backend public storage symlink (before blocking)
     RewriteRule ^storage/(.*)$ backend/public/storage/$1 [L]
 
-    # Route API and backend-specific paths to Laravel
+    # Route API and backend-specific paths to Laravel (before blocking)
     RewriteRule ^api/(.*)$ backend/public/index.php [L,QSA]
     RewriteRule ^sanctum/(.*)$ backend/public/index.php [L,QSA]
     RewriteRule ^broadcasting/(.*)$ backend/public/index.php [L,QSA]
+
+    # Block direct access to backend source files (allow public/ only)
+    RewriteRule ^backend/(?!public/) - [F,L]
+
+    # Block direct access to frontend source files (allow dist/ only)
+    RewriteRule ^frontend/(?!dist/) - [F,L]
 
     # Serve existing files from root directly (robots.txt, etc.)
     RewriteCond %{REQUEST_FILENAME} -f
     RewriteRule ^ - [L]
 
-    # Serve existing static assets from frontend/dist/ (use $1 not REQUEST_URI - works for subdirectory installs)
+    # Serve existing static assets from frontend/dist/
     RewriteRule ^(.+\.(css|js|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|map|webp|json|txt|xml))$ frontend/dist/$1 [L]
 
     # Everything else -> Vue SPA (handles client-side routing)

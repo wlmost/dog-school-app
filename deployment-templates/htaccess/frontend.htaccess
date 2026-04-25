@@ -1,9 +1,2 @@
-<IfModule mod_rewrite.c>
-    RewriteEngine On
-    # Allow access to built frontend assets
-    RewriteRule ^dist(/.*)?$ - [L]
-    # Block direct access to all other frontend source files
-    RewriteRule ^ - [F,L]
-</IfModule>
-
+# Block directory listing (access control handled by root .htaccess)
 Options -Indexes
