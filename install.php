@@ -1494,10 +1494,10 @@ function runMigrations() {
             // Start output buffering
             ob_start();
             
-            logMessage('Running migrate command...');
+            logMessage('Running migrate:fresh command...');
             
-            // Run migration command
-            $status = $kernel->call('migrate', [
+            // Run fresh migration command (drops all tables and re-runs all migrations)
+            $status = $kernel->call('migrate:fresh', [
                 '--force' => true,
             ]);
             
@@ -1509,7 +1509,7 @@ function runMigrations() {
             if ($output && (
                 strpos($output, 'Migration table created successfully') !== false ||
                 strpos($output, 'Migrating:') !== false ||
-                strpos($output, 'Nothing to migrate') !== false ||
+                strpos($output, 'Dropped all tables') !== false ||
                 strpos($output, 'migrated') !== false
             )) {
                 return [

@@ -101,16 +101,9 @@ return new class extends Migration
             return count($indexes) > 0;
         }
         
-        // For MySQL and other databases, try to get indexes from Schema
-        try {
-            $conn = Schema::getConnection();
-            $doctrineSchemaManager = $conn->getDoctrineSchemaManager();
-            $indexes = $doctrineSchemaManager->listTableIndexes($table);
-            return isset($indexes[$index]);
-        } catch (\Exception $e) {
-            // If we can't check, assume it doesn't exist to allow creation
-            return false;
-        }
+        // MySQL: use SHOW INDEX (no Doctrine dependency, works in Laravel 11+)
+        $rows = \DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", [$index]);
+        return count($rows) > 0;
     }
 
     /**
