@@ -222,7 +222,7 @@ class CustomerController extends Controller
     }
 
     /**
-     * Get customer's credits.
+     * Get credits.
      *
      * @param Customer $customer
      * @return AnonymousResourceCollection
@@ -237,5 +237,30 @@ class CustomerController extends Controller
                 ->orderBy('purchase_date', 'desc')
                 ->get()
         );
+    }
+
+    /**
+     * Get the profile of the currently authenticated customer.
+     *
+     * @param Request $request
+     * @return CustomerResource|JsonResponse
+     */
+    public function profile(Request $request): CustomerResource|JsonResponse
+    {
+        $user = $request->user();
+
+        if (!$user->isCustomer()) {
+            return response()->json(['message' => 'Nur für Kunden verfügbar.'], 403);
+        }
+
+        $customer = $user->customer;
+
+        if (!$customer) {
+            return response()->json(['message' => 'Kein Kundenprofil gefunden.'], 404);
+        }
+
+        $customer->load(['user', 'trainer', 'dogs']);
+
+        return new CustomerResource($customer);
     }
 }
