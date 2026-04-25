@@ -55,9 +55,9 @@ class UpdateCustomerRequest extends FormRequest
             'emergencyContact' => ['sometimes', 'nullable', 'string', 'max:255'],
             'notes' => ['sometimes', 'nullable', 'string', 'max:1000'],
             'paymentMethod' => ['sometimes', 'nullable', 'string', 'in:cash,invoice,direct_debit'],
-            'bankAccountHolder' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'bankIban' => ['sometimes', 'nullable', 'string', 'max:34'],
-            'bankBic' => ['sometimes', 'nullable', 'string', 'max:11'],
+            'bankAccountHolder' => ['sometimes', 'required_if:paymentMethod,direct_debit', 'nullable', 'string', 'max:255'],
+            'bankIban' => ['sometimes', 'required_if:paymentMethod,direct_debit', 'nullable', 'string', 'max:34', 'regex:/^[A-Z]{2}[0-9]{2}[A-Z0-9]{1,30}$/'],
+            'bankBic' => ['sometimes', 'nullable', 'string', 'max:11', 'regex:/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/'],
         ];
     }
 

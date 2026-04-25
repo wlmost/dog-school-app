@@ -101,6 +101,7 @@
           <p class="text-sm text-gray-600 dark:text-gray-400">
             Bitte geben Sie Ihre Bankdaten für das SEPA-Lastschriftverfahren an.
           </p>
+          <p v-if="bankError" class="text-xs text-red-600">{{ bankError }}</p>
           <div>
             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kontoinhaber *</label>
             <input v-model="form.bankAccountHolder" type="text" class="input" placeholder="Max Mustermann" />
@@ -110,9 +111,10 @@
             <input
               v-model="form.bankIban"
               type="text"
-              class="input uppercase"
-              placeholder="DE89 3704 0044 0532 0130 00"
+              class="input"
+              placeholder="DE89370400440532013000"
               maxlength="34"
+              aria-label="IBAN (ohne Leerzeichen, Buchstaben werden automatisch großgeschrieben)"
             />
           </div>
           <div>
@@ -120,9 +122,10 @@
             <input
               v-model="form.bankBic"
               type="text"
-              class="input uppercase"
+              class="input"
               placeholder="COBADEFFXXX"
               maxlength="11"
+              aria-label="BIC / SWIFT-Code (Buchstaben werden automatisch großgeschrieben)"
             />
           </div>
         </div>
@@ -214,11 +217,34 @@ import { ref, onMounted } from 'vue'
 import apiClient from '@/api/client'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
 
+interface CustomerUser {
+  firstName: string
+  lastName: string
+  email: string
+  phone: string | null
+  mobilePhone: string | null
+}
+
+interface CustomerProfile {
+  id: number
+  addressLine1: string | null
+  addressLine2: string | null
+  postalCode: string | null
+  city: string | null
+  country: string | null
+  paymentMethod: string | null
+  bankAccountHolder: string | null
+  bankIban: string | null
+  bankBic: string | null
+  user: CustomerUser
+}
+
 const loading = ref(true)
 const saving = ref(false)
 const customerId = ref<number | null>(null)
 const passwordError = ref<string | null>(null)
 const passwordConfirmError = ref<string | null>(null)
+const bankError = ref<string | null>(null)
 const showPassword = ref(false)
 const showPasswordConfirmation = ref(false)
 
@@ -280,7 +306,7 @@ async function loadProfile() {
   }
 }
 
-function populateForm(customer: any) {
+function populateForm(customer: CustomerProfile) {
   const data: ProfileForm = {
     firstName: customer.user?.firstName || '',
     lastName: customer.user?.lastName || '',
@@ -308,9 +334,14 @@ function resetForm() {
     form.value = { ...originalData.value, password: '', passwordConfirmation: '' }
     passwordError.value = null
     passwordConfirmError.value = null
+    bankError.value = null
     showPassword.value = false
     showPasswordConfirmation.value = false
   }
+}
+
+function normalizeIban(value: string): string {
+  return value.replace(/\s+/g, '').toUpperCase()
 }
 
 function validatePassword(password: string): string | null {
@@ -327,6 +358,7 @@ async function handleSubmit() {
 
   passwordError.value = null
   passwordConfirmError.value = null
+  bankError.value = null
 
   if (form.value.password) {
     const pwdValidation = validatePassword(form.value.password)
@@ -337,6 +369,17 @@ async function handleSubmit() {
     if (form.value.password !== form.value.passwordConfirmation) {
       passwordConfirmError.value = 'Passwörter stimmen nicht überein'
       return
+    }
+  }
+
+  if (form.value.paymentMethod === 'direct_debit') {
+    if (!form.value.bankAccountHolder || !form.value.bankIban) {
+      bankError.value = 'Bitte Kontoinhaber und IBAN für die Lastschrift angeben'
+      return
+    }
+    form.value.bankIban = normalizeIban(form.value.bankIban)
+    if (form.value.bankBic) {
+      form.value.bankBic = form.value.bankBic.trim().toUpperCase()
     }
   }
 
@@ -356,7 +399,7 @@ async function handleSubmit() {
       paymentMethod: form.value.paymentMethod || null,
       bankAccountHolder: form.value.paymentMethod === 'direct_debit' ? form.value.bankAccountHolder : null,
       bankIban: form.value.paymentMethod === 'direct_debit' ? form.value.bankIban : null,
-      bankBic: form.value.paymentMethod === 'direct_debit' ? form.value.bankBic : null,
+      bankBic: form.value.paymentMethod === 'direct_debit' ? (form.value.bankBic || null) : null,
     }
 
     if (form.value.password) {
@@ -365,7 +408,7 @@ async function handleSubmit() {
     }
 
     const response = await apiClient.put(`/api/v1/customers/${customerId.value}`, payload)
-    const customer = response.data.data
+    const customer = response.data.data as CustomerProfile
     populateForm(customer)
     showSuccess('Profil aktualisiert', 'Ihre Daten wurden erfolgreich gespeichert')
   } catch (error) {
