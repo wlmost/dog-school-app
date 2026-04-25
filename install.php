@@ -1180,7 +1180,7 @@ function createEnvFile() {
         
         // Write .env file
         file_put_contents(ENV_FILE, $template);
-        chmod(ENV_FILE, 0600);
+        chmod(ENV_FILE, 0644);
         
         logMessage('.env file created successfully');
         logMessage("DB settings: connection=$dbConnection host=$dbHost port=$dbPort db=$dbName user=$dbUser");
@@ -1439,6 +1439,24 @@ function runMigrations() {
         
         logMessage('Artisan found, attempting to load Laravel...');
         
+        // Read .env and verify DB settings are present
+        $envContents = file_exists(ENV_FILE) ? file_get_contents(ENV_FILE) : '';
+        $envDebug = [];
+        foreach (['DB_CONNECTION', 'DB_HOST', 'DB_PORT', 'DB_DATABASE', 'DB_USERNAME'] as $key) {
+            preg_match('/^' . $key . '=(.*)$/m', $envContents, $m);
+            $envDebug[] = $key . '=' . ($m[1] ?? '(not set)');
+        }
+        logMessage('.env DB settings: ' . implode(', ', $envDebug));
+        
+        // Verify .env is readable
+        if (!is_readable(ENV_FILE)) {
+            return [
+                'success' => false,
+                'message' => '.env file exists but is not readable (permission denied)',
+                'output' => 'Check file permissions. File: ' . ENV_FILE
+            ];
+        }
+
         // Try to run migrations directly via Laravel
         try {
             // Load Laravel application
@@ -1446,11 +1464,18 @@ function runMigrations() {
             logMessage('Autoloader loaded');
             
             $app = require_once BACKEND_DIR . '/bootstrap/app.php';
-            logMessage('Laravel app bootstrapped');
+            logMessage('Laravel app bootstrapped, basePath: ' . $app->basePath());
             
-            // Create kernel
+            // Create kernel and bootstrap it so config/env is loaded
             $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
-            logMessage('Console kernel created');
+            $kernel->bootstrap();
+            logMessage('Kernel bootstrapped');
+            
+            // Show what Laravel actually resolved for DB config
+            $dbConfig = $app['config']['database.default'] ?? 'unknown';
+            $dbHost   = $app['config']['database.connections.' . $dbConfig . '.host'] ?? 'unknown';
+            $dbName   = $app['config']['database.connections.' . $dbConfig . '.database'] ?? 'unknown';
+            logMessage("Laravel resolved DB: connection=$dbConfig host=$dbHost db=$dbName");
             
             // Test database connection first
             try {
@@ -1461,7 +1486,8 @@ function runMigrations() {
                 return [
                     'success' => false,
                     'message' => 'Database connection failed: ' . $dbErr->getMessage(),
-                    'output' => 'Please check your database credentials in the .env file'
+                    'output' => 'Laravel DB config: connection=' . $dbConfig . ', host=' . $dbHost . ', db=' . $dbName
+                        . "\n.env DB settings: " . implode(', ', $envDebug)
                 ];
             }
             
