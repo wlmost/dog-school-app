@@ -233,9 +233,11 @@ copy_htaccess_files() {
         error_exit ".htaccess templates directory not found: $template_dir"
     fi
     
-    # Root .htaccess
+    # Root .htaccess – use post-install version so both update.php and the SPA
+    # work correctly when extracting over an existing installation.
+    # install.php is also reachable via this file for fresh installs.
     info_msg "Placing root .htaccess..."
-    cp "$template_dir/root.htaccess" "$BUILD_DIR/.htaccess" || error_exit "Failed to copy root .htaccess"
+    cp "$template_dir/root-post-install.htaccess" "$BUILD_DIR/.htaccess" || error_exit "Failed to copy root .htaccess"
     
     # Backend public .htaccess
     info_msg "Placing backend/public .htaccess..."
