@@ -1400,29 +1400,158 @@ function setPermissions() {
 }
 
 /**
+ * Render the admin account + demo data form fields inside stepMigrate.
+ */
+function renderMigrateForm(): void
+{
+    ?>
+    <h3 style="margin-top:1.5rem;">Administrator Account</h3>
+    <p>This account will be used to log in and manage the application.</p>
+
+    <div class="form-group">
+        <label for="admin_first_name">First Name <span style="color:red">*</span></label>
+        <input type="text" id="admin_first_name" name="admin_first_name"
+               value="<?php echo htmlspecialchars($_POST['admin_first_name'] ?? ''); ?>"
+               required autocomplete="given-name">
+    </div>
+    <div class="form-group">
+        <label for="admin_last_name">Last Name <span style="color:red">*</span></label>
+        <input type="text" id="admin_last_name" name="admin_last_name"
+               value="<?php echo htmlspecialchars($_POST['admin_last_name'] ?? ''); ?>"
+               required autocomplete="family-name">
+    </div>
+    <div class="form-group">
+        <label for="admin_email">E-Mail Address <span style="color:red">*</span></label>
+        <input type="email" id="admin_email" name="admin_email"
+               value="<?php echo htmlspecialchars($_POST['admin_email'] ?? ''); ?>"
+               required autocomplete="email">
+    </div>
+    <div class="form-group">
+        <label for="admin_password">Password <span style="color:red">*</span> (min. 8 characters)</label>
+        <input type="password" id="admin_password" name="admin_password"
+               required autocomplete="new-password" minlength="8">
+    </div>
+
+    <hr style="margin: 1.5rem 0;">
+
+    <div class="checkbox-group">
+        <input type="checkbox" name="run_seeders" id="run_seeders">
+        <label for="run_seeders">Install demo data — creates a test trainer and test customer (optional)</label>
+    </div>
+    <?php
+}
+
+/**
+ * Create the initial admin user directly via Laravel's User model.
+ *
+ * @param string $firstName
+ * @param string $lastName
+ * @param string $email
+ * @param string $password  Plain-text password (will be hashed)
+ * @return array{success: bool, message: string}
+ */
+function createInitialAdmin(string $firstName, string $lastName, string $email, string $password): array
+{
+    try {
+        require_once BACKEND_DIR . '/vendor/autoload.php';
+        $app    = require_once BACKEND_DIR . '/bootstrap/app.php';
+        $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+        $kernel->bootstrap();
+
+        $userClass = \App\Models\User::class;
+
+        if ($userClass::where('email', $email)->exists()) {
+            logMessage("Admin user already exists: $email");
+            return ['success' => true, 'message' => 'Administrator account already exists'];
+        }
+
+        $userClass::create([
+            'first_name'        => $firstName,
+            'last_name'         => $lastName,
+            'email'             => $email,
+            'password'          => \Illuminate\Support\Facades\Hash::make($password),
+            'role'              => 'admin',
+            'email_verified_at' => now(),
+        ]);
+
+        logMessage("Initial admin created: $email");
+        return ['success' => true, 'message' => "Administrator account created ($email)"];
+    } catch (Exception $e) {
+        logMessage('createInitialAdmin error: ' . $e->getMessage(), 'ERROR');
+        return ['success' => false, 'message' => 'Failed to create admin: ' . $e->getMessage()];
+    }
+}
+
+/**
  * Step 6: Database Migration
  */
 function stepMigrate() {
     renderHeader('Database Migration', 'Initializing database schema', 70);
-    
+
     $migrationResult = null;
-    $seedResult = null;
-    
+    $adminResult     = null;
+    $seedResult      = null;
+
     // Run migrations if not already done
     if (!isset($_SESSION['migration_complete'])) {
+
+        // Collect and validate admin credentials from POST
+        $adminFirstName = trim($_POST['admin_first_name'] ?? '');
+        $adminLastName  = trim($_POST['admin_last_name']  ?? '');
+        $adminEmail     = trim($_POST['admin_email']      ?? '');
+        $adminPassword  = $_POST['admin_password']         ?? '';
+
+        if (empty($adminFirstName) || empty($adminLastName) || empty($adminEmail) || empty($adminPassword)) {
+            ?>
+            <div class="alert alert-error">
+                <strong>✗ Please fill in all administrator account fields.</strong>
+            </div>
+            <?php
+            renderMigrateForm();
+            renderFooter();
+            return;
+        }
+
+        if (!filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
+            ?>
+            <div class="alert alert-error">
+                <strong>✗ Please enter a valid administrator e-mail address.</strong>
+            </div>
+            <?php
+            renderMigrateForm();
+            renderFooter();
+            return;
+        }
+
+        if (strlen($adminPassword) < 8) {
+            ?>
+            <div class="alert alert-error">
+                <strong>✗ Administrator password must be at least 8 characters.</strong>
+            </div>
+            <?php
+            renderMigrateForm();
+            renderFooter();
+            return;
+        }
+
         $migrationResult = runMigrations();
         $_SESSION['migration_complete'] = $migrationResult['success'];
-        
-        // Run seeders if requested
-        if ($migrationResult['success'] && isset($_POST['run_seeders'])) {
-            $seedResult = runSeeders();
+
+        if ($migrationResult['success']) {
+            // Always create the initial admin account
+            $adminResult = createInitialAdmin($adminFirstName, $adminLastName, $adminEmail, $adminPassword);
+
+            // Optionally seed demo data (test trainer + test customer)
+            if (isset($_POST['run_seeders'])) {
+                $seedResult = runSeeders();
+            }
         }
     }
-    
+
     ?>
     <h2>📊 Database Migration</h2>
     <p>Running database migrations to create the application schema...</p>
-    
+
     <?php if ($migrationResult): ?>
         <div class="alert alert-<?php echo $migrationResult['success'] ? 'success' : 'error'; ?>">
             <strong><?php echo $migrationResult['success'] ? '✓' : '✗'; ?> <?php echo htmlspecialchars($migrationResult['message']); ?></strong>
@@ -1434,21 +1563,24 @@ function stepMigrate() {
             <?php endif; ?>
         </div>
     <?php endif; ?>
-    
+
+    <?php if ($adminResult): ?>
+        <div class="alert alert-<?php echo $adminResult['success'] ? 'success' : 'error'; ?>">
+            <strong><?php echo $adminResult['success'] ? '✓' : '✗'; ?> <?php echo htmlspecialchars($adminResult['message']); ?></strong>
+        </div>
+    <?php endif; ?>
+
     <?php if ($seedResult): ?>
         <div class="alert alert-<?php echo $seedResult['success'] ? 'success' : 'warning'; ?>">
             <strong><?php echo $seedResult['success'] ? '✓' : '⚠'; ?> <?php echo htmlspecialchars($seedResult['message']); ?></strong>
         </div>
     <?php endif; ?>
-    
+
     <form method="post">
         <?php if (!isset($_SESSION['migration_complete'])): ?>
-            <div class="checkbox-group">
-                <input type="checkbox" name="run_seeders" id="run_seeders">
-                <label for="run_seeders">Install demo data (optional)</label>
-            </div>
+            <?php renderMigrateForm(); ?>
         <?php endif; ?>
-        
+
         <div class="btn-group">
             <button type="submit" name="action" value="back_to_setup" class="btn btn-secondary">← Back</button>
             <?php if (isset($_SESSION['migration_complete']) && !$_SESSION['migration_complete']): ?>
@@ -1591,41 +1723,44 @@ function runSeeders() {
             // Load Laravel application
             require_once BACKEND_DIR . '/vendor/autoload.php';
             $app = require_once BACKEND_DIR . '/bootstrap/app.php';
-            
+
             // Create kernel
             $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
-            
+
             // Start output buffering
             ob_start();
-            
-            // Run seeder command
+
+            // Run only demo data seeder (admin is already created separately)
             $status = $kernel->call('db:seed', [
+                '--class' => 'DemoDataSeeder',
                 '--force' => true,
             ]);
-            
+
             $output = ob_get_clean();
-            
-            logMessage("Seeder output: $output");
-            logMessage("Seeder status: $status");
-            
+
+            logMessage("Demo seeder output: $output");
+            logMessage("Demo seeder status: $status");
+
             return [
                 'success' => $status === 0,
-                'message' => $status === 0 ? 'Demo data installed' : 'Seeder failed',
+                'message' => $status === 0
+                    ? 'Demo data installed (test trainer: trainer@example.com / demo1234, test customer: customer@example.com / demo1234)'
+                    : 'Demo seeder failed',
                 'output' => $output
             ];
         } catch (Exception $e) {
             logMessage('Direct seeder error, trying shell_exec: ' . $e->getMessage(), 'ERROR');
-            
+
             // Fallback to shell_exec
             $phpBinary = defined('PHP_BINARY') ? PHP_BINARY : 'php';
-            $command = "cd " . escapeshellarg(BACKEND_DIR) . " && $phpBinary artisan db:seed --force 2>&1";
+            $command = "cd " . escapeshellarg(BACKEND_DIR) . " && $phpBinary artisan db:seed --class=DemoDataSeeder --force 2>&1";
             $output = shell_exec($command);
-            
-            logMessage("Shell seeder output: $output");
-            
+
+            logMessage("Shell demo seeder output: $output");
+
             return [
                 'success' => true,
-                'message' => 'Demo data installed',
+                'message' => 'Demo data installed (test trainer: trainer@example.com / demo1234, test customer: customer@example.com / demo1234)',
                 'output' => $output ?: 'Seeder may have run (no output captured)'
             ];
         }
