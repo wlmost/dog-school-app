@@ -65,15 +65,16 @@
           </div>
         </div>
 
-        <div class="flex space-x-2 pt-4 border-t border-gray-200" @click.stop>
+        <div v-if="user?.role !== 'customer'" class="flex space-x-2 pt-4 border-t border-gray-200" @click.stop>
           <button @click="editDog(dog)" class="btn btn-primary flex-1 text-sm">Bearbeiten</button>
           <button @click="deleteDog(dog)" class="btn bg-red-100 hover:bg-red-200 text-red-700 flex-1 text-sm">Löschen</button>
         </div>
       </div>
     </div>
 
-    <!-- Dog Form Modal (admin/trainer) -->
-    <DogFormModal 
+    <!-- Dog Form Modal (admin/trainer only) -->
+    <DogFormModal
+      v-if="user?.role !== 'customer'"
       :is-open="showFormModal" 
       :dog="selectedDog"
       @close="closeFormModal"

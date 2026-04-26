@@ -157,7 +157,7 @@
  * @emits close - Emitted when modal should close
  * @emits saved - Emitted after successful dog creation/update
  */
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 import apiClient from '@/api/client'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
@@ -188,10 +188,6 @@ const form = ref({
   special_characteristics: '',
   neutered: false,
   notes: ''
-})
-
-onMounted(() => {
-  loadCustomers()
 })
 
 /**
@@ -226,6 +222,7 @@ watch(() => props.dog, (newDog) => {
 watch(() => props.isOpen, (isOpen) => {
   if (isOpen) {
     error.value = null
+    loadCustomers()
   }
 })
 
