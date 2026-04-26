@@ -140,6 +140,12 @@
           <RouterLink to="/legal" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
             Impressum
           </RouterLink>
+          <RouterLink to="/datenschutz" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+            Datenschutz
+          </RouterLink>
+          <RouterLink to="/agb" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
+            AGB
+          </RouterLink>
           <RouterLink to="/contact" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300">
             Kontakt
           </RouterLink>

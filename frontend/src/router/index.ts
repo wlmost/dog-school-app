@@ -26,6 +26,18 @@ const routes: RouteRecordRaw[] = [
         name: 'Legal',
         component: () => import('@/views/LegalView.vue'),
         meta: { title: 'Impressum - Hundeschule HomoCanis' }
+      },
+      {
+        path: 'datenschutz',
+        name: 'Datenschutz',
+        component: () => import('@/views/DatenschutzView.vue'),
+        meta: { title: 'Datenschutzerklärung - Hundeschule HomoCanis' }
+      },
+      {
+        path: 'agb',
+        name: 'Agb',
+        component: () => import('@/views/AgbView.vue'),
+        meta: { title: 'AGB - Hundeschule HomoCanis' }
       }
     ]
   },
