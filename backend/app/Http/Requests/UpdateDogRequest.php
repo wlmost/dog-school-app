@@ -20,8 +20,21 @@ class UpdateDogRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        // Only admins and trainers can update dogs
-        return $this->user()?->isAdminOrTrainer() ?? false;
+        $user = $this->user();
+        if (! $user) {
+            return false;
+        }
+        if ($user->isAdminOrTrainer()) {
+            return true;
+        }
+        // Customers can update their own dogs
+        if ($user->isCustomer()) {
+            $dog = $this->route('dog');
+
+            return $dog && $dog->customer?->user_id === $user->id;
+        }
+
+        return false;
     }
 
     /**

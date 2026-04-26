@@ -151,9 +151,62 @@
       </div>
     </div>
 
+    <!-- Pending Dog Deletion Requests (admin only) -->
+    <div v-if="user?.role === 'admin'" class="card">
+      <div class="flex items-center justify-between mb-4">
+        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          Ausstehende Löschanfragen (Hunde)
+        </h4>
+        <span
+          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+          :class="stats.pendingDogDeletionRequests > 0
+            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'"
+        >
+          {{ stats.pendingDogDeletionRequests ?? 0 }}
+        </span>
+      </div>
+
+      <div v-if="!pendingDogDeletionRequests.length" class="text-center py-8 text-gray-500 dark:text-gray-400">
+        Keine ausstehenden Löschanfragen
+      </div>
+
+      <div v-else class="divide-y divide-gray-200 dark:divide-gray-700">
+        <div
+          v-for="request in pendingDogDeletionRequests"
+          :key="request.id"
+          class="flex items-center justify-between py-3"
+        >
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-gray-900 dark:text-gray-100 truncate">{{ request.dogName }}</p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+              {{ request.customerName }} &middot; {{ formatDate(request.createdAt) }}
+            </p>
+          </div>
+          <div class="flex items-center space-x-2 ml-4 shrink-0">
+            <button
+              @click="approveDeletionRequest(request.id)"
+              :disabled="processingRequestId === request.id"
+              class="btn text-sm bg-red-100 hover:bg-red-200 text-red-800 disabled:opacity-50"
+            >
+              <span v-if="processingRequestId === request.id">...</span>
+              <span v-else>Löschen</span>
+            </button>
+            <button
+              @click="rejectDeletionRequest(request.id)"
+              :disabled="processingRequestId === request.id"
+              class="btn text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 disabled:opacity-50"
+            >
+              <span v-if="processingRequestId === request.id">...</span>
+              <span v-else>Ablehnen</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Recent Activity -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Upcoming Sessions -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">      <!-- Upcoming Sessions -->
       <div class="card">
         <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Bevorstehende Trainingssessions</h4>
         <div class="space-y-3">
@@ -253,6 +306,13 @@ interface PendingDogRegistration {
   createdAt: string
 }
 
+interface PendingDogDeletionRequest {
+  id: number
+  customerName: string
+  dogName: string
+  createdAt: string
+}
+
 const authStore = useAuthStore()
 const user = computed(() => authStore.user)
 
@@ -263,12 +323,14 @@ const stats = ref({
   courses: 0,
   invoices: 0,
   bookings: 0,
-  pendingDogRequests: 0
+  pendingDogRequests: 0,
+  pendingDogDeletionRequests: 0
 })
 
 const upcomingSessions = ref<any[]>([])
 const recentBookings = ref<any[]>([])
 const pendingDogRegistrations = ref<PendingDogRegistration[]>([])
+const pendingDogDeletionRequests = ref<PendingDogDeletionRequest[]>([])
 const processingRequestId = ref<number | null>(null)
 
 // Computed grid class based on user role
@@ -290,6 +352,7 @@ async function loadDashboard() {
     upcomingSessions.value = response.data.upcomingSessions
     recentBookings.value = response.data.recentBookings
     pendingDogRegistrations.value = response.data.pendingDogRegistrations ?? []
+    pendingDogDeletionRequests.value = response.data.pendingDogDeletionRequests ?? []
   } catch (error) {
     console.error('Error loading dashboard data:', error)
   } finally {
@@ -322,6 +385,32 @@ async function rejectRequest(id: number) {
     await loadDashboard()
   } catch (err) {
     handleApiError(err, 'Fehler beim Ablehnen der Anfrage')
+  } finally {
+    processingRequestId.value = null
+  }
+}
+
+async function approveDeletionRequest(id: number) {
+  processingRequestId.value = id
+  try {
+    await apiClient.post(`/api/v1/dog-deletion-requests/${id}/approve`)
+    showSuccess('Hund gelöscht', 'Der Hund wurde gelöscht und der Kunde per E-Mail informiert')
+    await loadDashboard()
+  } catch (err) {
+    handleApiError(err, 'Fehler beim Annehmen der Löschanfrage')
+  } finally {
+    processingRequestId.value = null
+  }
+}
+
+async function rejectDeletionRequest(id: number) {
+  processingRequestId.value = id
+  try {
+    await apiClient.post(`/api/v1/dog-deletion-requests/${id}/reject`)
+    showSuccess('Anfrage abgelehnt', 'Die Löschanfrage wurde abgelehnt')
+    await loadDashboard()
+  } catch (err) {
+    handleApiError(err, 'Fehler beim Ablehnen der Löschanfrage')
   } finally {
     processingRequestId.value = null
   }

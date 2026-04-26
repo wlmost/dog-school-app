@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\CustomerCreditController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\DogController;
+use App\Http\Controllers\Api\DogDeletionRequestController;
 use App\Http\Controllers\Api\DogRegistrationRequestController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\PaymentController;
@@ -82,11 +83,16 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/dogs/{dog}/vaccinations', [DogController::class, 'vaccinations']);
     Route::get('/dogs/{dog}/training-logs', [DogController::class, 'trainingLogs']);
     Route::get('/dogs/{dog}/bookings', [DogController::class, 'bookings']);
+    Route::post('/dogs/{dog}/request-deletion', [DogController::class, 'requestDeletion']);
 
     // Dog Registration Requests
     Route::apiResource('dog-registration-requests', DogRegistrationRequestController::class)->only(['index', 'store', 'show']);
     Route::post('/dog-registration-requests/{dogRegistrationRequest}/approve', [DogRegistrationRequestController::class, 'approve']);
     Route::post('/dog-registration-requests/{dogRegistrationRequest}/reject', [DogRegistrationRequestController::class, 'reject']);
+
+    // Dog Deletion Requests (admin only actions)
+    Route::post('/dog-deletion-requests/{dogDeletionRequest}/approve', [DogDeletionRequestController::class, 'approve']);
+    Route::post('/dog-deletion-requests/{dogDeletionRequest}/reject', [DogDeletionRequestController::class, 'reject']);
     
     // Training Session Management
     Route::get('/training-sessions', [TrainingSessionController::class, 'index']);

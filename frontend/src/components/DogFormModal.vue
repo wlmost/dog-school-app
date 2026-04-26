@@ -32,15 +32,21 @@
               <form @submit.prevent="handleSubmit" class="space-y-4">
                 <!-- Basic Info -->
                 <div class="grid grid-cols-2 gap-4">
-                  <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Besitzer *</label>
+                <!-- Besitzer: admin/trainer see dropdown, customers see their name as text -->
+                <div class="col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Besitzer *</label>
+                  <template v-if="isCustomer">
+                    <p class="input bg-gray-50 text-gray-600">{{ dog?.customer?.user?.fullName || 'Sie' }}</p>
+                  </template>
+                  <template v-else>
                     <select v-model="form.customer_id" required class="input">
                       <option value="">Besitzer auswählen...</option>
                       <option v-for="customer in customers" :key="customer.id" :value="customer.id">
                         {{ customer.user?.fullName }}
                       </option>
                     </select>
-                  </div>
+                  </template>
+                </div>
 
                   <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
@@ -157,10 +163,14 @@
  * @emits close - Emitted when modal should close
  * @emits saved - Emitted after successful dog creation/update
  */
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 import apiClient from '@/api/client'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
+import { useAuthStore } from '@/stores/auth'
+
+const authStore = useAuthStore()
+const isCustomer = computed(() => authStore.user?.role === 'customer')
 
 const props = defineProps<{
   isOpen: boolean
@@ -222,7 +232,9 @@ watch(() => props.dog, (newDog) => {
 watch(() => props.isOpen, (isOpen) => {
   if (isOpen) {
     error.value = null
-    loadCustomers()
+    if (!isCustomer.value) {
+      loadCustomers()
+    }
   }
 })
 
@@ -289,8 +301,7 @@ async function handleSubmit() {
   error.value = null
 
   try {
-    const payload = {
-      customerId: form.value.customer_id,
+    const payload: any = {
       name: form.value.name,
       breed: form.value.breed,
       dateOfBirth: form.value.date_of_birth || null,
@@ -301,6 +312,11 @@ async function handleSubmit() {
       specialCharacteristics: form.value.special_characteristics || null,
       neutered: form.value.neutered,
       notes: form.value.notes || null
+    }
+
+    // Only admins/trainers can change the owner
+    if (!isCustomer.value) {
+      payload.customerId = form.value.customer_id
     }
 
     if (props.dog) {

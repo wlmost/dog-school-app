@@ -12,11 +12,15 @@ use App\Http\Resources\BookingResource;
 use App\Http\Resources\DogResource;
 use App\Http\Resources\TrainingLogResource;
 use App\Http\Resources\VaccinationResource;
+use App\Mail\DogDeletedMail;
+use App\Models\Customer;
 use App\Models\Dog;
+use App\Models\DogDeletionRequest;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Dog Controller
@@ -133,7 +137,7 @@ class DogController extends Controller
     }
 
     /**
-     * Remove the specified dog.
+     * Remove the specified dog (admin only). Sends email notification to customer.
      *
      * @param Dog $dog
      * @return JsonResponse
@@ -149,9 +153,57 @@ class DogController extends Controller
             ], 422);
         }
 
+        // Cache customer info before deletion
+        $customer = $dog->customer()->with('user')->first();
+        $dogName  = $dog->name;
+
         $dog->delete();
 
+        // Notify customer via email
+        if ($customer?->user?->email) {
+            Mail::to($customer->user->email)
+                ->send(new DogDeletedMail($customer->user->first_name, $dogName));
+        }
+
         return response()->json(null, 204);
+    }
+
+    /**
+     * Customer requests deletion of their own dog.
+     * Admin reviews the request on the dashboard.
+     *
+     * @param Dog $dog
+     * @param Request $request
+     * @return JsonResponse
+     */
+    public function requestDeletion(Dog $dog, Request $request): JsonResponse
+    {
+        $this->authorize('view', $dog);
+
+        $user = $request->user();
+
+        if (! $user->isCustomer()) {
+            return response()->json(['message' => 'Nur Kunden können Löschanfragen stellen.'], 403);
+        }
+
+        $customer = Customer::where('user_id', $user->id)->first();
+        if (! $customer) {
+            return response()->json(['message' => 'Kein Kundenkonto gefunden.'], 422);
+        }
+
+        // Prevent duplicate pending requests
+        if (DogDeletionRequest::where('dog_id', $dog->id)->where('status', 'pending')->exists()) {
+            return response()->json(['message' => 'Eine Löschanfrage für diesen Hund ist bereits ausstehend.'], 422);
+        }
+
+        DogDeletionRequest::create([
+            'dog_id'      => $dog->id,
+            'customer_id' => $customer->id,
+            'dog_name'    => $dog->name,
+            'status'      => 'pending',
+        ]);
+
+        return response()->json(['message' => 'Löschanfrage wurde weitergeleitet.'], 201);
     }
 
     /**

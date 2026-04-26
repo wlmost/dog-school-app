@@ -69,13 +69,17 @@
           <button @click="editDog(dog)" class="btn btn-primary flex-1 text-sm">Bearbeiten</button>
           <button @click="deleteDog(dog)" class="btn bg-red-100 hover:bg-red-200 text-red-700 flex-1 text-sm">Löschen</button>
         </div>
+        <!-- Customer: edit own dog + request deletion -->
+        <div v-else class="flex space-x-2 pt-4 border-t border-gray-200" @click.stop>
+          <button @click="editDog(dog)" class="btn btn-primary flex-1 text-sm">Bearbeiten</button>
+          <button @click="requestDogDeletion(dog)" class="btn bg-red-100 hover:bg-red-200 text-red-700 flex-1 text-sm">Löschen</button>
+        </div>
       </div>
     </div>
 
-    <!-- Dog Form Modal (admin/trainer only) -->
+    <!-- Dog Form Modal -->
     <DogFormModal
-      v-if="user?.role !== 'customer'"
-      :is-open="showFormModal" 
+      :is-open="showFormModal"
       :dog="selectedDog"
       @close="closeFormModal"
       @saved="handleDogSaved"
@@ -166,6 +170,19 @@ async function deleteDog(dog: any) {
     showSuccess('Hund gelöscht', `${dog.name} wurde erfolgreich gelöscht`)
   } catch (error) {
     handleApiError(error, 'Fehler beim Löschen des Hundes')
+  }
+}
+
+async function requestDogDeletion(dog: any) {
+  if (!confirm(`Möchten Sie die Löschung von ${dog.name} beantragen? Der Administrator wird informiert.`)) {
+    return
+  }
+
+  try {
+    await apiClient.post(`/api/v1/dogs/${dog.id}/request-deletion`)
+    showSuccess('Anfrage weitergeleitet', `Die Löschanfrage für ${dog.name} wurde an den Administrator weitergeleitet.`)
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Senden der Löschanfrage')
   }
 }
 
