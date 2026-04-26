@@ -1451,44 +1451,96 @@ function renderMigrateForm(): void
 }
 
 /**
- * Create the initial admin user directly via Laravel's User model.
+ * Create the initial admin user via a small inline PHP script run through artisan tinker.
  *
- * @param string $firstName
- * @param string $lastName
- * @param string $email
- * @param string $password  Plain-text password (will be hashed)
+ * Uses a direct PDO connection (no Laravel bootstrap) so it works regardless of whether
+ * artisan/tinker is available and avoids double-bootstrapping issues.
+ *
  * @return array{success: bool, message: string}
  */
 function createInitialAdmin(string $firstName, string $lastName, string $email, string $password): array
 {
     try {
-        require_once BACKEND_DIR . '/vendor/autoload.php';
-        $app    = require_once BACKEND_DIR . '/bootstrap/app.php';
-        $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
-        $kernel->bootstrap();
-
-        $userClass = \App\Models\User::class;
-
-        if ($userClass::where('email', $email)->exists()) {
-            logMessage("Admin user already exists: $email");
-            return ['success' => true, 'message' => 'Administrator account already exists'];
+        $envContent = file_get_contents(ENV_FILE);
+        if ($envContent === false) {
+            return ['success' => false, 'message' => '.env nicht lesbar'];
         }
 
-        $userClass::create([
-            'first_name'        => $firstName,
-            'last_name'         => $lastName,
-            'email'             => $email,
-            'password'          => \Illuminate\Support\Facades\Hash::make($password),
-            'role'              => 'admin',
-            'email_verified_at' => now(),
+        $db = parseEnvForDb($envContent);
+        logMessage("createInitialAdmin: connecting to {$db['connection']}://{$db['host']}:{$db['port']}/{$db['database']}");
+
+        $dsn = match ($db['connection']) {
+            'pgsql'  => "pgsql:host={$db['host']};port={$db['port']};dbname={$db['database']}",
+            default  => "mysql:host={$db['host']};port={$db['port']};dbname={$db['database']};charset=utf8mb4",
+        };
+
+        $pdo = new PDO($dsn, $db['username'], $db['password'], [
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         ]);
 
-        logMessage("Initial admin created: $email");
-        return ['success' => true, 'message' => "Administrator account created ($email)"];
+        // Check if user already exists
+        $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
+        $stmt->execute([$email]);
+        if ($stmt->fetch()) {
+            logMessage("createInitialAdmin: user already exists ($email)");
+            return ['success' => true, 'message' => 'Administrator-Konto existiert bereits'];
+        }
+
+        // password_hash with BCRYPT cost 12 produces the same format as Laravel's Hash::make()
+        $hashedPassword = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
+        $now            = date('Y-m-d H:i:s');
+
+        $stmt = $pdo->prepare(
+            'INSERT INTO users (email, role, first_name, last_name, password, email_verified_at, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
+        );
+        $stmt->execute([$email, 'admin', $firstName, $lastName, $hashedPassword, $now, $now, $now]);
+
+        logMessage("createInitialAdmin: admin created ($email)");
+        return ['success' => true, 'message' => "Administrator-Konto erstellt ($email)"];
+    } catch (PDOException $e) {
+        logMessage('createInitialAdmin PDO error: ' . $e->getMessage(), 'ERROR');
+        return ['success' => false, 'message' => 'Datenbankfehler: ' . $e->getMessage()];
     } catch (Exception $e) {
         logMessage('createInitialAdmin error: ' . $e->getMessage(), 'ERROR');
-        return ['success' => false, 'message' => 'Failed to create admin: ' . $e->getMessage()];
+        return ['success' => false, 'message' => 'Fehler: ' . $e->getMessage()];
     }
+}
+
+/**
+ * Parse DB connection parameters from a .env file string.
+ *
+ * @return array{connection: string, host: string, port: string, database: string, username: string, password: string}
+ */
+function parseEnvForDb(string $envContent): array
+{
+    $result = [
+        'connection' => 'mysql',
+        'host'       => '127.0.0.1',
+        'port'       => '3306',
+        'database'   => '',
+        'username'   => '',
+        'password'   => '',
+    ];
+
+    $map = [
+        'DB_CONNECTION' => 'connection',
+        'DB_HOST'       => 'host',
+        'DB_PORT'       => 'port',
+        'DB_DATABASE'   => 'database',
+        'DB_USERNAME'   => 'username',
+        'DB_PASSWORD'   => 'password',
+    ];
+
+    foreach ($map as $envKey => $resultKey) {
+        if (preg_match('/^' . $envKey . '=(.*)$/m', $envContent, $m)) {
+            // Strip surrounding quotes if present
+            $result[$resultKey] = trim($m[1], " \t\r\n\"'");
+        }
+    }
+
+    return $result;
 }
 
 /**
@@ -1592,120 +1644,81 @@ function stepMigrate() {
 }
 
 /**
- * Run database migrations
+ * Run database migrations via shell_exec (avoids loading Laravel in the same PHP-FPM process,
+ * which would exhaust memory/timeout and cause "Primary script unknown" in Apache error logs).
  */
-function runMigrations() {
+function runMigrations(): array
+{
     logMessage("=== Starting Migration Process ===");
-    
-    try {
-        $artisan = BACKEND_DIR . '/artisan';
-        
-        if (!file_exists($artisan)) {
-            logMessage('Artisan not found at: ' . $artisan, 'ERROR');
-            return [
-                'success' => false,
-                'message' => 'Artisan command not found',
-                'output' => 'File not found: ' . $artisan
-            ];
-        }
-        
-        logMessage('Artisan found, attempting to load Laravel...');
-        
-        // Read .env and verify DB settings are present
-        $envContents = file_exists(ENV_FILE) ? file_get_contents(ENV_FILE) : '';
-        $envDebug = [];
-        foreach (['DB_CONNECTION', 'DB_HOST', 'DB_PORT', 'DB_DATABASE', 'DB_USERNAME'] as $key) {
-            preg_match('/^' . $key . '=(.*)$/m', $envContents, $m);
-            $envDebug[] = $key . '=' . ($m[1] ?? '(not set)');
-        }
-        logMessage('.env DB settings: ' . implode(', ', $envDebug));
-        
-        // Verify .env is readable
-        if (!is_readable(ENV_FILE)) {
-            return [
-                'success' => false,
-                'message' => '.env file exists but is not readable (permission denied)',
-                'output' => 'Check file permissions. File: ' . ENV_FILE
-            ];
-        }
 
-        // Try to run migrations directly via Laravel
-        try {
-            // Load Laravel application
-            require_once BACKEND_DIR . '/vendor/autoload.php';
-            logMessage('Autoloader loaded');
-            
-            $app = require_once BACKEND_DIR . '/bootstrap/app.php';
-            logMessage('Laravel app bootstrapped, basePath: ' . $app->basePath());
-            
-            // Create kernel and bootstrap it so config/env is loaded
-            $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
-            $kernel->bootstrap();
-            logMessage('Kernel bootstrapped');
-            
-            // Show what Laravel actually resolved for DB config
-            $dbConfig = $app['config']['database.default'] ?? 'unknown';
-            $dbHost   = $app['config']['database.connections.' . $dbConfig . '.host'] ?? 'unknown';
-            $dbName   = $app['config']['database.connections.' . $dbConfig . '.database'] ?? 'unknown';
-            logMessage("Laravel resolved DB: connection=$dbConfig host=$dbHost db=$dbName");
-            
-            // Test database connection first
-            try {
-                $pdo = $app->make('db')->connection()->getPdo();
-                logMessage('Database connection successful');
-            } catch (Exception $dbErr) {
-                logMessage('Database connection failed: ' . $dbErr->getMessage(), 'ERROR');
-                return [
-                    'success' => false,
-                    'message' => 'Database connection failed: ' . $dbErr->getMessage(),
-                    'output' => 'Laravel DB config: connection=' . $dbConfig . ', host=' . $dbHost . ', db=' . $dbName
-                        . "\n.env DB settings: " . implode(', ', $envDebug)
-                ];
-            }
-            
-            logMessage('Running migrate:fresh command...');
-            
-            // Run fresh migration command (drops all tables and re-runs all migrations).
-            // kernel->call() writes to an internal BufferedOutput, not PHP's output buffer,
-            // so we must use $kernel->output() to retrieve the captured output.
-            $status = $kernel->call('migrate:fresh', [
-                '--force' => true,
-            ]);
-            
-            $output = $kernel->output();
-            
-            logMessage("Migration command completed with status: $status");
-            logMessage("Migration output: " . substr($output, 0, 500));
-            
-            // Check if migration was successful (status 0 = success)
-            if ($status === 0) {
-                return [
-                    'success' => true,
-                    'message' => 'Database migrations completed successfully',
-                    'output' => $output
-                ];
-            } else {
-                return [
-                    'success' => false,
-                    'message' => 'Migration failed. Output: ' . ($output ?: 'No output'),
-                    'output' => $output ?: 'Command may have failed silently. Check if shell_exec is enabled.'
-                ];
-            }
-        } catch (Exception $e) {
-            logMessage('Inner migration error: ' . $e->getMessage(), 'ERROR');
-            return [
-                'success' => false,
-                'message' => 'Migration error: ' . $e->getMessage(),
-                'output' => $e->getTraceAsString()
-            ];
-        }
-    } catch (Exception $e) {
-        logMessage('Outer migration error: ' . $e->getMessage(), 'ERROR');
+    set_time_limit(300);
+
+    $artisan = BACKEND_DIR . '/artisan';
+
+    if (!file_exists($artisan)) {
+        logMessage('Artisan not found at: ' . $artisan, 'ERROR');
         return [
             'success' => false,
-            'message' => 'Migration error: ' . $e->getMessage(),
-            'output' => ''
+            'message' => 'Artisan command not found',
+            'output'  => 'File not found: ' . $artisan,
         ];
+    }
+
+    if (!is_readable(ENV_FILE)) {
+        return [
+            'success' => false,
+            'message' => '.env file is not readable (permission denied)',
+            'output'  => 'File: ' . ENV_FILE,
+        ];
+    }
+
+    // Primary: run via shell so Laravel is loaded in a separate process.
+    // Avoids memory/crash issues inside the PHP-FPM worker serving install.php.
+    if (function_exists('shell_exec')) {
+        // Use 'php' from PATH; PHP_BINARY on web is the FPM binary, not the CLI binary.
+        $phpBin  = 'php';
+        $command = 'cd ' . escapeshellarg(BACKEND_DIR)
+            . ' && ' . $phpBin . ' artisan migrate:fresh --force 2>&1';
+        logMessage("Running: $command");
+        $output = shell_exec($command);
+        logMessage("Migration output: " . substr((string) $output, 0, 1000));
+
+        if ($output === null) {
+            logMessage('shell_exec returned null – likely disabled on this host. Trying fallback.', 'WARNING');
+        } else {
+            $lower   = strtolower($output);
+            $success = !str_contains($lower, 'error')
+                && !str_contains($lower, 'exception')
+                && !str_contains($lower, 'fatal');
+            return [
+                'success' => $success,
+                'message' => $success
+                    ? 'Datenbank-Migrationen erfolgreich ausgeführt'
+                    : 'Migration fehlgeschlagen – Ausgabe: ' . $output,
+                'output'  => $output,
+            ];
+        }
+    }
+
+    // Fallback: bootstrap Laravel directly (only when shell_exec is unavailable).
+    // NOTE: this must be the ONLY Laravel bootstrap in the request; do NOT call
+    // createInitialAdmin() with a second bootstrap afterwards.
+    try {
+        require_once BACKEND_DIR . '/vendor/autoload.php';
+        $app    = require_once BACKEND_DIR . '/bootstrap/app.php';
+        $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+        $kernel->bootstrap();
+        $status = $kernel->call('migrate:fresh', ['--force' => true]);
+        $output = $kernel->output();
+        logMessage("Direct migration status: $status output: " . substr($output, 0, 500));
+
+        if ($status === 0) {
+            return ['success' => true, 'message' => 'Datenbank-Migrationen erfolgreich ausgeführt', 'output' => $output];
+        }
+        return ['success' => false, 'message' => 'Migration fehlgeschlagen', 'output' => $output ?: '(no output)'];
+    } catch (Throwable $e) {
+        logMessage('Direct migration error: ' . $e->getMessage(), 'ERROR');
+        return ['success' => false, 'message' => 'Migration error: ' . $e->getMessage(), 'output' => ''];
     }
 }
 
@@ -1714,58 +1727,29 @@ function runMigrations() {
  */
 function runSeeders() {
     try {
-        // Try to run seeders directly via Laravel
-        try {
-            // Load Laravel application
-            require_once BACKEND_DIR . '/vendor/autoload.php';
-            $app = require_once BACKEND_DIR . '/bootstrap/app.php';
+        $phpBinary = defined('PHP_BINARY') ? PHP_BINARY : 'php';
+        $command = 'cd ' . escapeshellarg(BACKEND_DIR)
+            . ' && ' . $phpBinary . ' artisan db:seed --class=DemoDataSeeder --force 2>&1';
+        $output = shell_exec($command);
 
-            // Create kernel
-            $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+        logMessage("Demo seeder output: $output");
 
-            // Start output buffering
-            ob_start();
+        // artisan exits with output containing 'INFO' or 'Seeding' on success
+        $success = $output !== null && !str_contains(strtolower($output), 'error');
 
-            // Run only demo data seeder (admin is already created separately)
-            $status = $kernel->call('db:seed', [
-                '--class' => 'DemoDataSeeder',
-                '--force' => true,
-            ]);
-
-            $output = ob_get_clean();
-
-            logMessage("Demo seeder output: $output");
-            logMessage("Demo seeder status: $status");
-
-            return [
-                'success' => $status === 0,
-                'message' => $status === 0
-                    ? 'Demo data installed (test trainer: trainer@example.com / demo1234, test customer: customer@example.com / demo1234)'
-                    : 'Demo seeder failed',
-                'output' => $output
-            ];
-        } catch (Exception $e) {
-            logMessage('Direct seeder error, trying shell_exec: ' . $e->getMessage(), 'ERROR');
-
-            // Fallback to shell_exec
-            $phpBinary = defined('PHP_BINARY') ? PHP_BINARY : 'php';
-            $command = "cd " . escapeshellarg(BACKEND_DIR) . " && $phpBinary artisan db:seed --class=DemoDataSeeder --force 2>&1";
-            $output = shell_exec($command);
-
-            logMessage("Shell demo seeder output: $output");
-
-            return [
-                'success' => true,
-                'message' => 'Demo data installed (test trainer: trainer@example.com / demo1234, test customer: customer@example.com / demo1234)',
-                'output' => $output ?: 'Seeder may have run (no output captured)'
-            ];
-        }
+        return [
+            'success' => $success,
+            'message' => $success
+                ? 'Demo-Daten installiert (Trainer: trainer@example.com / demo1234, Kunde: customer@example.com / demo1234)'
+                : 'Demo-Seeder fehlgeschlagen',
+            'output'  => $output ?: '(no output)'
+        ];
     } catch (Exception $e) {
         logMessage('Seeder error: ' . $e->getMessage(), 'ERROR');
         return [
             'success' => false,
             'message' => 'Seeder error: ' . $e->getMessage(),
-            'output' => ''
+            'output'  => ''
         ];
     }
 }
@@ -1863,36 +1847,26 @@ function stepComplete() {
 }
 
 /**
- * Create storage symlink
+ * Create storage symlink via shell_exec to avoid loading Laravel in this process.
  */
-function createStorageSymlink() {
+function createStorageSymlink(): bool
+{
     try {
-        // Try to run storage:link directly via Laravel
-        try {
-            // Load Laravel application
-            require_once BACKEND_DIR . '/vendor/autoload.php';
-            $app = require_once BACKEND_DIR . '/bootstrap/app.php';
-            
-            // Create kernel
-            $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
-            
-            // Run storage:link command
-            $status = $kernel->call('storage:link');
-            
-            logMessage("Storage link status: $status");
-            
-            return $status === 0;
-        } catch (Exception $e) {
-            logMessage('Direct storage:link error, trying shell_exec: ' . $e->getMessage(), 'ERROR');
-            
-            // Fallback to shell_exec
-            $phpBinary = defined('PHP_BINARY') ? PHP_BINARY : 'php';
-            $command = "cd " . escapeshellarg(BACKEND_DIR) . " && $phpBinary artisan storage:link 2>&1";
-            $output = shell_exec($command);
+        if (function_exists('shell_exec')) {
+            $command = 'cd ' . escapeshellarg(BACKEND_DIR) . ' && php artisan storage:link 2>&1';
+            $output  = shell_exec($command);
             logMessage("Storage link output: $output");
             return true;
         }
-    } catch (Exception $e) {
+
+        // Fallback: direct Laravel bootstrap (only when shell_exec is disabled)
+        require_once BACKEND_DIR . '/vendor/autoload.php';
+        $app    = require_once BACKEND_DIR . '/bootstrap/app.php';
+        $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+        $status = $kernel->call('storage:link');
+        logMessage("Storage link status: $status");
+        return $status === 0;
+    } catch (Throwable $e) {
         logMessage("Storage link error: " . $e->getMessage(), 'ERROR');
         return false;
     }
