@@ -3,8 +3,13 @@ import type { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axio
 import { useAuthStore } from '@/stores/auth'
 import router from '@/router'
 
+// In production the API lives on the same origin (no CORS). Use window.location.origin
+// as fallback so the built package works on any domain without reconfiguration.
+const apiBase = import.meta.env.VITE_API_BASE_URL
+  || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8081')
+
 const apiClient: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081',
+  baseURL: apiBase,
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',

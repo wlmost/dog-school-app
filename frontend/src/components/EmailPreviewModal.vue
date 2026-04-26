@@ -192,7 +192,8 @@ function getLogoUrl(path: string | File): string {
     return pathStr
   }
   
-  const apiUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8081'
+  const apiUrl = import.meta.env.VITE_API_BASE_URL
+    || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8081')
   return `${apiUrl}/storage/${pathStr}`
 }
 </script>
