@@ -696,6 +696,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: ' . $_SERVER['PHP_SELF']);
             exit;
             
+        case 'run_migration':
+            // Stay on STEP_MIGRATE – stepMigrate() will process POST data
+            break;
+
         case 'proceed_complete':
             setStep(STEP_COMPLETE);
             header('Location: ' . $_SERVER['PHP_SELF']);
@@ -1431,6 +1435,11 @@ function renderMigrateForm(): void
         <input type="password" id="admin_password" name="admin_password"
                required autocomplete="new-password" minlength="8">
     </div>
+    <div class="form-group">
+        <label for="admin_password_confirm">Confirm Password <span style="color:red">*</span></label>
+        <input type="password" id="admin_password_confirm" name="admin_password_confirm"
+               required autocomplete="new-password" minlength="8">
+    </div>
 
     <hr style="margin: 1.5rem 0;">
 
@@ -1499,9 +1508,10 @@ function stepMigrate() {
         $adminFirstName = trim($_POST['admin_first_name'] ?? '');
         $adminLastName  = trim($_POST['admin_last_name']  ?? '');
         $adminEmail     = trim($_POST['admin_email']      ?? '');
-        $adminPassword  = $_POST['admin_password']         ?? '';
+        $adminPassword        = $_POST['admin_password']         ?? '';
+        $adminPasswordConfirm = $_POST['admin_password_confirm'] ?? '';
 
-        if (empty($adminFirstName) || empty($adminLastName) || empty($adminEmail) || empty($adminPassword)) {
+        if (empty($adminFirstName) || empty($adminLastName) || empty($adminEmail) || empty($adminPassword) || empty($adminPasswordConfirm)) {
             ?>
             <div class="alert alert-error">
                 <strong>✗ Please fill in all administrator account fields.</strong>
@@ -1527,6 +1537,17 @@ function stepMigrate() {
             ?>
             <div class="alert alert-error">
                 <strong>✗ Administrator password must be at least 8 characters.</strong>
+            </div>
+            <?php
+            renderMigrateForm();
+            renderFooter();
+            return;
+        }
+
+        if ($adminPassword !== $adminPasswordConfirm) {
+            ?>
+            <div class="alert alert-error">
+                <strong>✗ Passwords do not match.</strong>
             </div>
             <?php
             renderMigrateForm();
@@ -1579,16 +1600,19 @@ function stepMigrate() {
     <form method="post">
         <?php if (!isset($_SESSION['migration_complete'])): ?>
             <?php renderMigrateForm(); ?>
-        <?php endif; ?>
-
-        <div class="btn-group">
-            <button type="submit" name="action" value="back_to_setup" class="btn btn-secondary">← Back</button>
-            <?php if (isset($_SESSION['migration_complete']) && !$_SESSION['migration_complete']): ?>
+            <div class="btn-group">
+                <button type="submit" name="action" value="back_to_setup" class="btn btn-secondary">← Back</button>
+                <button type="submit" name="action" value="run_migration" class="btn">Run Migration &amp; Create Admin →</button>
+            </div>
+        <?php elseif (!$_SESSION['migration_complete']): ?>
+            <div class="btn-group">
                 <button type="submit" name="action" value="rollback" class="btn btn-danger">Rollback Installation</button>
-            <?php else: ?>
+            </div>
+        <?php else: ?>
+            <div class="btn-group">
                 <button type="submit" name="action" value="proceed_complete" class="btn">Complete Installation →</button>
-            <?php endif; ?>
-        </div>
+            </div>
+        <?php endif; ?>
     </form>
     <?php
     
