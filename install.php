@@ -1500,71 +1500,37 @@ function stepMigrate() {
     $migrationResult = null;
     $adminResult     = null;
     $seedResult      = null;
+    $formErrors      = [];
 
-    // Run migrations if not already done
-    if (!isset($_SESSION['migration_complete'])) {
+    // Only validate and run when the user explicitly submitted the migration form
+    if (($_POST['action'] ?? '') === 'run_migration' && !isset($_SESSION['migration_complete'])) {
 
-        // Collect and validate admin credentials from POST
-        $adminFirstName = trim($_POST['admin_first_name'] ?? '');
-        $adminLastName  = trim($_POST['admin_last_name']  ?? '');
-        $adminEmail     = trim($_POST['admin_email']      ?? '');
-        $adminPassword        = $_POST['admin_password']         ?? '';
-        $adminPasswordConfirm = $_POST['admin_password_confirm'] ?? '';
+        $adminFirstName       = trim($_POST['admin_first_name']      ?? '');
+        $adminLastName        = trim($_POST['admin_last_name']       ?? '');
+        $adminEmail           = trim($_POST['admin_email']           ?? '');
+        $adminPassword        =      $_POST['admin_password']        ?? '';
+        $adminPasswordConfirm =      $_POST['admin_password_confirm'] ?? '';
 
         if (empty($adminFirstName) || empty($adminLastName) || empty($adminEmail) || empty($adminPassword) || empty($adminPasswordConfirm)) {
-            ?>
-            <div class="alert alert-error">
-                <strong>✗ Please fill in all administrator account fields.</strong>
-            </div>
-            <?php
-            renderMigrateForm();
-            renderFooter();
-            return;
+            $formErrors[] = 'Please fill in all administrator account fields.';
+        } elseif (!filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
+            $formErrors[] = 'Please enter a valid administrator e-mail address.';
+        } elseif (strlen($adminPassword) < 8) {
+            $formErrors[] = 'Administrator password must be at least 8 characters.';
+        } elseif ($adminPassword !== $adminPasswordConfirm) {
+            $formErrors[] = 'Passwords do not match.';
         }
 
-        if (!filter_var($adminEmail, FILTER_VALIDATE_EMAIL)) {
-            ?>
-            <div class="alert alert-error">
-                <strong>✗ Please enter a valid administrator e-mail address.</strong>
-            </div>
-            <?php
-            renderMigrateForm();
-            renderFooter();
-            return;
-        }
+        if (empty($formErrors)) {
+            $migrationResult = runMigrations();
+            $_SESSION['migration_complete'] = $migrationResult['success'];
 
-        if (strlen($adminPassword) < 8) {
-            ?>
-            <div class="alert alert-error">
-                <strong>✗ Administrator password must be at least 8 characters.</strong>
-            </div>
-            <?php
-            renderMigrateForm();
-            renderFooter();
-            return;
-        }
+            if ($migrationResult['success']) {
+                $adminResult = createInitialAdmin($adminFirstName, $adminLastName, $adminEmail, $adminPassword);
 
-        if ($adminPassword !== $adminPasswordConfirm) {
-            ?>
-            <div class="alert alert-error">
-                <strong>✗ Passwords do not match.</strong>
-            </div>
-            <?php
-            renderMigrateForm();
-            renderFooter();
-            return;
-        }
-
-        $migrationResult = runMigrations();
-        $_SESSION['migration_complete'] = $migrationResult['success'];
-
-        if ($migrationResult['success']) {
-            // Always create the initial admin account
-            $adminResult = createInitialAdmin($adminFirstName, $adminLastName, $adminEmail, $adminPassword);
-
-            // Optionally seed demo data (test trainer + test customer)
-            if (isset($_POST['run_seeders'])) {
-                $seedResult = runSeeders();
+                if (isset($_POST['run_seeders'])) {
+                    $seedResult = runSeeders();
+                }
             }
         }
     }
@@ -1572,6 +1538,12 @@ function stepMigrate() {
     ?>
     <h2>📊 Database Migration</h2>
     <p>Running database migrations to create the application schema...</p>
+
+    <?php foreach ($formErrors as $error): ?>
+        <div class="alert alert-error">
+            <strong>✗ <?php echo htmlspecialchars($error); ?></strong>
+        </div>
+    <?php endforeach; ?>
 
     <?php if ($migrationResult): ?>
         <div class="alert alert-<?php echo $migrationResult['success'] ? 'success' : 'error'; ?>">
@@ -1601,8 +1573,8 @@ function stepMigrate() {
         <?php if (!isset($_SESSION['migration_complete'])): ?>
             <?php renderMigrateForm(); ?>
             <div class="btn-group">
-                <button type="submit" name="action" value="back_to_setup" class="btn btn-secondary">← Back</button>
-                <button type="submit" name="action" value="run_migration" class="btn">Run Migration &amp; Create Admin →</button>
+                <button type="submit" name="action" value="back_to_setup" class="btn btn-secondary">← Zurück</button>
+                <button type="submit" name="action" value="run_migration" class="btn">Migration starten &amp; Admin anlegen →</button>
             </div>
         <?php elseif (!$_SESSION['migration_complete']): ?>
             <div class="btn-group">
@@ -1610,7 +1582,7 @@ function stepMigrate() {
             </div>
         <?php else: ?>
             <div class="btn-group">
-                <button type="submit" name="action" value="proceed_complete" class="btn">Complete Installation →</button>
+                <button type="submit" name="action" value="proceed_complete" class="btn">Installation abschließen →</button>
             </div>
         <?php endif; ?>
     </form>
