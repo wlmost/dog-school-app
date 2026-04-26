@@ -46,7 +46,7 @@ class ContactController extends Controller
             Mail::send(new ContactFormMail(
                 senderName: $validated['name'],
                 senderEmail: $validated['email'],
-                subject: $validated['subject'],
+                contactSubject: $validated['subject'],
                 contactMessage: $validated['message'],
                 phone: $validated['phone'] ?? null,
             ));

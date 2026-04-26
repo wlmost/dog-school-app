@@ -25,7 +25,7 @@
 
                 <div class="info-row">
                     <span class="info-label">Betreff:</span>
-                    {{ $subject }}
+                    {{ $contactSubject }}
                 </div>
             </div>
 
