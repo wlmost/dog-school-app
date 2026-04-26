@@ -1,11 +1,30 @@
 <template>
   <div class="min-h-screen" :style="backgroundStyle">
+
+    <!-- Mobile overlay backdrop -->
+    <div
+      v-if="sidebarOpen"
+      class="fixed inset-0 z-30 bg-black/50 lg:hidden"
+      @click="sidebarOpen = false"
+    />
+
     <!-- Sidebar -->
-    <aside class="fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 shadow-lg z-40 border-r border-gray-200 dark:border-gray-700">
+    <aside
+      :class="[
+        'fixed inset-y-0 left-0 w-64 bg-white dark:bg-gray-800 shadow-lg z-40 border-r border-gray-200 dark:border-gray-700 transition-transform duration-300',
+        sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+      ]"
+    >
       <div class="flex flex-col h-full">
-        <!-- Logo -->
-        <div class="flex items-center justify-center h-16 px-4 border-b border-gray-200 dark:border-gray-700">
+        <!-- Logo + mobile close button -->
+        <div class="flex items-center justify-between h-16 px-4 border-b border-gray-200 dark:border-gray-700">
           <img src="@/assets/HomoCanis.jpg" alt="HomoCanis" class="h-12 w-auto">
+          <button
+            class="lg:hidden p-1 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+            @click="sidebarOpen = false"
+          >
+            <XMarkIcon class="w-6 h-6" />
+          </button>
         </div>
 
         <!-- Navigation -->
@@ -16,8 +35,9 @@
             :to="item.to"
             class="flex items-center px-4 py-3 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-primary-50 dark:hover:bg-gray-700 hover:text-primary-700 dark:hover:text-primary-400 transition-colors"
             active-class="bg-primary-100 dark:bg-gray-700 text-primary-700 dark:text-primary-400 font-medium"
+            @click="sidebarOpen = false"
           >
-            <component :is="item.icon" class="w-5 h-5 mr-3" />
+            <component :is="item.icon" class="w-5 h-5 mr-3 flex-shrink-0" />
             {{ item.name }}
           </RouterLink>
         </nav>
@@ -47,16 +67,25 @@
     </aside>
 
     <!-- Main Content -->
-    <div class="pl-64">
+    <div class="lg:pl-64">
       <!-- Header -->
       <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div class="px-8 py-4 flex items-center justify-between">
-          <h2 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ pageTitle }}</h2>
-          
+        <div class="px-4 sm:px-8 py-4 flex items-center justify-between">
+          <!-- Hamburger (mobile only) -->
+          <button
+            class="lg:hidden mr-3 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            @click="sidebarOpen = true"
+            title="Menü öffnen"
+          >
+            <Bars3Icon class="w-6 h-6" />
+          </button>
+
+          <h2 class="text-xl sm:text-2xl font-semibold text-gray-900 dark:text-gray-100 truncate">{{ pageTitle }}</h2>
+
           <!-- Theme Toggle -->
           <button
             @click="themeStore.toggleTheme()"
-            class="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            class="ml-2 p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
             title="Theme wechseln"
           >
             <SunIcon v-if="themeStore.isDark" class="w-5 h-5" />
@@ -66,7 +95,7 @@
       </header>
 
       <!-- Page Content -->
-      <main class="p-8">
+      <main class="p-4 sm:p-8">
         <RouterView />
       </main>
     </div>
@@ -74,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
@@ -91,7 +120,9 @@ import {
   SunIcon,
   MoonIcon,
   EnvelopeIcon,
-  IdentificationIcon
+  IdentificationIcon,
+  Bars3Icon,
+  XMarkIcon,
 } from '@heroicons/vue/24/outline'
 import { h } from 'vue'
 import backgroundImage from '@/assets/pet-01-1280x664.jpg'
@@ -117,6 +148,7 @@ const router = useRouter()
 const authStore = useAuthStore()
 const themeStore = useThemeStore()
 
+const sidebarOpen = ref(false)
 const user = computed(() => authStore.user)
 
 const userInitials = computed(() => {
