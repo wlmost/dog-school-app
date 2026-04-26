@@ -210,6 +210,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
+import apiClient from '@/api/client'
 
 const form = ref({
   name: '',
@@ -229,12 +230,16 @@ const handleSubmit = async () => {
   errorMessage.value = ''
 
   try {
-    // TODO: Implement actual form submission to backend
-    // For now, just show success message
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
+    await apiClient.post('/api/v1/contact', {
+      name: form.value.name,
+      email: form.value.email,
+      phone: form.value.phone || undefined,
+      subject: form.value.subject,
+      message: form.value.message,
+    })
+
     successMessage.value = 'Vielen Dank für Ihre Nachricht! Wir werden uns so schnell wie möglich bei Ihnen melden.'
-    
+
     // Reset form
     form.value = {
       name: '',
@@ -243,8 +248,14 @@ const handleSubmit = async () => {
       subject: '',
       message: ''
     }
-  } catch (error) {
-    errorMessage.value = 'Es gab einen Fehler beim Senden Ihrer Nachricht. Bitte versuchen Sie es später erneut.'
+  } catch (error: any) {
+    if (error.response?.status === 429) {
+      errorMessage.value = 'Sie haben zu viele Anfragen gesendet. Bitte versuchen Sie es in einigen Minuten erneut.'
+    } else if (error.response?.data?.message) {
+      errorMessage.value = error.response.data.message
+    } else {
+      errorMessage.value = 'Es gab einen Fehler beim Senden Ihrer Nachricht. Bitte versuchen Sie es später erneut.'
+    }
   } finally {
     loading.value = false
   }

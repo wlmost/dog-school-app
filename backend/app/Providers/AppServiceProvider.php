@@ -43,6 +43,11 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($request->ip());
         });
 
+        // Configure rate limiting for public contact form (3 submissions per 5 minutes per IP)
+        RateLimiter::for('contact', function (Request $request) {
+            return Limit::perMinutes(5, 3)->by($request->ip());
+        });
+
         // Set password validation rules
         Password::defaults(function () {
             return Password::min(8)

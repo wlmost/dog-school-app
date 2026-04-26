@@ -6,6 +6,7 @@ use App\Http\Controllers\AnamnesisResponseController;
 use App\Http\Controllers\AnamnesisTemplateController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\CourseController;
 use App\Http\Controllers\Api\CreditPackageController;
 use App\Http\Controllers\Api\CustomerController;
@@ -40,6 +41,11 @@ Route::prefix('v1')->middleware('throttle:login')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login']);
     Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword']);
     Route::post('/auth/reset-password', [AuthController::class, 'resetPassword']);
+});
+
+// Public contact form (rate limited: 3 per 5 minutes per IP)
+Route::prefix('v1')->middleware('throttle:contact')->group(function () {
+    Route::post('/contact', [ContactController::class, 'send']);
 });
 
 // PayPal webhook - separate without rate limiting (PayPal needs reliable access)
