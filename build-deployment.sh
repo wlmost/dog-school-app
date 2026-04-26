@@ -193,6 +193,11 @@ copy_application_files() {
     # Copy LICENSE and README if they exist
     [ -f "LICENSE" ] && cp LICENSE "$BUILD_DIR/"
     [ -f "README.md" ] && cp README.md "$BUILD_DIR/"
+
+    # Copy update wizard and maintenance page
+    info_msg "Adding update wizard and maintenance page..."
+    cp update.php "$BUILD_DIR/update.php" || error_exit "Failed to copy update.php"
+    cp maintenance.html "$BUILD_DIR/maintenance.html" || error_exit "Failed to copy maintenance.html"
     
     success_msg "Application files copied"
 }
@@ -314,6 +319,8 @@ verify_archive() {
     local critical_files=(
         "./backend/public/index.php"
         "./install.php"
+        "./update.php"
+        "./maintenance.html"
         "./.htaccess"
         "./backend/public/.htaccess"
     )

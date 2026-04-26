@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="refresh" content="30">
+    <title>Wartung – HomoCanis</title>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            color: #333;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+            max-width: 560px;
+            width: 100%;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .card-top {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px 30px 32px;
+            color: #fff;
+        }
+
+        .gear-icon {
+            font-size: 3.5em;
+            display: block;
+            margin-bottom: 16px;
+            animation: spin 6s linear infinite;
+        }
+
+        @keyframes spin {
+            0%   { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .card-top h1 {
+            font-size: 1.75em;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .card-top p {
+            opacity: .9;
+            font-size: 1.05em;
+        }
+
+        .card-body {
+            padding: 32px 36px 36px;
+        }
+
+        .card-body p {
+            color: #555;
+            font-size: 1em;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffc107;
+            border-radius: 999px;
+            padding: 8px 20px;
+            font-size: .9em;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #ffc107;
+            border-radius: 50%;
+            animation: pulse 1.4s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1;   transform: scale(1); }
+            50%       { opacity: .4; transform: scale(.8); }
+        }
+
+        .refresh-note {
+            font-size: .8em;
+            color: #999;
+            margin-top: 8px;
+        }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #eee;
+            margin: 20px 0;
+        }
+
+        .brand {
+            font-size: .85em;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="card-top">
+            <span class="gear-icon">⚙️</span>
+            <h1>Kurze Wartungspause</h1>
+            <p>Wir spielen gerade ein Update ein.</p>
+        </div>
+        <div class="card-body">
+            <div class="status-badge">
+                <span class="dot"></span>
+                Update wird durchgeführt …
+            </div>
+            <p>
+                Die Hundeschule-App ist vorübergehend nicht erreichbar.<br>
+                Wir sind gleich wieder für dich da – bitte versuche es in wenigen Minuten erneut.
+            </p>
+            <p class="refresh-note">Diese Seite aktualisiert sich automatisch alle 30 Sekunden.</p>
+            <hr class="divider">
+            <p class="brand">HomoCanis – Hundeschulenverwaltung</p>
+        </div>
+    </div>
+</body>
+</html>

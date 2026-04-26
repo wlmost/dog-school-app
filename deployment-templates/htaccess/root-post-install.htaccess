@@ -2,8 +2,22 @@
     RewriteEngine On
     RewriteBase /
 
+    # MAINTENANCE_MODE – redirect all traffic to maintenance.html while update.php runs.
+    # update.php creates/deletes maintenance.flag to toggle this block.
+    RewriteCond %{REQUEST_URI} !maintenance\.html$
+    RewriteCond %{REQUEST_URI} !update\.php$
+    RewriteCond %{DOCUMENT_ROOT}/maintenance.flag -f
+    RewriteRule ^ /maintenance.html [R=302,L]
+    # /MAINTENANCE_MODE
+
     # Allow direct access to install.php (shows locked screen post-install)
     RewriteRule ^install\.php$ - [L]
+
+    # Allow direct access to update.php
+    RewriteRule ^update\.php$ - [L]
+
+    # Allow direct access to maintenance.html
+    RewriteRule ^maintenance\.html$ - [L]
 
     # Route storage requests to backend public storage symlink
     RewriteRule ^storage/(.*)$ backend/public/storage/$1 [L]
