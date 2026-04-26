@@ -26,7 +26,9 @@ define('UPDATE_LOG_FILE',   __DIR__ . '/update_' . date('Ymd_His') . '.log');
 session_start();
 
 // ─── Block if not installed ───────────────────────────────────────────────────
-if (!file_exists(INSTALL_LOCK_FILE) || !file_exists(ENV_FILE)) {
+// Only the .env file is checked – install.lock is a convenience marker that may
+// be lost when a hosting panel removes unarchived files during extraction.
+if (!file_exists(ENV_FILE)) {
     die('<p style="font-family:sans-serif;padding:2em">Die Anwendung ist noch nicht installiert. Bitte zuerst <a href="install.php">install.php</a> ausführen.</p>');
 }
 
