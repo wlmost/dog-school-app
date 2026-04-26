@@ -120,7 +120,7 @@ install_frontend_dependencies() {
 # Build frontend assets
 build_frontend() {
     info_msg "Building frontend assets (via docker)..."
-    docker exec dog-school-node sh -c "npm run build" \
+    docker exec dog-school-node sh -c "npm run build:deploy" \
         || error_exit "Frontend build failed"
     success_msg "Frontend build complete"
 }
