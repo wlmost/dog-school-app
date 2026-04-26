@@ -255,6 +255,11 @@ copy_htaccess_files() {
     # Frontend .htaccess (deny all)
     info_msg "Placing frontend .htaccess..."
     cp "$template_dir/frontend.htaccess" "$BUILD_DIR/frontend/.htaccess" || error_exit "Failed to copy frontend .htaccess"
+
+    # Frontend dist .htaccess – sets proper caching headers (no-cache for index.html,
+    # long-cache for content-hashed assets) so browsers always load fresh JS after deploy.
+    info_msg "Placing frontend/dist .htaccess..."
+    cp "$template_dir/frontend-dist.htaccess" "$BUILD_DIR/frontend/dist/.htaccess" || error_exit "Failed to copy frontend/dist .htaccess"
     
     success_msg ".htaccess files placed"
 }
@@ -269,6 +274,7 @@ verify_htaccess_files() {
         "$BUILD_DIR/backend/.htaccess"
         "$BUILD_DIR/backend/storage/.htaccess"
         "$BUILD_DIR/frontend/.htaccess"
+        "$BUILD_DIR/frontend/dist/.htaccess"
     )
     
     for file in "${htaccess_files[@]}"; do

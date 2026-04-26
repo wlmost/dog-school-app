@@ -290,6 +290,7 @@ watch(() => props.isOpen, (isOpen) => {
 })
 
 async function loadCustomers() {
+  if (isCustomer.value) return  // customers never need the customer list
   try {
     const response = await apiClient.get('/api/v1/customers')
     customers.value = response.data.data
