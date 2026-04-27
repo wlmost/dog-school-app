@@ -402,10 +402,25 @@ describe('Dog API - Update', function () {
         $response->assertStatus(200);
     });
 
-    test('customer cannot update dogs', function () {
+    test('customer can update their own dog', function () {
         $customerUser = User::factory()->customer()->create();
         $customer = Customer::factory()->for($customerUser, 'user')->create();
-        $dog = Dog::factory()->for($customer)->create();
+        $dog = Dog::factory()->for($customer)->create(['name' => 'Old Name']);
+
+        $response = $this->actingAs($customerUser)
+            ->patchJson("/api/v1/dogs/{$dog->id}", [
+                'name' => 'New Name',
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.name', 'New Name');
+    });
+
+    test('customer cannot update another customer\'s dog', function () {
+        $customerUser = User::factory()->customer()->create();
+        $otherCustomerUser = User::factory()->customer()->create();
+        $otherCustomer = Customer::factory()->for($otherCustomerUser, 'user')->create();
+        $dog = Dog::factory()->for($otherCustomer)->create();
 
         $response = $this->actingAs($customerUser)
             ->patchJson("/api/v1/dogs/{$dog->id}", [
