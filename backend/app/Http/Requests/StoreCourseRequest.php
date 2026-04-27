@@ -32,8 +32,7 @@ class StoreCourseRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:2000'],
-            'trainerId' => ['required', 'integer', 'exists:users,id'],
+            'description' => ['nullable', 'string', 'max:5000'],
             'courseType' => ['required', 'in:group,individual,workshop'],
             'maxParticipants' => ['required', 'integer', 'min:1', 'max:50'],
             'durationMinutes' => ['required', 'integer', 'min:15', 'max:240'],

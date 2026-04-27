@@ -32,8 +32,7 @@ class UpdateCourseRequest extends FormRequest
     {
         return [
             'name' => ['sometimes', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:2000'],
-            'trainerId' => ['sometimes', 'integer', 'exists:users,id'],
+            'description' => ['nullable', 'string', 'max:5000'],
             'courseType' => ['sometimes', 'in:group,individual,workshop'],
             'maxParticipants' => ['sometimes', 'integer', 'min:1', 'max:50'],
             'durationMinutes' => ['sometimes', 'integer', 'min:15', 'max:240'],

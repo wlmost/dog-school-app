@@ -37,7 +37,8 @@
         <div class="flex items-start justify-between mb-4">
           <div class="flex-1">
             <h3 class="text-xl font-semibold text-gray-900 mb-1">{{ course.name }}</h3>
-            <p class="text-sm text-gray-600">{{ course.description }}</p>
+            <!-- eslint-disable-next-line vue/no-v-html -->
+            <div class="text-sm text-gray-600 course-description" v-html="sanitizeHtml(course.description)"></div>
           </div>
           <span :class="courseStatusClass(course.status)" class="px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap">
             {{ courseStatusLabel(course.status) }}
@@ -98,6 +99,7 @@ import { ref, onMounted } from 'vue'
 import apiClient from '@/api/client'
 import CourseFormModal from '@/components/CourseFormModal.vue'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
+import DOMPurify from 'dompurify'
 
 const loading = ref(true)
 const filterStatus = ref<string | null>(null)
@@ -195,4 +197,47 @@ function getCourseTypeLabel(type: string) {
   }
   return labels[type] || type
 }
+
+function sanitizeHtml(html: string): string {
+  if (!html) return ''
+  return DOMPurify.sanitize(html)
+}
 </script>
+
+<style scoped>
+.course-description :deep(p) {
+  margin: 0 0 0.25rem 0;
+}
+
+.course-description :deep(p:last-child) {
+  margin-bottom: 0;
+}
+
+.course-description :deep(ul),
+.course-description :deep(ol) {
+  padding-left: 1.25rem;
+  margin: 0.25rem 0;
+}
+
+.course-description :deep(ul) {
+  list-style-type: disc;
+}
+
+.course-description :deep(ol) {
+  list-style-type: decimal;
+}
+
+.course-description :deep(strong) {
+  font-weight: 600;
+}
+
+.course-description :deep(em) {
+  font-style: italic;
+}
+
+.course-description :deep(h2) {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0.25rem 0;
+}
+</style>
