@@ -198,9 +198,12 @@ function getCourseTypeLabel(type: string) {
   return labels[type] || type
 }
 
+/** Allowed HTML tags consistent with the backend sanitization allowlist. */
+const ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'code', 'pre']
+
 function sanitizeHtml(html: string): string {
   if (!html) return ''
-  return DOMPurify.sanitize(html)
+  return DOMPurify.sanitize(html, { ALLOWED_TAGS, ALLOWED_ATTR: [] })
 }
 </script>
 
