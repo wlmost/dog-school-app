@@ -51,13 +51,8 @@ class DogPolicy
      */
     public function update(User $user, Dog $dog): bool
     {
-        // Admins and trainers can update any dog
-        if ($user->isAdminOrTrainer()) {
-            return true;
-        }
-
-        // Customers can update their own dogs
-        return $user->isCustomer() && $dog->customer?->user_id === $user->id;
+        // Only admins and trainers can update dogs
+        return $user->isAdminOrTrainer();
     }
 
     /**
