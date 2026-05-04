@@ -139,7 +139,10 @@ class Booking extends Model
 
         $deadlineHours = $session->course?->cancellation_deadline_hours ?? 24;
 
-        // Combine session_date (Carbon date) with start_time string
+        // Combine session_date (Carbon date) with start_time string.
+        // When start_time is null, midnight (00:00:00) is used as a conservative
+        // default – the deadline will then be `deadlineHours` before midnight of
+        // the session date, which is stricter (earlier) than the actual session start.
         $sessionStart = Carbon::parse(
             $session->session_date->format('Y-m-d') . ' ' . ($session->start_time ?? '00:00:00')
         );
