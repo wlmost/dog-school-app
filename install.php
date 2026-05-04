@@ -1687,6 +1687,51 @@ function stepMigrate() {
 }
 
 /**
+ * Find a PHP CLI binary that matches the version currently running this script.
+ *
+ * On shared hosting, the generic `php` command often points to an old PHP 7.x
+ * while the web server (and this script) runs PHP 8.x. Providers usually offer
+ * versioned binaries such as `php8.3` or `php8`. We probe those first.
+ *
+ * @return string  Shell-ready binary name (e.g. "php8.3")
+ */
+function findPhpBinary(): string
+{
+    $major = (int) PHP_MAJOR_VERSION;
+    $minor = (int) PHP_MINOR_VERSION;
+
+    // Candidates ordered from most-specific to least-specific
+    $candidates = [
+        "php{$major}.{$minor}",   // e.g. php8.3
+        "php{$major}",            // e.g. php8
+        'php',                    // generic fallback
+    ];
+
+    foreach ($candidates as $bin) {
+        // Use 'command -v' to check existence without executing the binary
+        $check = @shell_exec('command -v ' . escapeshellarg($bin) . ' 2>/dev/null');
+        if (empty(trim((string) $check))) {
+            continue;
+        }
+        // Verify the binary actually reports a compatible PHP version
+        $ver = @shell_exec(escapeshellarg($bin) . ' -r "echo PHP_MAJOR_VERSION.\".\".PHP_MINOR_VERSION;" 2>/dev/null');
+        if ($ver === null) {
+            continue;
+        }
+        $parts = explode('.', trim((string) $ver));
+        $binMajor = (int) ($parts[0] ?? 0);
+        $binMinor = (int) ($parts[1] ?? 0);
+        if ($binMajor > $major || ($binMajor === $major && $binMinor >= $minor)) {
+            return $bin;
+        }
+    }
+
+    // Could not verify – return best-guess versioned name so at least the
+    // version-specific binary is tried rather than falling back to php 7.x
+    return "php{$major}.{$minor}";
+}
+
+/**
  * Run database migrations via shell_exec (avoids loading Laravel in the same PHP-FPM process,
  * which would exhaust memory/timeout and cause "Primary script unknown" in Apache error logs).
  */
@@ -1718,8 +1763,10 @@ function runMigrations(): array
     // Primary: run via shell so Laravel is loaded in a separate process.
     // Avoids memory/crash issues inside the PHP-FPM worker serving install.php.
     if (function_exists('shell_exec')) {
-        // Use 'php' from PATH; PHP_BINARY on web is the FPM binary, not the CLI binary.
-        $phpBin  = 'php';
+        // Resolve a versioned CLI binary (e.g. php8.3) because the generic 'php'
+        // on shared hosting often points to PHP 7.x.
+        $phpBin  = findPhpBinary();
+        logMessage("Using PHP binary: $phpBin");
         $command = 'cd ' . escapeshellarg(BACKEND_DIR)
             . ' && ' . $phpBin . ' artisan migrate:fresh --force 2>&1';
         logMessage("Running: $command");
@@ -1770,7 +1817,7 @@ function runMigrations(): array
  */
 function runSeeders() {
     try {
-        $phpBinary = defined('PHP_BINARY') ? PHP_BINARY : 'php';
+        $phpBinary = findPhpBinary();
         $command = 'cd ' . escapeshellarg(BACKEND_DIR)
             . ' && ' . $phpBinary . ' artisan db:seed --class=DemoDataSeeder --force 2>&1';
         $output = shell_exec($command);
