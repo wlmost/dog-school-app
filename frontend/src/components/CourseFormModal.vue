@@ -49,7 +49,7 @@
 
                   <div class="col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1">Beschreibung</label>
-                    <textarea v-model="form.description" rows="3" class="input"></textarea>
+                    <HtmlEditor v-model="form.description" />
                   </div>
 
                   <div>
@@ -140,6 +140,7 @@ import { ref, watch, onMounted } from 'vue'
 import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 import apiClient from '@/api/client'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
+import HtmlEditor from '@/components/HtmlEditor.vue'
 
 const props = defineProps<{
   isOpen: boolean

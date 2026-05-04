@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Http\Requests\Concerns\SanitizesHtmlContent;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 
@@ -14,6 +15,8 @@ use Illuminate\Support\Str;
  */
 class StoreCourseRequest extends FormRequest
 {
+    use SanitizesHtmlContent;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -32,7 +35,7 @@ class StoreCourseRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string', 'max:2000'],
+            'description' => ['nullable', 'string', 'max:5000'],
             'trainerId' => ['required', 'integer', 'exists:users,id'],
             'courseType' => ['required', 'in:group,individual,workshop'],
             'maxParticipants' => ['required', 'integer', 'min:1', 'max:50'],
@@ -59,6 +62,11 @@ class StoreCourseRequest extends FormRequest
             $snakeCase[Str::snake($key)] = $value;
         }
 
+        // Sanitize HTML in description to prevent XSS
+        if (isset($snakeCase['description']) && is_string($snakeCase['description'])) {
+            $snakeCase['description'] = $this->sanitizeHtmlDescription($snakeCase['description']);
+        }
+
         // Set default status if not provided
         if (!isset($snakeCase['status'])) {
             $snakeCase['status'] = 'planned';
@@ -82,3 +90,4 @@ class StoreCourseRequest extends FormRequest
         ];
     }
 }
+
