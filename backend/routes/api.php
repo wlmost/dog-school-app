@@ -84,6 +84,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/dogs/{dog}/training-logs', [DogController::class, 'trainingLogs']);
     Route::get('/dogs/{dog}/bookings', [DogController::class, 'bookings']);
     Route::post('/dogs/{dog}/request-deletion', [DogController::class, 'requestDeletion']);
+    Route::post('/dogs/{dog}/upload-image', [DogController::class, 'uploadImage']);
 
     // Dog Registration Requests
     Route::apiResource('dog-registration-requests', DogRegistrationRequestController::class)->only(['index', 'store', 'show']);

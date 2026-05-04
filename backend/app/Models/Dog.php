@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $veterinarian_name
  * @property string|null $veterinarian_contact
  * @property string|null $medical_notes
+ * @property string|null $profile_image
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property \Illuminate\Support\Carbon|null $deleted_at
@@ -61,6 +62,7 @@ class Dog extends Model
         'special_needs',
         'notes',
         'is_active',
+        'profile_image',
     ];
 
     /**

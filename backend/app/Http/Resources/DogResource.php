@@ -6,6 +6,7 @@ namespace App\Http\Resources;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Dog Resource
@@ -38,6 +39,9 @@ class DogResource extends JsonResource
             'specialNeeds' => $this->special_needs,
             'isActive' => $this->is_active,
             'notes' => $this->notes,
+            'profileImageUrl' => $this->profile_image
+                ? Storage::disk('public')->url($this->profile_image)
+                : null,
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
             'deletedAt' => $this->deleted_at?->toISOString(),

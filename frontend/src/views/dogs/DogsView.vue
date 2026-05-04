@@ -41,7 +41,15 @@
             <h3 class="text-lg font-semibold text-gray-900">{{ dog.name }}</h3>
             <p class="text-sm text-gray-600">{{ dog.breed }}</p>
           </div>
-          <span class="text-3xl">🐕</span>
+          <div class="ml-3 flex-shrink-0">
+            <img
+              v-if="dog.profileImageUrl"
+              :src="dog.profileImageUrl"
+              :alt="dog.name"
+              class="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+            />
+            <span v-else class="text-3xl">🐕</span>
+          </div>
         </div>
         
         <div class="space-y-2 mb-4">

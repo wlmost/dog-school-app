@@ -21,6 +21,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 
 /**
  * Dog Controller
@@ -166,6 +167,41 @@ class DogController extends Controller
         }
 
         return response()->json(null, 204);
+    }
+
+    /**
+     * Upload a profile image for the specified dog.
+     *
+     * @param Request $request
+     * @param Dog $dog
+     * @return DogResource
+     */
+    public function uploadImage(Request $request, Dog $dog): DogResource
+    {
+        $this->authorize('update', $dog);
+
+        $request->validate([
+            'image' => ['required', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:5120'],
+        ]);
+
+        $file = $request->file('image');
+        $extension = strtolower($file->getClientOriginalExtension());
+        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        if (! in_array($extension, $allowedExtensions)) {
+            abort(422, 'Invalid file extension');
+        }
+
+        // Delete old image if it exists
+        if ($dog->profile_image && Storage::disk('public')->exists($dog->profile_image)) {
+            Storage::disk('public')->delete($dog->profile_image);
+        }
+
+        $filename = 'dog_' . $dog->id . '_' . uniqid() . '.' . $extension;
+        $path = $file->storeAs('dog-images', $filename, 'public');
+
+        $dog->update(['profile_image' => $path]);
+
+        return new DogResource($dog->fresh(['customer.user']));
     }
 
     /**
