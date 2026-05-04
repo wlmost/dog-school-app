@@ -1693,9 +1693,9 @@ function stepMigrate() {
  * while the web server (and this script) runs PHP 8.x. Providers usually offer
  * versioned binaries such as `php8.3` or `php8`. We probe those first.
  *
- * @return string  Shell-ready binary name (e.g. "php8.3")
+ * @return string|null  Full path to a working PHP binary, or null if none found.
  */
-function findPhpBinary(): string
+function findPhpBinary(): ?string
 {
     $major = (int) PHP_MAJOR_VERSION;
     $minor = (int) PHP_MINOR_VERSION;
@@ -1708,27 +1708,37 @@ function findPhpBinary(): string
     ];
 
     foreach ($candidates as $bin) {
-        // Use 'command -v' to check existence without executing the binary
-        $check = @shell_exec('command -v ' . escapeshellarg($bin) . ' 2>/dev/null');
-        if (empty(trim((string) $check))) {
+        // Resolve to full path via 'which'
+        $path = trim((string) @shell_exec('which ' . escapeshellarg($bin) . ' 2>/dev/null'));
+        if (empty($path)) {
             continue;
         }
-        // Verify the binary actually reports a compatible PHP version
-        $ver = @shell_exec(escapeshellarg($bin) . ' -r "echo PHP_MAJOR_VERSION.\".\".PHP_MINOR_VERSION;" 2>/dev/null');
-        if ($ver === null) {
+
+        // Check that the file is actually executable by the current process
+        if (!is_executable($path)) {
+            logMessage("PHP binary found but not executable: $path", 'WARNING');
             continue;
         }
-        $parts = explode('.', trim((string) $ver));
-        $binMajor = (int) ($parts[0] ?? 0);
-        $binMinor = (int) ($parts[1] ?? 0);
+
+        // Verify the binary reports a compatible PHP version by running it
+        $ver = trim((string) @shell_exec(escapeshellarg($path) . ' -r "echo PHP_MAJOR_VERSION.\".\".PHP_MINOR_VERSION;" 2>/dev/null'));
+        if (!preg_match('/^\d+\.\d+$/', $ver)) {
+            // Binary exists and is executable but produced no valid version output
+            logMessage("PHP binary produced no valid version output: $path (got: " . substr($ver, 0, 50) . ")", 'WARNING');
+            continue;
+        }
+
+        $parts    = explode('.', $ver);
+        $binMajor = (int) $parts[0];
+        $binMinor = (int) $parts[1];
         if ($binMajor > $major || ($binMajor === $major && $binMinor >= $minor)) {
-            return $bin;
+            logMessage("Using PHP binary: $path ($ver)");
+            return $path;
         }
     }
 
-    // Could not verify – return best-guess versioned name so at least the
-    // version-specific binary is tried rather than falling back to php 7.x
-    return "php{$major}.{$minor}";
+    logMessage('No suitable PHP CLI binary found – artisan commands will be skipped.', 'WARNING');
+    return null;
 }
 
 /**
@@ -1762,13 +1772,10 @@ function runMigrations(): array
 
     // Primary: run via shell so Laravel is loaded in a separate process.
     // Avoids memory/crash issues inside the PHP-FPM worker serving install.php.
-    if (function_exists('shell_exec')) {
-        // Resolve a versioned CLI binary (e.g. php8.3) because the generic 'php'
-        // on shared hosting often points to PHP 7.x.
-        $phpBin  = findPhpBinary();
-        logMessage("Using PHP binary: $phpBin");
+    $phpBin = function_exists('shell_exec') ? findPhpBinary() : null;
+    if ($phpBin !== null) {
         $command = 'cd ' . escapeshellarg(BACKEND_DIR)
-            . ' && ' . $phpBin . ' artisan migrate:fresh --force 2>&1';
+            . ' && ' . escapeshellarg($phpBin) . ' artisan migrate:fresh --force 2>&1';
         logMessage("Running: $command");
         $output = shell_exec($command);
         logMessage("Migration output: " . substr((string) $output, 0, 1000));
@@ -1790,7 +1797,7 @@ function runMigrations(): array
         }
     }
 
-    // Fallback: bootstrap Laravel directly (only when shell_exec is unavailable).
+    // Fallback: bootstrap Laravel directly (no working PHP CLI binary found or shell_exec unavailable).
     // NOTE: this must be the ONLY Laravel bootstrap in the request; do NOT call
     // createInitialAdmin() with a second bootstrap afterwards.
     try {
@@ -1817,9 +1824,13 @@ function runMigrations(): array
  */
 function runSeeders() {
     try {
-        $phpBinary = findPhpBinary();
+        $phpBinary = function_exists('shell_exec') ? findPhpBinary() : null;
+        if ($phpBinary === null) {
+            logMessage('No executable PHP CLI binary found – skipping demo seeder.', 'WARNING');
+            return ['success' => false, 'message' => 'Kein ausführbares PHP CLI Binary gefunden', 'output' => ''];
+        }
         $command = 'cd ' . escapeshellarg(BACKEND_DIR)
-            . ' && ' . $phpBinary . ' artisan db:seed --class=DemoDataSeeder --force 2>&1';
+            . ' && ' . escapeshellarg($phpBinary) . ' artisan db:seed --class=DemoDataSeeder --force 2>&1';
         $output = shell_exec($command);
 
         logMessage("Demo seeder output: $output");
