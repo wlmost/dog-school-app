@@ -30,6 +30,51 @@
               </DialogTitle>
 
               <form @submit.prevent="handleSubmit" class="space-y-4">
+                <!-- Profile Image -->
+                <div class="flex items-center space-x-4">
+                  <div class="relative">
+                    <div
+                      v-if="imagePreview || dog?.profileImageUrl"
+                      class="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200"
+                    >
+                      <img
+                        :src="imagePreview || dog?.profileImageUrl"
+                        alt="Hundebild"
+                        class="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div
+                      v-else
+                      class="w-20 h-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-3xl"
+                    >
+                      🐕
+                    </div>
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Profilbild</label>
+                    <label class="cursor-pointer">
+                      <span class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm">
+                        Bild auswählen
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/gif,image/webp"
+                        class="hidden"
+                        @change="handleImageChange"
+                      />
+                    </label>
+                    <p class="text-xs text-gray-500 mt-1">JPG, PNG, GIF oder WebP, max. 5 MB</p>
+                    <button
+                      v-if="imagePreview"
+                      type="button"
+                      @click="clearImageSelection"
+                      class="text-xs text-red-600 hover:text-red-800 mt-1 block"
+                    >
+                      Auswahl aufheben
+                    </button>
+                  </div>
+                </div>
+
                 <!-- Basic Info -->
                 <div class="grid grid-cols-2 gap-4">
                 <!-- Besitzer: admin/trainer see dropdown, customers see their name as text -->
@@ -153,6 +198,7 @@
  * - Toast notifications for successful operations
  * - Automatic customer dropdown population
  * - Smart form state management preserving errors during validation failures
+ * - Profile image upload with preview
  * 
  * Error Handling:
  * - Displays inline errors that persist until next submission attempt
@@ -185,6 +231,9 @@ const emit = defineEmits<{
 const loading = ref(false)
 const error = ref<string | null>(null)
 const customers = ref<any[]>([])
+
+const selectedImageFile = ref<File | null>(null)
+const imagePreview = ref<string | null>(null)
 
 const form = ref({
   customer_id: '',
@@ -232,6 +281,8 @@ watch(() => props.dog, (newDog) => {
 watch(() => props.isOpen, (isOpen) => {
   if (isOpen) {
     error.value = null
+    selectedImageFile.value = null
+    imagePreview.value = null
     if (!isCustomer.value) {
       loadCustomers()
     }
@@ -245,6 +296,25 @@ async function loadCustomers() {
   } catch (err: any) {
     handleApiError(err, 'Fehler beim Laden der Besitzer')
   }
+}
+
+function handleImageChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  selectedImageFile.value = file
+
+  const reader = new FileReader()
+  reader.onload = (e) => {
+    imagePreview.value = e.target?.result as string
+  }
+  reader.readAsDataURL(file)
+}
+
+function clearImageSelection() {
+  selectedImageFile.value = null
+  imagePreview.value = null
 }
 
 function resetForm() {
@@ -262,6 +332,8 @@ function resetForm() {
     notes: ''
   }
   error.value = null
+  selectedImageFile.value = null
+  imagePreview.value = null
 }
 
 /**
@@ -319,12 +391,29 @@ async function handleSubmit() {
       payload.customerId = form.value.customer_id
     }
 
+    let savedDog: any
     if (props.dog) {
-      await apiClient.put(`/api/v1/dogs/${props.dog.id}`, payload)
+      const response = await apiClient.put(`/api/v1/dogs/${props.dog.id}`, payload)
+      savedDog = response.data.data
       showSuccess('Hund aktualisiert', `${form.value.name} wurde erfolgreich aktualisiert`)
     } else {
-      await apiClient.post('/api/v1/dogs', payload)
+      const response = await apiClient.post('/api/v1/dogs', payload)
+      savedDog = response.data.data
       showSuccess('Hund erstellt', `${form.value.name} wurde erfolgreich erstellt`)
+    }
+
+    // Upload image if one was selected
+    if (selectedImageFile.value && savedDog?.id) {
+      try {
+        const formData = new FormData()
+        formData.append('image', selectedImageFile.value)
+        await apiClient.post(`/api/v1/dogs/${savedDog.id}/upload-image`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+      } catch (imgErr: any) {
+        const imgError = imgErr.response?.data?.message || 'Fehler beim Hochladen des Bildes'
+        handleApiError(imgErr, imgError)
+      }
     }
 
     emit('saved')

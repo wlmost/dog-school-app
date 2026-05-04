@@ -9,6 +9,8 @@ use App\Models\TrainingLog;
 use App\Models\User;
 use App\Models\Vaccination;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -527,5 +529,118 @@ describe('Dog API - Related Resources', function () {
 
         $response->assertStatus(200)
             ->assertJsonCount(2, 'data');
+    });
+});
+
+describe('Dog API - Upload Image', function () {
+    beforeEach(function () {
+        Storage::fake('public');
+    });
+
+    test('admin can upload profile image for a dog', function () {
+        $admin = User::factory()->admin()->create();
+        $dog = Dog::factory()->create();
+        $file = UploadedFile::fake()->image('dog-photo.jpg');
+
+        $response = $this->actingAs($admin)
+            ->postJson("/api/v1/dogs/{$dog->id}/upload-image", [
+                'image' => $file,
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.id', $dog->id)
+            ->assertJsonStructure(['data' => ['profileImageUrl']]);
+
+        $this->assertDatabaseHas('dogs', ['id' => $dog->id]);
+        $updatedDog = Dog::find($dog->id);
+        $this->assertNotNull($updatedDog->profile_image);
+        Storage::disk('public')->assertExists($updatedDog->profile_image);
+    });
+
+    test('trainer can upload profile image for a dog', function () {
+        $trainer = User::factory()->trainer()->create();
+        $dog = Dog::factory()->create();
+        $file = UploadedFile::fake()->image('dog-photo.png');
+
+        $response = $this->actingAs($trainer)
+            ->postJson("/api/v1/dogs/{$dog->id}/upload-image", [
+                'image' => $file,
+            ]);
+
+        $response->assertStatus(200);
+    });
+
+    test('customer can upload profile image for their own dog', function () {
+        $customerUser = User::factory()->customer()->create();
+        $customer = Customer::factory()->for($customerUser, 'user')->create();
+        $dog = Dog::factory()->for($customer)->create();
+        $file = UploadedFile::fake()->image('dog-photo.jpg');
+
+        $response = $this->actingAs($customerUser)
+            ->postJson("/api/v1/dogs/{$dog->id}/upload-image", [
+                'image' => $file,
+            ]);
+
+        $response->assertStatus(200);
+    });
+
+    test('customer cannot upload profile image for another customer dog', function () {
+        $customerUser = User::factory()->customer()->create();
+        $otherCustomerUser = User::factory()->customer()->create();
+        $otherCustomer = Customer::factory()->for($otherCustomerUser, 'user')->create();
+        $dog = Dog::factory()->for($otherCustomer)->create();
+        $file = UploadedFile::fake()->image('dog-photo.jpg');
+
+        $response = $this->actingAs($customerUser)
+            ->postJson("/api/v1/dogs/{$dog->id}/upload-image", [
+                'image' => $file,
+            ]);
+
+        $response->assertStatus(403);
+    });
+
+    test('upload image requires image field', function () {
+        $admin = User::factory()->admin()->create();
+        $dog = Dog::factory()->create();
+
+        $response = $this->actingAs($admin)
+            ->postJson("/api/v1/dogs/{$dog->id}/upload-image", []);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['image']);
+    });
+
+    test('upload image rejects non-image files', function () {
+        $admin = User::factory()->admin()->create();
+        $dog = Dog::factory()->create();
+        $file = UploadedFile::fake()->create('document.pdf', 100, 'application/pdf');
+
+        $response = $this->actingAs($admin)
+            ->postJson("/api/v1/dogs/{$dog->id}/upload-image", [
+                'image' => $file,
+            ]);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['image']);
+    });
+
+    test('uploading new image replaces old image', function () {
+        $admin = User::factory()->admin()->create();
+        $dog = Dog::factory()->create();
+
+        $firstFile = UploadedFile::fake()->image('first.jpg');
+        $this->actingAs($admin)
+            ->postJson("/api/v1/dogs/{$dog->id}/upload-image", ['image' => $firstFile]);
+
+        $firstPath = Dog::find($dog->id)->profile_image;
+        Storage::disk('public')->assertExists($firstPath);
+
+        $secondFile = UploadedFile::fake()->image('second.jpg');
+        $this->actingAs($admin)
+            ->postJson("/api/v1/dogs/{$dog->id}/upload-image", ['image' => $secondFile]);
+
+        $secondPath = Dog::find($dog->id)->profile_image;
+        Storage::disk('public')->assertMissing($firstPath);
+        Storage::disk('public')->assertExists($secondPath);
     });
 });
