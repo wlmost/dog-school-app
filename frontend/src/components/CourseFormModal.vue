@@ -112,8 +112,24 @@
 
                 <!-- Additional Info -->
                 <div class="pt-4 border-t border-gray-200">
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
-                  <textarea v-model="form.notes" rows="2" class="input"></textarea>
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Stornierungsfrist (Stunden)</label>
+                      <input
+                        v-model.number="form.cancellation_deadline_hours"
+                        type="number"
+                        min="0"
+                        max="720"
+                        class="input"
+                        placeholder="z.B. 24"
+                      />
+                      <p class="text-xs text-gray-500 mt-1">Bis wie viele Stunden vor Kursbeginn kann storniert werden? (Standard: 24h)</p>
+                    </div>
+                    <div>
+                      <label class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
+                      <textarea v-model="form.notes" rows="2" class="input"></textarea>
+                    </div>
+                  </div>
                 </div>
 
                 <!-- Buttons -->
@@ -172,6 +188,7 @@ const form = ref({
   price_per_session: 25,
   total_sessions: 8,
   duration_minutes: 60,
+  cancellation_deadline_hours: 24,
   notes: ''
 })
 
@@ -199,6 +216,7 @@ watch(() => props.course, (newCourse) => {
       price_per_session: newCourse.pricePerSession || 25,
       total_sessions: newCourse.totalSessions || 8,
       duration_minutes: newCourse.durationMinutes || 60,
+      cancellation_deadline_hours: newCourse.cancellationDeadlineHours ?? 24,
       notes: newCourse.notes || ''
     }
   } else {
@@ -220,6 +238,7 @@ function resetForm() {
     price_per_session: 25,
     total_sessions: 8,
     duration_minutes: 60,
+    cancellation_deadline_hours: 24,
     notes: ''
   }
 }
@@ -239,6 +258,7 @@ async function handleSubmit() {
       totalSessions: form.value.total_sessions,
       startDate: form.value.start_date || null,
       endDate: form.value.end_date || null,
+      cancellationDeadlineHours: form.value.cancellation_deadline_hours,
       status: 'active'
     }
 

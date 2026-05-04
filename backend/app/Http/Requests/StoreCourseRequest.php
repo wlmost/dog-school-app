@@ -44,6 +44,7 @@ class StoreCourseRequest extends FormRequest
             'totalSessions' => ['required', 'integer', 'min:1', 'max:100'],
             'startDate' => ['required', 'date'],
             'endDate' => ['nullable', 'date', 'after:startDate'],
+            'cancellationDeadlineHours' => ['sometimes', 'integer', 'min:0', 'max:720'],
             'status' => ['sometimes', 'in:planned,active,completed,cancelled'],
         ];
     }

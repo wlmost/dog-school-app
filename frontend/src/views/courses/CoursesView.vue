@@ -62,6 +62,10 @@
             <p class="text-xs text-gray-500 mb-1">Typ</p>
             <p class="text-sm font-medium text-gray-900">{{ getCourseTypeLabel(course.courseType) }}</p>
           </div>
+          <div class="col-span-2">
+            <p class="text-xs text-gray-500 mb-1">Stornierungsfrist</p>
+            <p class="text-sm font-medium text-gray-900">{{ course.cancellationDeadlineHours ?? 24 }} Stunden vor Kursbeginn</p>
+          </div>
         </div>
 
         <div class="mb-4">
