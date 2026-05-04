@@ -239,11 +239,11 @@ test('customer can cancel their own booking', function () {
             'cancellationReason' => 'Schedule conflict',
         ])
         ->assertOk()
-        ->assertJsonPath('data.status', 'cancelled');
+        ->assertJsonPath('data.status', 'cancellation_requested');
 
     $this->assertDatabaseHas('bookings', [
         'id' => $booking->id,
-        'status' => 'cancelled',
+        'status' => 'cancellation_requested',
         'cancellation_reason' => 'Schedule conflict',
     ]);
 });
@@ -441,3 +441,93 @@ test('customer without customer record sees no bookings', function () {
 
     expect($response->json('data'))->toHaveCount(0);
 });
+
+test('customer cancellation sets status to cancellation_requested when within deadline', function () {
+    // Session date far in the future so deadline has not passed
+    $session = TrainingSession::factory()->create([
+        'session_date' => now()->addDays(30),
+        'start_time'   => '10:00:00',
+    ]);
+    $booking = Booking::factory()->create([
+        'customer_id'         => $this->customer->id,
+        'training_session_id' => $session->id,
+        'status'              => 'confirmed',
+    ]);
+
+    $this->actingAs($this->customerUser)
+        ->postJson('/api/v1/bookings/' . $booking->id . '/cancel', [
+            'cancellationReason' => 'Personal reasons',
+        ])
+        ->assertOk()
+        ->assertJsonPath('data.status', 'cancellation_requested');
+
+    $this->assertDatabaseHas('bookings', [
+        'id'                  => $booking->id,
+        'status'              => 'cancellation_requested',
+        'cancellation_reason' => 'Personal reasons',
+    ]);
+});
+
+test('customer cancellation is rejected when deadline has passed', function () {
+    // Session is in the past (deadline already expired)
+    $session = TrainingSession::factory()->create([
+        'session_date' => now()->subDays(2),
+        'start_time'   => '10:00:00',
+    ]);
+    $booking = Booking::factory()->create([
+        'customer_id'         => $this->customer->id,
+        'training_session_id' => $session->id,
+        'status'              => 'confirmed',
+    ]);
+
+    $this->actingAs($this->customerUser)
+        ->postJson('/api/v1/bookings/' . $booking->id . '/cancel')
+        ->assertUnprocessable()
+        ->assertJsonPath('deadlineExpired', true);
+
+    $this->assertDatabaseHas('bookings', [
+        'id'     => $booking->id,
+        'status' => 'confirmed',
+    ]);
+});
+
+test('trainer can approve cancellation request', function () {
+    $session = TrainingSession::factory()->create([
+        'trainer_id' => $this->trainer->id,
+    ]);
+    $booking = Booking::factory()->create([
+        'training_session_id' => $session->id,
+        'status'              => 'cancellation_requested',
+        'cancellation_reason' => 'Illness',
+    ]);
+
+    $this->actingAs($this->trainer)
+        ->postJson('/api/v1/bookings/' . $booking->id . '/approve-cancellation')
+        ->assertOk()
+        ->assertJsonPath('data.status', 'cancelled');
+
+    $this->assertDatabaseHas('bookings', [
+        'id'     => $booking->id,
+        'status' => 'cancelled',
+    ]);
+});
+
+test('trainer cannot approve cancellation if not requested', function () {
+    $booking = Booking::factory()->create(['status' => 'confirmed']);
+
+    $this->actingAs($this->trainer)
+        ->postJson('/api/v1/bookings/' . $booking->id . '/approve-cancellation')
+        ->assertUnprocessable();
+});
+
+test('customer cannot approve cancellation request', function () {
+    $booking = Booking::factory()->create([
+        'customer_id' => $this->customer->id,
+        'status'      => 'cancellation_requested',
+    ]);
+
+    $this->actingAs($this->customerUser)
+        ->postJson('/api/v1/bookings/' . $booking->id . '/approve-cancellation')
+        ->assertForbidden();
+});
+

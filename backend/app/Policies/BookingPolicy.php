@@ -75,6 +75,16 @@ class BookingPolicy
     }
 
     /**
+     * Determine whether the user can approve a cancellation request.
+     *
+     * Only trainers (for their own courses) and admins may approve.
+     */
+    public function approveCancellation(User $user, Booking $booking): bool
+    {
+        return $user->isAdminOrTrainer();
+    }
+
+    /**
      * Determine whether the user can delete the booking.
      */
     public function delete(User $user, Booking $booking): bool

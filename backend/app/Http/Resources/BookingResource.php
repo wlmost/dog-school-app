@@ -35,6 +35,9 @@ class BookingResource extends JsonResource
             'notes' => $this->notes,
             'isConfirmed' => $this->isConfirmed(),
             'isCancelled' => $this->isCancelled(),
+            'isCancellationRequested' => $this->isCancellationRequested(),
+            'cancellationDeadline' => $this->cancellationDeadline()?->toISOString(),
+            'isCancellationAllowed' => $this->isCancellationAllowed(),
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
             

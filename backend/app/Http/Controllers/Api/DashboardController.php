@@ -64,6 +64,7 @@ class DashboardController extends Controller
             'bookings'                   => Booking::whereIn('status', ['pending', 'confirmed'])->count(),
             'pendingDogRequests'         => DogRegistrationRequest::where('status', 'pending')->count(),
             'pendingDogDeletionRequests' => DogDeletionRequest::where('status', 'pending')->count(),
+            'pendingCancellationRequests' => Booking::where('status', 'cancellation_requested')->count(),
         ];
 
         $upcomingSessions = TrainingSession::with(['course', 'bookings'])
@@ -123,6 +124,20 @@ class DashboardController extends Controller
                     'customerName' => $r->customer->user->full_name ?? 'Unbekannt',
                     'dogName'      => $r->dog_name,
                     'createdAt'    => $r->created_at?->toISOString(),
+                ]),
+            'pendingCancellationRequests' => Booking::with(['customer.user', 'dog', 'trainingSession.course'])
+                ->where('status', 'cancellation_requested')
+                ->orderBy('updated_at', 'desc')
+                ->limit(5)
+                ->get()
+                ->map(fn (Booking $b) => [
+                    'id'                 => $b->id,
+                    'customerName'       => $b->customer?->user?->full_name ?? 'Unbekannt',
+                    'dogName'            => $b->dog?->name ?? 'Unbekannt',
+                    'courseName'         => $b->trainingSession?->course?->name ?? 'Unbekannt',
+                    'sessionDate'        => $b->trainingSession?->session_date?->format('d.m.Y') ?? '-',
+                    'cancellationReason' => $b->cancellation_reason,
+                    'updatedAt'          => $b->updated_at?->toISOString(),
                 ]),
         ]);
     }
@@ -186,10 +201,30 @@ class DashboardController extends Controller
                 ];
             });
 
+        $pendingCancellationRequests = Booking::with(['customer.user', 'dog', 'trainingSession.course'])
+            ->whereHas('trainingSession', function ($query) use ($trainerCourses) {
+                $query->whereIn('course_id', $trainerCourses);
+            })
+            ->where('status', 'cancellation_requested')
+            ->orderBy('updated_at', 'desc')
+            ->get()
+            ->map(function ($booking) {
+                return [
+                    'id' => $booking->id,
+                    'customerName' => $booking->customer->user->full_name ?? 'Unbekannt',
+                    'dogName' => $booking->dog->name ?? 'Unbekannt',
+                    'courseName' => $booking->trainingSession->course->name ?? 'Unbekannt',
+                    'sessionDate' => $booking->trainingSession->session_date?->format('d.m.Y') ?? '-',
+                    'cancellationReason' => $booking->cancellation_reason,
+                    'updatedAt' => $booking->updated_at?->toISOString(),
+                ];
+            });
+
         return response()->json([
             'stats' => $stats,
             'upcomingSessions' => $upcomingSessions,
             'recentBookings' => $recentBookings,
+            'pendingCancellationRequests' => $pendingCancellationRequests,
         ]);
     }
 

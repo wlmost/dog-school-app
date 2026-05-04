@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Booking Model
@@ -21,6 +22,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon $booking_date
  * @property bool|null $attended
  * @property string|null $notes
+ * @property string|null $cancellation_reason
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read TrainingSession $session
@@ -111,6 +113,54 @@ class Booking extends Model
     }
 
     /**
+     * Check if a cancellation has been requested by the customer and is awaiting trainer approval.
+     */
+    public function isCancellationRequested(): bool
+    {
+        return $this->status === 'cancellation_requested';
+    }
+
+    /**
+     * Calculate the latest point in time until which a cancellation is allowed.
+     *
+     * The deadline is derived from the related training session's date/time and
+     * the course-level `cancellation_deadline_hours` setting (default 24 h).
+     * Returns null when the related session or course cannot be resolved.
+     */
+    public function cancellationDeadline(): ?Carbon
+    {
+        $session = $this->relationLoaded('trainingSession')
+            ? $this->trainingSession
+            : $this->trainingSession()->with('course')->first();
+
+        if (! $session) {
+            return null;
+        }
+
+        $deadlineHours = $session->course?->cancellation_deadline_hours ?? 24;
+
+        // Combine session_date (Carbon date) with start_time string.
+        // When start_time is null, midnight (00:00:00) is used as a conservative
+        // default – the deadline will then be `deadlineHours` before midnight of
+        // the session date, which is stricter (earlier) than the actual session start.
+        $sessionStart = Carbon::parse(
+            $session->session_date->format('Y-m-d') . ' ' . ($session->start_time ?? '00:00:00')
+        );
+
+        return $sessionStart->subHours($deadlineHours);
+    }
+
+    /**
+     * Determine whether the cancellation window is still open.
+     */
+    public function isCancellationAllowed(): bool
+    {
+        $deadline = $this->cancellationDeadline();
+
+        return $deadline === null || now()->lessThanOrEqualTo($deadline);
+    }
+
+    /**
      * Scope a query to only include confirmed bookings.
      */
     public function scopeConfirmed($query)
@@ -124,6 +174,14 @@ class Booking extends Model
     public function scopeCancelled($query)
     {
         return $query->where('status', 'cancelled');
+    }
+
+    /**
+     * Scope a query to only include bookings with a pending cancellation request.
+     */
+    public function scopeCancellationRequested($query)
+    {
+        return $query->where('status', 'cancellation_requested');
     }
 
     /**
