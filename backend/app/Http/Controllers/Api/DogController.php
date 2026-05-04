@@ -22,6 +22,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 /**
  * Dog Controller
@@ -186,17 +187,13 @@ class DogController extends Controller
 
         $file = $request->file('image');
         $extension = strtolower($file->getClientOriginalExtension());
-        $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-        if (! in_array($extension, $allowedExtensions)) {
-            abort(422, 'Invalid file extension');
-        }
 
         // Delete old image if it exists
         if ($dog->profile_image && Storage::disk('public')->exists($dog->profile_image)) {
             Storage::disk('public')->delete($dog->profile_image);
         }
 
-        $filename = 'dog_' . $dog->id . '_' . uniqid() . '.' . $extension;
+        $filename = 'dog_' . $dog->id . '_' . Str::uuid() . '.' . $extension;
         $path = $file->storeAs('dog-images', $filename, 'public');
 
         $dog->update(['profile_image' => $path]);

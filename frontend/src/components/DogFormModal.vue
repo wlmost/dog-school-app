@@ -404,11 +404,16 @@ async function handleSubmit() {
 
     // Upload image if one was selected
     if (selectedImageFile.value && savedDog?.id) {
-      const formData = new FormData()
-      formData.append('image', selectedImageFile.value)
-      await apiClient.post(`/api/v1/dogs/${savedDog.id}/upload-image`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      })
+      try {
+        const formData = new FormData()
+        formData.append('image', selectedImageFile.value)
+        await apiClient.post(`/api/v1/dogs/${savedDog.id}/upload-image`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        })
+      } catch (imgErr: any) {
+        const imgError = imgErr.response?.data?.message || 'Fehler beim Hochladen des Bildes'
+        handleApiError(imgErr, imgError)
+      }
     }
 
     emit('saved')
