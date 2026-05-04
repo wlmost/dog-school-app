@@ -10,12 +10,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreBookingRequest;
 use App\Http\Requests\UpdateBookingRequest;
 use App\Http\Resources\BookingResource;
+use App\Mail\BookingCancellationApproved;
 use App\Models\Booking;
 use App\Models\TrainingSession;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Booking Controller
@@ -169,7 +171,7 @@ class BookingController extends Controller
     {
         $this->authorize('view', $booking);
 
-        return new BookingResource($booking->load(['trainingSession', 'customer.user', 'dog']));
+        return new BookingResource($booking->load(['trainingSession.course', 'customer.user', 'dog']));
     }
 
     /**
@@ -185,17 +187,22 @@ class BookingController extends Controller
 
         $booking->update($request->validatedSnakeCase());
 
-        return new BookingResource($booking->fresh(['trainingSession', 'customer.user', 'dog']));
+        return new BookingResource($booking->fresh(['trainingSession.course', 'customer.user', 'dog']));
     }
 
     /**
-     * Cancel the specified booking.
+     * Cancel or request cancellation for the specified booking.
+     *
+     * - Admins / trainers: cancel immediately.
+     * - Customers: if within the cancellation window, set status to
+     *   'cancellation_requested' so the responsible trainer can approve it.
+     *   If the window has passed, return a 422 with a descriptive message.
      *
      * @param Request $request
      * @param Booking $booking
-     * @return BookingResource
+     * @return BookingResource|JsonResponse
      */
-    public function cancel(Request $request, Booking $booking): BookingResource
+    public function cancel(Request $request, Booking $booking): BookingResource|JsonResponse
     {
         $this->authorize('cancel', $booking);
 
@@ -203,12 +210,72 @@ class BookingController extends Controller
             'cancellationReason' => ['nullable', 'string', 'max:500'],
         ]);
 
+        $user = $request->user();
+
+        // Admins and trainers cancel immediately without a deadline check
+        if ($user->isAdminOrTrainer()) {
+            $booking->update([
+                'status' => 'cancelled',
+                'cancellation_reason' => $request->input('cancellationReason'),
+            ]);
+
+            return new BookingResource($booking->fresh(['trainingSession.course', 'customer.user', 'dog']));
+        }
+
+        // Customers: check cancellation deadline
+        $booking->load('trainingSession.course');
+
+        if (! $booking->isCancellationAllowed()) {
+            $deadline = $booking->cancellationDeadline();
+            $deadlineFormatted = $deadline?->locale('de')->isoFormat('DD.MM.YYYY [um] HH:mm [Uhr]') ?? '-';
+
+            return response()->json([
+                'message' => "Die Stornierungsfrist ist abgelaufen (war bis {$deadlineFormatted}). "
+                    . 'Eine Stornierung ist nicht mehr möglich. Die Kurskosten fallen an.',
+                'deadlineExpired' => true,
+                'cancellationDeadline' => $deadline?->toISOString(),
+            ], 422);
+        }
+
+        // Within the window: create a cancellation request for the trainer to approve
         $booking->update([
-            'status' => 'cancelled',
+            'status' => 'cancellation_requested',
             'cancellation_reason' => $request->input('cancellationReason'),
         ]);
 
-        return new BookingResource($booking->fresh(['trainingSession', 'customer.user', 'dog']));
+        return new BookingResource($booking->fresh(['trainingSession.course', 'customer.user', 'dog']));
+    }
+
+    /**
+     * Approve a cancellation request submitted by a customer.
+     *
+     * Only trainers (and admins) may approve. On approval the booking status
+     * is set to 'cancelled' and the customer receives a notification email.
+     *
+     * @param Request $request
+     * @param Booking $booking
+     * @return BookingResource|JsonResponse
+     */
+    public function approveCancellation(Request $request, Booking $booking): BookingResource|JsonResponse
+    {
+        $this->authorize('approveCancellation', $booking);
+
+        if (! $booking->isCancellationRequested()) {
+            return response()->json([
+                'message' => 'Diese Buchung hat keine ausstehende Stornierungsanfrage.',
+            ], 422);
+        }
+
+        $booking->update(['status' => 'cancelled']);
+        $booking->load(['trainingSession.course', 'customer.user', 'dog']);
+
+        // Notify the customer by email
+        $customerEmail = $booking->customer?->user?->email;
+        if ($customerEmail) {
+            Mail::to($customerEmail)->send(new BookingCancellationApproved($booking));
+        }
+
+        return new BookingResource($booking->fresh(['trainingSession.course', 'customer.user', 'dog']));
     }
 
     /**
@@ -227,7 +294,7 @@ class BookingController extends Controller
         // Dispatch event to send confirmation email
         BookingCreated::dispatch($booking);
 
-        return new BookingResource($booking->fresh(['trainingSession', 'customer.user', 'dog']));
+        return new BookingResource($booking->fresh(['trainingSession.course', 'customer.user', 'dog']));
     }
 
     /**

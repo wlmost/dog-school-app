@@ -28,6 +28,7 @@ class CourseResource extends JsonResource
             'startDate' => $this->start_date?->toDateString(),
             'endDate' => $this->end_date?->toDateString(),
             'status' => $this->status,
+            'cancellationDeadlineHours' => $this->cancellation_deadline_hours ?? 24,
             'isActive' => $this->isActive(),
             'isFull' => $this->isFull(),
             'createdAt' => $this->created_at?->toISOString(),

@@ -205,6 +205,72 @@
       </div>
     </div>
 
+    <!-- Pending Cancellation Requests (trainer and admin) -->
+    <div v-if="user?.role === 'trainer' || user?.role === 'admin'" class="card">
+      <div class="flex items-center justify-between mb-4">
+        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          Ausstehende Stornierungsanfragen
+        </h4>
+        <span
+          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+          :class="pendingCancellationRequests.length > 0
+            ? 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'"
+        >
+          {{ pendingCancellationRequests.length }}
+        </span>
+      </div>
+
+      <div v-if="loading" class="text-center py-8">
+        <svg class="animate-spin h-8 w-8 text-primary-600 dark:text-primary-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="text-gray-500 dark:text-gray-400 mt-2">Lade Daten...</p>
+      </div>
+
+      <div
+        v-else-if="!pendingCancellationRequests.length"
+        class="text-center py-8 text-gray-500 dark:text-gray-400"
+      >
+        Keine ausstehenden Stornierungsanfragen
+      </div>
+
+      <div v-else class="divide-y divide-gray-200 dark:divide-gray-700">
+        <div
+          v-for="request in pendingCancellationRequests"
+          :key="request.id"
+          class="flex items-center justify-between py-3"
+        >
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-gray-900 dark:text-gray-100 truncate">
+              {{ request.dogName }}
+              <span class="text-sm font-normal text-gray-500 dark:text-gray-400 ml-1">
+                &ndash; {{ request.courseName }}
+              </span>
+            </p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+              {{ request.customerName }} &middot; {{ request.sessionDate }}
+            </p>
+            <p v-if="request.cancellationReason" class="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
+              Grund: {{ request.cancellationReason }}
+            </p>
+          </div>
+          <div class="flex items-center space-x-2 ml-4 shrink-0">
+            <button
+              @click="approveCancellationRequest(request.id)"
+              :disabled="processingRequestId === request.id"
+              class="btn text-sm bg-green-100 hover:bg-green-200 text-green-800 disabled:opacity-50"
+              aria-label="Stornierung genehmigen"
+            >
+              <span v-if="processingRequestId === request.id">...</span>
+              <span v-else>Genehmigen</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Recent Activity -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">      <!-- Upcoming Sessions -->
       <div class="card">
@@ -313,6 +379,16 @@ interface PendingDogDeletionRequest {
   createdAt: string
 }
 
+interface PendingCancellationRequest {
+  id: number
+  customerName: string
+  dogName: string
+  courseName: string
+  sessionDate: string
+  cancellationReason: string | null
+  updatedAt: string
+}
+
 const authStore = useAuthStore()
 const user = computed(() => authStore.user)
 
@@ -331,6 +407,7 @@ const upcomingSessions = ref<any[]>([])
 const recentBookings = ref<any[]>([])
 const pendingDogRegistrations = ref<PendingDogRegistration[]>([])
 const pendingDogDeletionRequests = ref<PendingDogDeletionRequest[]>([])
+const pendingCancellationRequests = ref<PendingCancellationRequest[]>([])
 const processingRequestId = ref<number | null>(null)
 
 // Computed grid class based on user role
@@ -353,6 +430,7 @@ async function loadDashboard() {
     recentBookings.value = response.data.recentBookings
     pendingDogRegistrations.value = response.data.pendingDogRegistrations ?? []
     pendingDogDeletionRequests.value = response.data.pendingDogDeletionRequests ?? []
+    pendingCancellationRequests.value = response.data.pendingCancellationRequests ?? []
   } catch (error) {
     console.error('Error loading dashboard data:', error)
   } finally {
@@ -416,6 +494,19 @@ async function rejectDeletionRequest(id: number) {
   }
 }
 
+async function approveCancellationRequest(id: number) {
+  processingRequestId.value = id
+  try {
+    await apiClient.post(`/api/v1/bookings/${id}/approve-cancellation`)
+    showSuccess('Stornierung genehmigt', 'Die Stornierung wurde genehmigt und der Kunde per E-Mail informiert.')
+    await loadDashboard()
+  } catch (err) {
+    handleApiError(err, 'Fehler beim Genehmigen der Stornierungsanfrage')
+  } finally {
+    processingRequestId.value = null
+  }
+}
+
 function formatDate(date: string) {
   if (!date) return '-'
   return new Date(date).toLocaleDateString('de-DE')
@@ -425,7 +516,8 @@ function bookingStatusClass(status: string) {
   const classes = {
     confirmed: 'px-3 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full',
     pending: 'px-3 py-1 text-xs font-medium text-yellow-800 bg-yellow-100 rounded-full',
-    cancelled: 'px-3 py-1 text-xs font-medium text-red-800 bg-red-100 rounded-full'
+    cancelled: 'px-3 py-1 text-xs font-medium text-red-800 bg-red-100 rounded-full',
+    cancellation_requested: 'px-3 py-1 text-xs font-medium text-orange-800 bg-orange-100 rounded-full',
   }
   return classes[status as keyof typeof classes] || classes.pending
 }
@@ -434,7 +526,8 @@ function bookingStatusLabel(status: string) {
   const labels = {
     confirmed: 'Bestätigt',
     pending: 'Ausstehend',
-    cancelled: 'Storniert'
+    cancelled: 'Storniert',
+    cancellation_requested: 'Stornierung beantragt',
   }
   return labels[status as keyof typeof labels] || status
 }

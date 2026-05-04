@@ -105,6 +105,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::apiResource('bookings', BookingController::class);
     Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']);
     Route::post('/bookings/{booking}/confirm', [BookingController::class, 'confirm']);
+    Route::post('/bookings/{booking}/approve-cancellation', [BookingController::class, 'approveCancellation']);
     
     // Course Management
     Route::apiResource('courses', CourseController::class);
