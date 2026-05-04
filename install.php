@@ -907,22 +907,25 @@ function stepDatabase() {
     
     // Handle database test
     if (isset($_POST['test_connection'])) {
-        $dbHost = $_POST['db_host'] ?? 'localhost';
-        $dbPort = $_POST['db_port'] ?? '3306';
-        $dbName = $_POST['db_name'] ?? '';
-        $dbUser = $_POST['db_user'] ?? '';
-        $dbPass = $_POST['db_pass'] ?? '';
+        $dbHost   = $_POST['db_host']   ?? 'localhost';
+        $dbPort   = $_POST['db_port']   ?? '3306';
+        $dbName   = $_POST['db_name']   ?? '';
+        $dbUser   = $_POST['db_user']   ?? '';
+        $dbPass   = $_POST['db_pass']   ?? '';
+        // Sanitize prefix: only lowercase alphanumeric and underscores
+        $dbPrefix = preg_replace('/[^a-z0-9_]/', '', strtolower($_POST['db_prefix'] ?? ''));
         
         $testResult = testDatabaseConnection($dbHost, $dbPort, $dbName, $dbUser, $dbPass);
         
         if ($testResult['success']) {
             $success = true;
             // Save to session
-            setSessionData('db_host', $dbHost);
-            setSessionData('db_port', $dbPort);
-            setSessionData('db_name', $dbName);
-            setSessionData('db_user', $dbUser);
-            setSessionData('db_pass', $dbPass);
+            setSessionData('db_host',   $dbHost);
+            setSessionData('db_port',   $dbPort);
+            setSessionData('db_name',   $dbName);
+            setSessionData('db_user',   $dbUser);
+            setSessionData('db_pass',   $dbPass);
+            setSessionData('db_prefix', $dbPrefix);
         } else {
             $errors[] = $testResult['error'];
         }
@@ -976,6 +979,13 @@ function stepDatabase() {
         <div class="form-group">
             <label>Database Password</label>
             <input type="password" name="db_pass" value="<?php echo htmlspecialchars(getSessionData('db_pass', '')); ?>">
+        </div>
+
+        <div class="form-group">
+            <label>Tabellenpräfix <small>(optional)</small></label>
+            <input type="text" name="db_prefix" value="<?php echo htmlspecialchars(getSessionData('db_prefix', '')); ?>"
+                   pattern="[a-z0-9_]*" placeholder="z.B. ds_ (leer lassen für kein Präfix)">
+            <small>Präfix für alle Tabellennamen. Nützlich wenn mehrere Anwendungen dieselbe Datenbank teilen. Beispiel: "ds_" → ds_users, ds_dogs, ...</small>
         </div>
         
         <div class="btn-group">
@@ -1180,7 +1190,8 @@ function createEnvFile() {
         $dbName       = getSessionData('db_name', '');
         $dbUser       = getSessionData('db_user', '');
         $dbPass       = getSessionData('db_pass', '');
-        
+        $dbPrefix     = getSessionData('db_prefix', '');
+
         $dbReplacements = [
             '/^#?\s*DB_CONNECTION\s*=.*$/m' => 'DB_CONNECTION=' . $dbConnection,
             '/^#?\s*DB_HOST\s*=.*$/m'       => 'DB_HOST=' . $dbHost,
@@ -1188,6 +1199,7 @@ function createEnvFile() {
             '/^#?\s*DB_DATABASE\s*=.*$/m'   => 'DB_DATABASE=' . $dbName,
             '/^#?\s*DB_USERNAME\s*=.*$/m'   => 'DB_USERNAME=' . $dbUser,
             '/^#?\s*DB_PASSWORD\s*=.*$/m'   => 'DB_PASSWORD=' . $dbPass,
+            '/^#?\s*DB_PREFIX\s*=.*$/m'     => 'DB_PREFIX=' . $dbPrefix,
         ];
         
         foreach ($dbReplacements as $pattern => $replace) {
@@ -1205,7 +1217,7 @@ function createEnvFile() {
         chmod(ENV_FILE, 0644);
         
         logMessage('.env file created successfully');
-        logMessage("DB settings: connection=$dbConnection host=$dbHost port=$dbPort db=$dbName user=$dbUser");
+        logMessage("DB settings: connection=$dbConnection host=$dbHost port=$dbPort db=$dbName user=$dbUser prefix=$dbPrefix");
         
         return [
             'success' => true,
@@ -1480,7 +1492,7 @@ function createInitialAdmin(string $firstName, string $lastName, string $email, 
         ]);
 
         // Check if user already exists
-        $stmt = $pdo->prepare('SELECT id FROM users WHERE email = ?');
+        $stmt = $pdo->prepare('SELECT id FROM ' . getTableName('users') . ' WHERE email = ?');
         $stmt->execute([$email]);
         if ($stmt->fetch()) {
             logMessage("createInitialAdmin: user already exists ($email)");
@@ -1492,7 +1504,7 @@ function createInitialAdmin(string $firstName, string $lastName, string $email, 
         $now            = date('Y-m-d H:i:s');
 
         $stmt = $pdo->prepare(
-            'INSERT INTO users (email, role, first_name, last_name, password, email_verified_at, created_at, updated_at)
+            'INSERT INTO ' . getTableName('users') . ' (email, role, first_name, last_name, password, email_verified_at, created_at, updated_at)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
         );
         $stmt->execute([$email, 'admin', $firstName, $lastName, $hashedPassword, $now, $now, $now]);
@@ -1541,6 +1553,37 @@ function parseEnvForDb(string $envContent): array
     }
 
     return $result;
+}
+
+/**
+ * Return the prefixed table name by reading DB_PREFIX from the .env file.
+ *
+ * Uses static caching so the .env file is only read once per request.
+ *
+ * @param  string $tableName  Raw table name without prefix.
+ * @return string             Prefixed table name.
+ */
+function getTableName(string $tableName): string
+{
+    static $prefix = null;
+
+    if ($prefix === null) {
+        $envPath = defined('ENV_FILE') ? ENV_FILE : __DIR__ . '/backend/.env';
+        $prefix  = '';
+
+        if (file_exists($envPath)) {
+            $content = (string) file_get_contents($envPath);
+            if (preg_match('/^DB_PREFIX=(.*)$/m', $content, $m)) {
+                $raw = trim($m[1], " \t\r\n\"'");
+                // Only allow lowercase alphanumeric characters and underscores
+                if (preg_match('/^[a-z0-9_]*$/', $raw)) {
+                    $prefix = $raw;
+                }
+            }
+        }
+    }
+
+    return $prefix . $tableName;
 }
 
 /**

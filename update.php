@@ -39,6 +39,37 @@ function logUpdate(string $message, string $level = 'INFO'): void
     file_put_contents(UPDATE_LOG_FILE, $line, FILE_APPEND | LOCK_EX);
 }
 
+/**
+ * Return the prefixed table name by reading DB_PREFIX from the .env file.
+ *
+ * Uses static caching so the .env file is only read once per request.
+ *
+ * @param  string $tableName  Raw table name without prefix.
+ * @return string             Prefixed table name.
+ */
+function getTableName(string $tableName): string
+{
+    static $prefix = null;
+
+    if ($prefix === null) {
+        $envPath = defined('ENV_FILE') ? ENV_FILE : __DIR__ . '/backend/.env';
+        $prefix  = '';
+
+        if (file_exists($envPath)) {
+            $content = (string) file_get_contents($envPath);
+            if (preg_match('/^DB_PREFIX=(.*)$/m', $content, $m)) {
+                $raw = trim($m[1], " \t\r\n\"'");
+                // Only allow lowercase alphanumeric characters and underscores
+                if (preg_match('/^[a-z0-9_]*$/', $raw)) {
+                    $prefix = $raw;
+                }
+            }
+        }
+    }
+
+    return $prefix . $tableName;
+}
+
 function parseEnvForDb(string $envContent): array
 {
     $result = [
@@ -48,6 +79,7 @@ function parseEnvForDb(string $envContent): array
         'database'   => '',
         'username'   => '',
         'password'   => '',
+        'prefix'     => '',
     ];
     $map = [
         'DB_CONNECTION' => 'connection',
@@ -56,6 +88,7 @@ function parseEnvForDb(string $envContent): array
         'DB_DATABASE'   => 'database',
         'DB_USERNAME'   => 'username',
         'DB_PASSWORD'   => 'password',
+        'DB_PREFIX'     => 'prefix',
     ];
     foreach ($map as $envKey => $resultKey) {
         if (preg_match('/^' . $envKey . '=(.*)$/m', $envContent, $m)) {
@@ -83,7 +116,7 @@ function verifyAdmin(string $email, string $password): bool
     try {
         $pdo  = getPdo();
         $stmt = $pdo->prepare(
-            "SELECT password FROM users WHERE email = ? AND role = 'admin' AND deleted_at IS NULL LIMIT 1"
+            "SELECT password FROM " . getTableName('users') . " WHERE email = ? AND role = 'admin' AND deleted_at IS NULL LIMIT 1"
         );
         $stmt->execute([$email]);
         $row = $stmt->fetch();

@@ -4,7 +4,11 @@
 # Creates a deployment-ready tar.gz archive for shared hosting
 # Runs composer and npm commands inside Docker containers
 #
-# Usage: ./build-deployment-docker.sh
+# Usage: ./build-deployment-docker.sh [--php-version 8.3]
+#
+# Options:
+#   -p, --php-version VERSION   PHP version to build for (default: 8.4)
+#                               Example: --php-version 8.3
 #
 
 set -e  # Exit on error
@@ -16,10 +20,42 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Defaults
+PHP_VERSION="8.4"
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -p|--php-version)
+            PHP_VERSION="$2"
+            shift 2
+            ;;
+        -h|--help)
+            echo "Usage: $0 [--php-version VERSION]"
+            echo "  -p, --php-version VERSION   PHP version (default: 8.4)"
+            exit 0
+            ;;
+        *)
+            echo -e "${RED}Unknown argument: $1${NC}" >&2
+            exit 1
+            ;;
+    esac
+done
+
+# Validate PHP version format (e.g. 8.3, 8.4)
+if ! [[ "$PHP_VERSION" =~ ^[0-9]+\.[0-9]+$ ]]; then
+    echo -e "${RED}ERROR: Invalid PHP version format: '$PHP_VERSION'. Expected e.g. 8.3 or 8.4${NC}" >&2
+    exit 1
+fi
+
+# Derive short version tag (e.g. 8.3 -> php83)
+PHP_VERSION_TAG="php$(echo "$PHP_VERSION" | tr -d '.')"
+BUILDER_IMAGE="homocanis-builder-${PHP_VERSION_TAG}"
+
 # Configuration
 BUILD_DIR="build-deploy"
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
-ARCHIVE_NAME="homocanis-deployment-${TIMESTAMP}.tar.gz"
+ARCHIVE_NAME="homocanis-deployment-${PHP_VERSION_TAG}-${TIMESTAMP}.tar.gz"
 
 # Error handling function
 error_exit() {
@@ -94,14 +130,31 @@ check_docker_compose() {
     success_msg "Docker Compose available"
 }
 
+# Build the lightweight PHP builder image for the requested PHP version
+build_php_builder_image() {
+    info_msg "Building PHP ${PHP_VERSION} builder image (${BUILDER_IMAGE})..."
+    
+    docker build \
+        --build-arg PHP_VERSION="${PHP_VERSION}" \
+        -t "${BUILDER_IMAGE}" \
+        -f docker/php/Dockerfile.build \
+        . || error_exit "Failed to build PHP ${PHP_VERSION} builder image"
+    
+    success_msg "PHP ${PHP_VERSION} builder image ready"
+}
+
 # Install backend production dependencies
 install_backend_dependencies() {
-    info_msg "Installing backend production dependencies (in Docker)..."
+    info_msg "Installing backend production dependencies (PHP ${PHP_VERSION} in Docker)..."
     
-    # Run composer in Docker container (use service name 'php', not container name)
-    docker compose run --rm php composer install --no-dev --optimize-autoloader -d /var/www/html || error_exit "Backend dependency installation failed"
+    docker run --rm \
+        -v "$(pwd)/backend:/app" \
+        -w /app \
+        "${BUILDER_IMAGE}" \
+        composer install --no-dev --optimize-autoloader --no-interaction \
+        || error_exit "Backend dependency installation failed"
     
-    success_msg "Backend dependencies installed"
+    success_msg "Backend dependencies installed (PHP ${PHP_VERSION})"
 }
 
 # Install frontend dependencies and build
@@ -123,6 +176,49 @@ build_frontend() {
     docker compose run --rm node npx vite build || error_exit "Frontend build failed"
     
     success_msg "Frontend build complete"
+}
+
+# Patch PHP version requirements in install.php and requirements-check.php
+# so the installer accepts the PHP version this package was built for.
+patch_php_version_requirement() {
+    local minor="${PHP_VERSION#*.}"
+
+    local files=(
+        "$BUILD_DIR/install.php"
+        "$BUILD_DIR/backend/requirements-check.php"
+    )
+
+    # Write a temp perl script via heredoc so bash expands version vars cleanly
+    # while perl regex special chars (like \$) stay escaped.
+    local tmp_perl
+    tmp_perl=$(mktemp /tmp/php_patch_XXXXXX.pl)
+    cat > "$tmp_perl" << ENDPERL
+# requirements-check.php: PHP minor version comparisons
+s/\\\$minor < \K\d+/${minor}/g;
+s/\\\$minor > \K\d+/${minor}/g;
+# install.php: 'required' => '8.x'
+s/'required' => '\K8\.\d+(?=')/${PHP_VERSION}/g;
+# install.php: version_compare(PHP_VERSION, '8.x.0', ...)
+s/version_compare\(PHP_VERSION, '\K8\.\d+(?=\.0')/${PHP_VERSION}/g;
+# All free-text version references
+s/PHP 8\.\d+\.0 or higher/PHP ${PHP_VERSION}.0 or higher/g;
+s/\(8\.\d+\.x recommended\)/(${PHP_VERSION}.x recommended)/g;
+s/PHP 8\.\d+\.x\b/PHP ${PHP_VERSION}.x/g;
+s/Required PHP: 8\.\d+\.x/Required PHP: ${PHP_VERSION}.x/g;
+s/php8\.\d+-/php${PHP_VERSION}-/g;
+ENDPERL
+
+    for f in "${files[@]}"; do
+        if [ ! -f "$f" ]; then
+            warn_msg "$(basename "$f") not found in build dir, skipping version patch"
+            continue
+        fi
+        info_msg "Patching $(basename "$f") for PHP ${PHP_VERSION}..."
+        perl -i -p "$tmp_perl" "$f"
+        success_msg "$(basename "$f") patched for PHP ${PHP_VERSION}"
+    done
+
+    rm -f "$tmp_perl"
 }
 
 # Verify production dependencies
@@ -358,6 +454,7 @@ display_archive_info() {
     echo -e "${GREEN}║        Build Completed Successfully!       ║${NC}"
     echo -e "${GREEN}╚════════════════════════════════════════════╝${NC}"
     echo ""
+    echo -e "${BLUE}PHP version:${NC}  ${PHP_VERSION}"
     echo -e "${BLUE}Archive:${NC}      $ARCHIVE_NAME"
     echo -e "${BLUE}Size:${NC}         $size"
     echo -e "${BLUE}Files:${NC}        $file_count"
@@ -375,10 +472,16 @@ main() {
     echo -e "${BLUE}║  HomoCanis Deployment Builder (Docker)    ║${NC}"
     echo -e "${BLUE}╚════════════════════════════════════════════╝${NC}"
     echo ""
+    echo -e "${BLUE}PHP version:${NC}  ${PHP_VERSION}"
+    echo -e "${BLUE}Archive:${NC}      ${ARCHIVE_NAME}"
+    echo ""
 
     # Check Docker environment
     check_docker
     check_docker_compose
+
+    # Build PHP builder image for requested version
+    build_php_builder_image
     
     echo ""
     echo -e "${BLUE}Starting build process...${NC}"
@@ -399,7 +502,7 @@ main() {
     
     # Step 5: Copy application files
     copy_application_files
-    
+
     # Step 6: Verify directory structure
     verify_directory_structure
     
@@ -411,7 +514,10 @@ main() {
     
     # Step 8.5: Copy install.php
     copy_installer
-    
+
+    # Step 8.6: Patch PHP version requirements for target server
+    patch_php_version_requirement
+
     # Step 9: Create archive
     create_archive
     
