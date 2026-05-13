@@ -1,0 +1,26 @@
+# Lightweight PHP build image for generating composer vendor directory.
+# Used by build-deployment-docker.sh with --php-version argument.
+#
+# Usage:
+#   docker build --build-arg PHP_VERSION=8.3 -t homocanis-builder-php83 -f docker/php/Dockerfile.build .
+ARG PHP_VERSION=8.4
+FROM php:${PHP_VERSION}-cli-alpine
+
+RUN apk add --no-cache \
+    postgresql-dev \
+    mariadb-connector-c-dev \
+    libzip-dev \
+    oniguruma-dev \
+    icu-dev \
+    && docker-php-ext-install \
+        pdo \
+        pdo_pgsql \
+        pdo_mysql \
+        zip \
+        mbstring \
+        intl \
+        bcmath
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+
+WORKDIR /app
