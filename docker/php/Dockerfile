@@ -12,6 +12,7 @@ RUN apk add --no-cache \
     zip \
     unzip \
     postgresql-dev \
+    mariadb-connector-c-dev \
     oniguruma-dev \
     libzip-dev \
     icu-dev \
@@ -26,6 +27,7 @@ RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install \
     pdo \
     pdo_pgsql \
+    pdo_mysql \
     pgsql \
     mbstring \
     exif \
