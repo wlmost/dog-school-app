@@ -383,6 +383,126 @@
         <p class="text-green-800">{{ successMessage }}</p>
       </div>
     </form>
+
+    <!-- Preise-Abschnitt -->
+    <div class="bg-white dark:bg-gray-800 shadow rounded-lg overflow-hidden mt-8">
+      <div
+        class="bg-gray-50 dark:bg-gray-700 px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between"
+      >
+        <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Preise</h2>
+        <button
+          type="button"
+          class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          @click="openNewPricingForm"
+        >
+          Neuen Preis anlegen
+        </button>
+      </div>
+
+      <div class="p-6">
+        <!-- Loading -->
+        <div v-if="pricingLoading" class="flex justify-center py-6">
+          <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        </div>
+
+        <!-- Error -->
+        <div v-else-if="pricingError" class="text-red-600 dark:text-red-400">{{ pricingError }}</div>
+
+        <!-- Tabelle -->
+        <div v-else-if="pricingItems.length > 0" class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  Kategorie
+                </th>
+                <th
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  Leistung
+                </th>
+                <th
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  Preis
+                </th>
+                <th
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  Einheit
+                </th>
+                <th
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  Zusatzinfo
+                </th>
+                <th
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  Ab-Preis?
+                </th>
+                <th
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+                >
+                  Aktionen
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+              <tr v-for="item in pricingItems" :key="item.id">
+                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ item.category }}</td>
+                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">{{ item.title }}</td>
+                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                  {{
+                    parseFloat(item.price).toLocaleString('de-DE', {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })
+                  }}
+                  €
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ item.unit ?? '—' }}</td>
+                <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                  {{ item.description ?? '—' }}
+                </td>
+                <td class="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
+                  {{ item.isFromPrice ? 'Ja' : 'Nein' }}
+                </td>
+                <td class="px-4 py-3 text-sm space-x-2">
+                  <button
+                    type="button"
+                    class="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300 font-medium"
+                    @click="openEditPricingForm(item)"
+                  >
+                    Bearbeiten
+                  </button>
+                  <button
+                    type="button"
+                    class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 font-medium"
+                    @click="handleDeletePricingItem(item)"
+                  >
+                    Löschen
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Leer-Zustand -->
+        <p v-else class="text-gray-500 dark:text-gray-400">Noch keine Preise hinterlegt.</p>
+      </div>
+
+      <!-- Formular-Modal -->
+      <PricingItemForm
+        :visible="showPricingForm"
+        :item="editingPricingItem"
+        @saved="handlePricingSaved"
+        @cancel="showPricingForm = false"
+      />
+    </div>
   </div>
 </template>
 
@@ -390,6 +510,9 @@
 import { ref, onMounted } from 'vue'
 import EmailTemplateEditor from '@/components/EmailTemplateEditor.vue'
 import { settingsApi, type Setting } from '@/api/settings'
+import { usePricingItems } from '@/composables/usePricingItems'
+import PricingItemForm from '@/components/PricingItemForm.vue'
+import type { PricingItem } from '@/api/pricingItems'
 
 // Form data
 const formData = ref({
@@ -562,9 +685,36 @@ const handleFaviconChange = (event: Event) => {
   }
 }
 
+// Preise-State
+const { items: pricingItems, loading: pricingLoading, error: pricingError, loadAll, deleteItem } = usePricingItems()
+const showPricingForm = ref(false)
+const editingPricingItem = ref<PricingItem | null>(null)
+
+function openNewPricingForm() {
+  editingPricingItem.value = null
+  showPricingForm.value = true
+}
+
+function openEditPricingForm(item: PricingItem) {
+  editingPricingItem.value = item
+  showPricingForm.value = true
+}
+
+async function handlePricingSaved() {
+  showPricingForm.value = false
+  await loadAll()
+}
+
+async function handleDeletePricingItem(item: PricingItem) {
+  if (!window.confirm(`"${item.title}" wirklich löschen?`)) return
+  await deleteItem(item.id)
+  await loadAll()
+}
+
 // Load settings on mount
 onMounted(() => {
   loadSettings()
+  loadAll()
 })
 </script>
 

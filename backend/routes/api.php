@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\DogDeletionRequestController;
 use App\Http\Controllers\Api\DogRegistrationRequestController;
 use App\Http\Controllers\Api\InvoiceController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PricingItemController;
 use App\Http\Controllers\Api\TrainerController;
 use App\Http\Controllers\Api\TrainingAttachmentController;
 use App\Http\Controllers\Api\TrainingSessionController;
@@ -49,6 +50,11 @@ Route::prefix('v1')->middleware('throttle:contact')->group(function () {
     Route::post('/contact', [ContactController::class, 'send']);
 });
 
+// Public pricing route (no auth required)
+Route::prefix('v1')->group(function () {
+    Route::get('/pricing-items', [PricingItemController::class, 'publicIndex']);
+});
+
 // PayPal webhook - separate without rate limiting (PayPal needs reliable access)
 Route::post('/api/v1/payments/paypal/webhook', [PaymentController::class, 'handleWebhook']);
 
@@ -65,6 +71,12 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // Admin only routes
     Route::middleware('can:admin')->group(function () {
         // Admin specific routes can go here
+        Route::prefix('admin')->group(function () {
+            Route::get('/pricing-items', [PricingItemController::class, 'index']);
+            Route::post('/pricing-items', [PricingItemController::class, 'store']);
+            Route::put('/pricing-items/{pricingItem}', [PricingItemController::class, 'update']);
+            Route::delete('/pricing-items/{pricingItem}', [PricingItemController::class, 'destroy']);
+        });
     });
     
     // Dashboard
