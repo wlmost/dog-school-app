@@ -115,6 +115,23 @@
               Einfache und bequeme Terminbuchung über unser modernes Verwaltungssystem
             </p>
           </div>
+
+          <!-- Feature 7: Preise -->
+          <div
+            class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6 hover:shadow-lg transition-shadow cursor-pointer"
+            @click="showPricingModal = true"
+          >
+            <div class="w-12 h-12 bg-primary-100 dark:bg-primary-900 rounded-lg flex items-center justify-center mb-4">
+              <CurrencyEuroIcon class="w-6 h-6 text-primary-600 dark:text-primary-400" />
+            </div>
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+              Preise
+            </h3>
+            <p class="text-gray-600 dark:text-gray-300">
+              <span v-if="pricingLoading">Preise werden geladen…</span>
+              <span v-else>Transparente Preisübersicht für alle Leistungen der Hundeschule</span>
+            </p>
+          </div>
         </div>
       </div>
     </section>
@@ -168,26 +185,36 @@
       </div>
     </section>
   </div>
+
+  <PricingModal :visible="showPricingModal" :groups="groups" @close="showPricingModal = false" />
 </template>
 
 <script setup lang="ts">
 import { RouterLink } from 'vue-router'
-import { onMounted, computed } from 'vue'
+import { onMounted, computed, ref } from 'vue'
 import { 
   AcademicCapIcon, 
   BookOpenIcon, 
   ChatBubbleLeftRightIcon, 
   UserIcon, 
   UserGroupIcon, 
-  DevicePhoneMobileIcon 
+  DevicePhoneMobileIcon,
+  CurrencyEuroIcon
 } from '@heroicons/vue/24/outline'
 import backgroundImage from '@/assets/pet-01-1280x664.jpg'
+import PricingModal from '@/components/PricingModal.vue'
+import { usePricingItems } from '@/composables/usePricingItems'
+
+const showPricingModal = ref(false)
+const { groups, loading: pricingLoading, loadPublic } = usePricingItems()
 
 const heroStyle = computed(() => ({
   background: `url(${backgroundImage})`,
   backgroundSize: 'cover',
   backgroundPosition: 'center'
 }))
+
+onMounted(() => loadPublic())
 
 // SEO Meta Tags
 onMounted(() => {
