@@ -82,28 +82,31 @@ return new class extends Migration
 
     /**
      * Check if an index exists on a table.
+     *
+     * Uses Schema::getIndexes() which is prefix-aware (Laravel 10+):
+     * it automatically prepends DB_PREFIX to the table name and returns
+     * the actual index names as stored in the database (also prefixed).
      */
     private function indexExists(string $table, string $index): bool
     {
-        $driver = Schema::getConnection()->getDriverName();
-        
-        if ($driver === 'pgsql') {
-            $indexes = \DB::select("
-                SELECT indexname 
-                FROM pg_indexes 
-                WHERE tablename = ? AND indexname = ?
-            ", [$table, $index]);
-            
-            return count($indexes) > 0;
-        } elseif ($driver === 'sqlite') {
-            // SQLite: Use pragma to check for index
-            $indexes = \DB::select("SELECT name FROM sqlite_master WHERE type = 'index' AND name = ?", [$index]);
-            return count($indexes) > 0;
+        try {
+            $prefix  = Schema::getConnection()->getTablePrefix();
+            $indexes = Schema::getIndexes($table);
+
+            // The index names stored in the DB are prefixed (e.g. dsa_customers_trainer_id_index)
+            $prefixedIndex = $prefix . $index;
+
+            foreach ($indexes as $idx) {
+                if ($idx['name'] === $prefixedIndex) {
+                    return true;
+                }
+            }
+
+            return false;
+        } catch (\Throwable $e) {
+            // Table does not exist yet or other schema error – treat as "index not present"
+            return false;
         }
-        
-        // MySQL: use SHOW INDEX (no Doctrine dependency, works in Laravel 11+)
-        $rows = \DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", [$index]);
-        return count($rows) > 0;
     }
 
     /**

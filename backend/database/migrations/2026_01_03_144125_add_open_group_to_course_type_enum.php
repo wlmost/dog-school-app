@@ -12,17 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         $driver = Schema::getConnection()->getDriverName();
-        
-        if ($driver === 'pgsql') {
+        $prefix = Schema::getConnection()->getTablePrefix();
+
+        if ($driver === 'mysql') {
+            DB::statement("ALTER TABLE `{$prefix}courses` MODIFY COLUMN course_type ENUM('group','individual','workshop','open_group') NOT NULL");
+        } elseif ($driver === 'pgsql') {
             // PostgreSQL: Drop old check constraint and add new one
-            DB::statement("ALTER TABLE courses DROP CONSTRAINT IF EXISTS courses_course_type_check");
-            DB::statement("ALTER TABLE courses ADD CONSTRAINT courses_course_type_check CHECK (course_type IN ('group', 'individual', 'workshop', 'open_group'))");
-        } elseif ($driver === 'sqlite') {
-            // SQLite: Cannot alter constraints directly, would need table recreation
-            // Since SQLite doesn't enforce CHECK constraints strictly in older versions,
-            // and the original migration already has the column, we can skip this
-            // The constraint will be enforced at the application level
+            DB::statement("ALTER TABLE \"{$prefix}courses\" DROP CONSTRAINT IF EXISTS {$prefix}courses_course_type_check");
+            DB::statement("ALTER TABLE \"{$prefix}courses\" ADD CONSTRAINT {$prefix}courses_course_type_check CHECK (course_type IN ('group', 'individual', 'workshop', 'open_group'))");
         }
+        // SQLite: ENUM is stored as VARCHAR, no constraint change needed
     }
 
     /**
@@ -31,13 +30,15 @@ return new class extends Migration
     public function down(): void
     {
         $driver = Schema::getConnection()->getDriverName();
-        
-        if ($driver === 'pgsql') {
+        $prefix = Schema::getConnection()->getTablePrefix();
+
+        if ($driver === 'mysql') {
+            DB::statement("ALTER TABLE `{$prefix}courses` MODIFY COLUMN course_type ENUM('group','individual','workshop') NOT NULL");
+        } elseif ($driver === 'pgsql') {
             // PostgreSQL: Remove the constraint with 'open_group' and restore original
-            DB::statement("ALTER TABLE courses DROP CONSTRAINT IF EXISTS courses_course_type_check");
-            DB::statement("ALTER TABLE courses ADD CONSTRAINT courses_course_type_check CHECK (course_type IN ('group', 'individual', 'workshop'))");
-        } elseif ($driver === 'sqlite') {
-            // SQLite: No action needed
+            DB::statement("ALTER TABLE \"{$prefix}courses\" DROP CONSTRAINT IF EXISTS {$prefix}courses_course_type_check");
+            DB::statement("ALTER TABLE \"{$prefix}courses\" ADD CONSTRAINT {$prefix}courses_course_type_check CHECK (course_type IN ('group', 'individual', 'workshop'))");
         }
+        // SQLite: no action needed
     }
 };

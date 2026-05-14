@@ -24,9 +24,19 @@ return new class extends Migration
             return;
         }
 
+        if ($driver === 'pgsql') {
+            // PostgreSQL does not have ENUM; the column is VARCHAR with a CHECK constraint.
+            // Add the new value to the existing CHECK constraint.
+            $prefix = DB::getTablePrefix();
+            DB::statement("ALTER TABLE \"{$prefix}bookings\" DROP CONSTRAINT IF EXISTS {$prefix}bookings_status_check");
+            DB::statement("ALTER TABLE \"{$prefix}bookings\" ADD CONSTRAINT {$prefix}bookings_status_check CHECK (status IN ('pending','confirmed','cancelled','cancellation_requested'))");
+            return;
+        }
+
         // MySQL / MariaDB
+        $prefix = DB::getTablePrefix();
         DB::statement(
-            "ALTER TABLE bookings MODIFY COLUMN status
+            "ALTER TABLE `{$prefix}bookings` MODIFY COLUMN status
              ENUM('pending','confirmed','cancelled','cancellation_requested')
              NOT NULL DEFAULT 'pending'"
         );
@@ -51,13 +61,24 @@ return new class extends Migration
             return;
         }
 
+        if ($driver === 'pgsql') {
+            DB::table('bookings')
+                ->where('status', 'cancellation_requested')
+                ->update(['status' => 'pending']);
+            $prefix = DB::getTablePrefix();
+            DB::statement("ALTER TABLE \"{$prefix}bookings\" DROP CONSTRAINT IF EXISTS {$prefix}bookings_status_check");
+            DB::statement("ALTER TABLE \"{$prefix}bookings\" ADD CONSTRAINT {$prefix}bookings_status_check CHECK (status IN ('pending','confirmed','cancelled'))");
+            return;
+        }
+
         // MySQL / MariaDB: reset rows first
         DB::table('bookings')
             ->where('status', 'cancellation_requested')
             ->update(['status' => 'pending']);
 
+        $prefix = DB::getTablePrefix();
         DB::statement(
-            "ALTER TABLE bookings MODIFY COLUMN status
+            "ALTER TABLE `{$prefix}bookings` MODIFY COLUMN status
              ENUM('pending','confirmed','cancelled')
              NOT NULL DEFAULT 'pending'"
         );
@@ -75,6 +96,8 @@ return new class extends Migration
     {
         DB::statement('PRAGMA foreign_keys = OFF');
 
+        $prefix = DB::getTablePrefix();
+
         // 1. Create a new table with the desired schema under a temp name
         Schema::create('bookings_new', function (Blueprint $table) use ($statusValues) {
             $table->id();
@@ -91,8 +114,8 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // 2. Copy existing rows
-        DB::statement('INSERT INTO bookings_new SELECT * FROM bookings');
+        // 2. Copy existing rows – use prefixed table names in raw SQL
+        DB::statement("INSERT INTO \"{$prefix}bookings_new\" SELECT * FROM \"{$prefix}bookings\"");
 
         // 3. Drop the original table (indexes included)
         Schema::drop('bookings');

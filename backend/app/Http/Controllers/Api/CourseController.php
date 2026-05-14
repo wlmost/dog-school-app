@@ -189,7 +189,7 @@ class CourseController extends Controller
         )->where('status', 'confirmed')->count();
 
         // Get total capacity across all sessions
-        $totalCapacity = $course->sessions()->sum('max_participants');
+        $totalCapacity = (int) $course->sessions()->sum('max_participants');
 
         // Get unique participants (customers)
         $uniqueParticipants = \App\Models\Booking::whereIn(
