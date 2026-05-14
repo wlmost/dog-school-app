@@ -230,6 +230,7 @@ test('customer cannot update booking', function () {
 
 test('customer can cancel their own booking', function () {
     $booking = Booking::factory()->create([
+        'training_session_id' => $this->session->id,
         'customer_id' => $this->customer->id,
         'status' => 'confirmed',
     ]);
