@@ -6,6 +6,7 @@ import apiClient from '@/api/client'
 import { handleApiError } from '@/utils/errorHandler'
 import CourseSessionList from '@/components/CourseSessionList.vue'
 import CourseFormModal from '@/components/CourseFormModal.vue'
+import CustomerBookingModal from '@/components/CustomerBookingModal.vue'
 import axios from 'axios'
 
 interface CourseTrainer {
@@ -53,6 +54,10 @@ const notFound = ref(false)
 const isEditModalOpen = ref(false)
 
 const isTrainerOrAdmin = computed(() => authStore.isAuthenticated && authStore.isTrainer)
+const isCustomer = computed(() => authStore.isAuthenticated && authStore.isCustomer)
+const alreadyBooked = ref(false)
+const bookingStatusLoading = ref(true)
+const showBookingModal = ref(false)
 
 const courseId = computed(() => Number(route.params.id))
 
@@ -108,13 +113,39 @@ async function loadCourse() {
   }
 }
 
+async function loadBookingStatus(): Promise<void> {
+  if (!isCustomer.value || !courseId.value) return
+  bookingStatusLoading.value = true
+  try {
+    const response = await apiClient.get('/api/v1/bookings')
+    const bookings: any[] = response.data.data ?? []
+    alreadyBooked.value = bookings
+      .filter((b) => b.status === 'confirmed' || b.status === 'pending')
+      .some((b) => b.trainingSession?.course?.id === courseId.value)
+  } catch (err) {
+    console.warn('loadBookingStatus fehlgeschlagen', err)
+  } finally {
+    bookingStatusLoading.value = false
+  }
+}
+
 async function onCourseSaved() {
   isEditModalOpen.value = false
   await loadCourse()
 }
 
+function closeBookingModal(): void {
+  showBookingModal.value = false
+}
+
+async function onBookingCompleted(): Promise<void> {
+  showBookingModal.value = false
+  await loadBookingStatus()
+}
+
 onMounted(() => {
   loadCourse()
+  loadBookingStatus()
 })
 </script>
 
@@ -285,20 +316,67 @@ onMounted(() => {
       </div>
 
       <!-- Booking CTA for non-trainers -->
-      <div v-if="!isTrainerOrAdmin" class="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700 rounded-lg p-6 text-center">
-        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Interesse an diesem Kurs?</h3>
-        <p class="text-gray-600 dark:text-gray-400 mb-4">
-          Melden Sie sich an oder nehmen Sie Kontakt mit uns auf, um einen Platz zu reservieren.
-        </p>
-        <div class="flex flex-col sm:flex-row gap-3 justify-center">
-          <RouterLink to="/contact" class="btn btn-primary px-6 py-2">
-            Kontakt aufnehmen
-          </RouterLink>
-          <RouterLink to="/login" class="btn bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 px-6 py-2">
-            Anmelden
-          </RouterLink>
-        </div>
+      <div
+        v-if="!isTrainerOrAdmin"
+        class="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-700 rounded-lg p-6 text-center"
+      >
+        <!-- Eingeloggter Kunde -->
+        <template v-if="isCustomer">
+          <!-- Bereits gebucht -->
+          <div v-if="alreadyBooked" class="flex flex-col items-center gap-2">
+            <span class="inline-flex items-center gap-2 text-green-700 dark:text-green-400 font-semibold text-lg">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Bereits gebucht
+            </span>
+            <p class="text-sm text-gray-500 dark:text-gray-400">Du hast diesen Kurs bereits gebucht.</p>
+          </div>
+          <!-- Noch nicht gebucht -->
+          <div v-else-if="!bookingStatusLoading">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Jetzt buchen</h3>
+            <p class="text-gray-600 dark:text-gray-400 mb-4">
+              Wähle Termine und deinen Hund aus, um direkt zu buchen.
+            </p>
+            <button
+              type="button"
+              class="btn btn-primary px-6 py-2"
+              @click="showBookingModal = true"
+            >
+              Buchen
+            </button>
+          </div>
+        </template>
+
+        <!-- Nicht eingeloggt (Gast) -->
+        <template v-else-if="!authStore.isAuthenticated">
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Interesse an diesem Kurs?</h3>
+          <p class="text-gray-600 dark:text-gray-400 mb-4">
+            Melden Sie sich an oder nehmen Sie Kontakt mit uns auf, um einen Platz zu reservieren.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-3 justify-center">
+            <RouterLink to="/contact" class="btn btn-primary px-6 py-2">
+              Kontakt aufnehmen
+            </RouterLink>
+            <RouterLink
+              to="/login"
+              class="btn bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-600 px-6 py-2"
+            >
+              Anmelden
+            </RouterLink>
+          </div>
+        </template>
       </div>
+
+      <!-- CustomerBookingModal -->
+      <CustomerBookingModal
+        v-if="isCustomer"
+        :is-open="showBookingModal"
+        :course-id="course?.id"
+        :course-name="course?.name"
+        @close="closeBookingModal"
+        @booked="onBookingCompleted"
+      />
 
       <!-- CourseFormModal for trainer/admin -->
       <CourseFormModal

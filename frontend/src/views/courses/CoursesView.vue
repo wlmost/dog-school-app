@@ -11,7 +11,7 @@
           <option value="cancelled">Abgesagte Kurse</option>
         </select>
       </div>
-      <button @click="openCreateModal" class="btn btn-primary">
+      <button v-if="isTrainerOrAdmin" @click="openCreateModal" class="btn btn-primary">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
@@ -82,8 +82,27 @@
         </div>
 
         <div class="flex space-x-2 pt-4 border-t border-gray-200">
-          <button @click="editCourse(course)" class="btn btn-primary flex-1">Bearbeiten</button>
-          <button @click="deleteCourse(course)" class="btn bg-red-100 hover:bg-red-200 text-red-700 flex-1">Löschen</button>
+          <!-- Trainer: Bearbeiten + Löschen -->
+          <template v-if="isTrainerOrAdmin">
+            <button @click="editCourse(course)" class="btn btn-primary flex-1">Bearbeiten</button>
+            <button @click="deleteCourse(course)" class="btn bg-red-100 hover:bg-red-200 text-red-700 flex-1">Löschen</button>
+          </template>
+          <!-- Kunde: Buchen oder bereits gebucht -->
+          <template v-else-if="isCustomer">
+            <span
+              v-if="bookedCourseIds.has(course.id)"
+              class="inline-flex items-center px-3 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-lg w-full justify-center"
+            >
+              ✓ Bereits gebucht
+            </span>
+            <button
+              v-else
+              @click="openBookingModal(course)"
+              class="btn btn-primary flex-1"
+            >
+              Buchen
+            </button>
+          </template>
         </div>
       </div>
     </div>
@@ -95,13 +114,24 @@
       @close="closeFormModal"
       @saved="handleCourseSaved"
     />
+
+    <!-- Customer Booking Modal -->
+    <CustomerBookingModal
+      :is-open="showBookingModal"
+      :course-id="selectedCourseForBooking?.id"
+      :course-name="selectedCourseForBooking?.name"
+      @close="closeBookingModal"
+      @booked="onBookingCompleted"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import apiClient from '@/api/client'
 import CourseFormModal from '@/components/CourseFormModal.vue'
+import CustomerBookingModal from '@/components/CustomerBookingModal.vue'
+import { useAuthStore } from '@/stores/auth'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
 import DOMPurify from 'dompurify'
 
@@ -111,9 +141,50 @@ const courses = ref<any[]>([])
 const showFormModal = ref(false)
 const selectedCourse = ref<any>(null)
 
+const authStore = useAuthStore()
+const isTrainerOrAdmin = computed(() => authStore.isAuthenticated && authStore.isTrainer)
+const isCustomer = computed(() => authStore.isAuthenticated && authStore.isCustomer)
+const bookedCourseIds = ref<Set<number>>(new Set())
+const showBookingModal = ref(false)
+const selectedCourseForBooking = ref<any>(null)
+
 onMounted(() => {
   loadCourses()
+  if (isCustomer.value) {
+    loadOwnBookings()
+  }
 })
+
+async function loadOwnBookings(): Promise<void> {
+  try {
+    const response = await apiClient.get('/api/v1/bookings')
+    const bookings: any[] = response.data.data ?? []
+    bookedCourseIds.value = new Set(
+      bookings
+        .filter((b) => b.status === 'confirmed' || b.status === 'pending')
+        .map((b) => b.trainingSession?.course?.id)
+        .filter((id): id is number => typeof id === 'number'),
+    )
+  } catch (err) {
+    console.warn('loadOwnBookings fehlgeschlagen', err)
+  }
+}
+
+function closeBookingModal(): void {
+  showBookingModal.value = false
+  selectedCourseForBooking.value = null
+}
+
+function openBookingModal(course: any): void {
+  selectedCourseForBooking.value = course
+  showBookingModal.value = true
+}
+
+async function onBookingCompleted(): Promise<void> {
+  showBookingModal.value = false
+  selectedCourseForBooking.value = null
+  await loadOwnBookings()
+}
 
 async function loadCourses() {
   loading.value = true
