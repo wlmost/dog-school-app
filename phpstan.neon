@@ -1,0 +1,24 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+        - database
+        - config
+        - routes
+
+    # Start at level 5; raise as code base improves.
+    # Level 9 is strictest; level 0 is barely any checks.
+    level: 5
+
+    # Common excludes — adjust to your project.
+    excludePaths:
+        - app/Console/Kernel.php          # Laravel skeleton, often noisy
+        - database/migrations/*           # Migration up()/down() are dynamic
+
+    # Treat unmatched ignore patterns as errors, so the config stays clean.
+    reportUnmatchedIgnoredErrors: true
+
+    # Memory hint — Larastan boots the full app container, which is heavy.
+    # If you still hit OOM, raise via CLI: --memory-limit=2G

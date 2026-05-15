@@ -1,336 +1,336 @@
-# Testing Documentation
+# Test-Konventionen — dog-school-app
 
-This document describes the comprehensive testing strategy for the Dog School Management System.
+> **Verbindlich für `tester`-Agent und `reviewer`-Agent.**
+> Diese Datei ist die einzige Wahrheitsquelle für Test-Konventionen.
+> Bei Widerspruch zwischen dieser Datei und bestehenden Tests:
+> diese Datei gewinnt für **neue** Tests. Bestand wird nicht rückwirkend
+> angepasst, sondern nach Boy-Scout-Regel: wer eine alte Test-Datei
+> sowieso anfasst, bringt sie bei der Gelegenheit auf den neuen Stand.
 
-## Test Overview
+---
 
-### Backend Tests (Laravel/Pest)
-- **485 passing tests** across 24 test suites
-- **Feature Tests**: API endpoints with role-based authorization
-- **Unit Tests**: Models, business logic, and relationships
-- **Integration Tests**: Email notifications, PDF generation
-- **Policy Tests**: Authorization and access control
+## 1. Test-Framework
 
-### Test Coverage
+- **Engine:** Pest (`vendor/bin/pest`), läuft über `composer test`.
+- **Klassische PHPUnit-Klassen sind verboten** für neue Tests. `TestCase.php`
+  existiert nur als Skeleton-Fundament, wird **nicht** direkt erweitert.
+- Wenn ein bestehender Test im PHPUnit-Klassen-Stil angefasst werden muss
+  (z. B. größerer Umbau), darf er bei Gelegenheit in Pest umgeschrieben werden
+  — aber NICHT als alleinige Aufgabe ohne expliziten Auftrag.
 
-#### API Feature Tests
-- ✅ **Authentication** (11 tests) - Login, logout, registration, profile management
-- ✅ **Authorization** (29 tests) - Gates, policies, role-based access
-- ✅ **Bookings** (26 tests) - CRUD, filtering, authorization, status transitions
-- ✅ **Courses** (20 tests) - CRUD, filtering, session management
-- ✅ **Customers** (27 tests) - CRUD, related resources, search
-- ✅ **Dogs** (33 tests) - CRUD, filtering, ownership validation
-- ✅ **Invoices** (21 tests) - CRUD, PDF generation, payment tracking
-- ✅ **Payments** (23 tests) - CRUD, status management
-- ✅ **Training Sessions** (12 tests) - Availability, filtering, bookings
-- ✅ **Training Logs** (31 tests) - CRUD, attachments, filtering
-- ✅ **Vaccinations** (19 tests) - CRUD, due date tracking
-- ✅ **Credit Packages** (15 tests) - CRUD, purchasing, usage
-- ✅ **Anamnesis Templates** (17 tests) - CRUD, questions management
-- ✅ **Anamnesis Responses** (22 tests) - CRUD, answers, PDF export
+## 2. Datei-Aufbau (kanonische Schablone)
 
-#### Business Logic Tests
-- ✅ **Model Relationships** (15 tests) - Eloquent relationships, eager loading
-- ✅ **Model Scopes** (14 tests) - Query scopes for filtering
-- ✅ **Model Business Logic** (19 tests) - Computed properties, state management
-- ✅ **Database Structure** (18 tests) - Schema validation
+Jede neue Test-Datei beginnt **exakt so**:
 
-#### Integration Tests
-- ✅ **Email Notifications** (16 tests) - Booking confirmations, invoice emails, payment reminders
-- ✅ **PDF Generation** (46 tests) - Invoice PDFs, anamnesis PDFs
-- ✅ **File Uploads** (27 tests) - Training attachments
-- ✅ **Dashboard API** (11 tests) - Role-specific dashboard data
-
-## Running Tests
-
-### Backend Tests
-
-#### All Tests
-```bash
-# In Docker
-docker-compose exec php php artisan test
-
-# Or using Makefile
-make test
-
-# With coverage
-docker-compose exec php php artisan test --coverage
-```
-
-### Frontend Tests (Manual)
-
-Da das Frontend in einem Docker-Container läuft, erfolgen Frontend-Tests derzeit manuell.
-Siehe [MANUAL-TESTING.md](MANUAL-TESTING.md) für eine vollständige Checkliste.
-
-#### Quick Frontend Test
-```bash
-# Frontend im Browser öffnen
-open http://localhost:5173
-
-# Als Admin einloggen
-# Email: admin@hundeschule.test
-# Password: password
-
-# Grundlegende Funktionalität prüfen:
-# - Dashboard lädt
-# - Navigation funktioniert
-# - Toast-Benachrichtigungen erscheinen
-# - Dark Mode toggle funktioniert
-```
-
-### Test Email System
-
-Send test emails to verify email configuration and templates:
-
-```bash
-# Send all test emails
-docker-compose exec php php artisan email:test wlmost@gmx.de
-
-# Send specific email type
-docker-compose exec php php artisan email:test wlmost@gmx.de --type=welcome
-docker-compose exec php php artisan email:test wlmost@gmx.de --type=booking
-docker-compose exec php php artisan email:test wlmost@gmx.de --type=invoice
-docker-compose exec php php artisan email:test wlmost@gmx.de --type=reminder
-```
-
-Check sent emails in Mailpit: http://localhost:8025
-
-## Test Data
-
-### Test Users (Seeded)
-
-All test users use the password: `password`
-
-**Admin:**
-- Email: admin@hundeschule.test
-- Role: admin
-- Full access to all features
-
-**Trainer:**
-- Email: trainer@hundeschule.test
-- Role: trainer
-- Can manage courses, bookings, customers, dogs
-
-**Customer:**
-- Email: kunde@hundeschule.test
-- Role: customer
-- Can view own bookings, dogs, invoices
-
-### Test Database
-
-The test database is automatically seeded with:
-- 3 users (admin, trainer, customer)
-- Sample courses and training sessions
-- Sample customers and dogs
-- Sample bookings and invoices
-- Credit packages and customer credits
-
-## Manual Testing Checklist
-
-### Authentication & Authorization
-- [ ] Admin can login and access all features
-- [ ] Trainer can login and access assigned features
-- [ ] Customer can login and see only own data
-- [ ] Invalid credentials are rejected
-- [ ] Session persistence works correctly
-- [ ] Logout clears session
-
-### Booking Flow
-- [ ] Customer can view available courses
-- [ ] Customer can book training session for their dog
-- [ ] Booking confirmation email is sent
-- [ ] Trainer can view all bookings
-- [ ] Trainer can confirm pending booking
-- [ ] Trainer can cancel booking
-- [ ] Full sessions show as unavailable
-
-### Dog Management
-- [ ] Trainer can create dog for customer
-- [ ] Customer can view their dogs
-- [ ] Dog data displays correctly (breed, age, vaccinations)
-- [ ] Cannot delete dog with active bookings
-
-### Course Management
-- [ ] Trainer can create new course
-- [ ] Course details show correctly
-- [ ] Training sessions are listed
-- [ ] Course can be edited/updated
-- [ ] Course statistics are accurate
-
-### Invoice & Payment
-- [ ] Invoice is created with correct line items
-- [ ] Invoice PDF can be downloaded
-- [ ] Invoice PDF contains all information
-- [ ] Payment can be recorded
-- [ ] Invoice status updates when paid
-- [ ] Payment reminder emails are sent for overdue invoices
-
-### Anamnesis System
-- [ ] Trainer can create anamnesis template
-- [ ] Template questions can be added/edited
-- [ ] Customer can fill out anamnesis form
-- [ ] Responses are saved correctly
-- [ ] Anamnesis PDF can be downloaded
-- [ ] PDF contains all questions and answers
-
-### Email System
-- [ ] Welcome email sent to new users
-- [ ] Booking confirmation sent when booking created
-- [ ] Invoice email sent when invoice created
-- [ ] Payment reminder sent for overdue invoices
-- [ ] Emails contain correct data
-- [ ] Emails use company settings
-
-### UI/UX Features
-- [ ] Toast notifications show for all actions
-- [ ] Success messages display correctly
-- [ ] Error messages are user-friendly
-- [ ] Loading states show during API calls
-- [ ] Skeleton loaders display while loading
-- [ ] Dark mode toggle works
-- [ ] Dark mode persists across sessions
-- [ ] All forms validate input
-- [ ] Form errors are displayed clearly
-
-### Dashboard
-- [ ] Admin sees all statistics
-- [ ] Trainer sees only assigned data
-- [ ] Customer sees only own data
-- [ ] Statistics are accurate
-- [ ] Upcoming sessions display correctly
-- [ ] Recent activity shows latest data
-
-## Known Test Failures
-
-The following tests have known issues (related to test isolation/database state):
-
-1. `AuthenticationTest > non-admin cannot register new user` - Registration policy needs review
-2. `InvoiceApiTest > can get unpaid invoices` - Test isolation issue with invoice creation
-3. `InvoiceApiTest > can get overdue invoices` - Test isolation issue
-4. `ModelScopesTest` (7 failures) - Database seeding conflicts with test data
-5. `TrainingSessionApiTest > sessions can be filtered by status` - Filter implementation needs review
-6. `TrainingSessionApiTest > can filter available sessions only` - Availability logic needs review
-
-These failures do not affect application functionality and are isolated to test environment setup.
-
-## Test Best Practices
-
-### When Writing New Tests
-
-1. **Isolate test data**: Each test should create its own data
-2. **Use factories**: Leverage model factories for consistent test data
-3. **Test authorization**: Always test with different user roles
-4. **Clean up**: Tests should not leave state changes
-5. **Descriptive names**: Use clear, descriptive test names
-6. **Arrange-Act-Assert**: Follow AAA pattern
-
-### Testing Roles
-
-Always test with all three roles:
 ```php
-test('admin can access resource', function() {
-    $admin = User::factory()->create(['role' => 'admin']);
-    // ...
+<?php
+
+declare(strict_types=1);
+
+use App\Models\…;                                           // Domain-Models alphabetisch
+use Illuminate\Foundation\Testing\RefreshDatabase;          // immer drin
+
+uses(RefreshDatabase::class);
+uses()->group('<typ>', '<feature>');                        // siehe Abschnitt 7
+
+beforeEach(function () {
+    // Fixtures, die JEDER Test in dieser Datei braucht.
+    // Spezifisches gehört in den jeweiligen Test, nicht hierher.
 });
 
-test('trainer has limited access', function() {
-    $trainer = User::factory()->create(['role' => 'trainer']);
-    // ...
-});
-
-test('customer cannot access resource', function() {
-    $customer = User::factory()->create(['role' => 'customer']);
-    // ...
+it('liefert 404 wenn die anamnese nicht existiert', function () {
+    // arrange — gegeben dieser Zustand
+    // act     — wenn ich das mache
+    // assert  — dann erwarte ich …
 });
 ```
 
-## Coverage Report
+**Begründung der Wahl von `it()` statt `test()`:** BDD-Stil liest sich als
+ganzer Satz, erzwingt ein Verb in der Beschreibung und macht den erwarteten
+Effekt klarer. Bestand verwendet teils `test()` — das bleibt unberührt.
 
-Current test coverage:
+### 2.1 Test-Benennung (verbindlich)
 
-- **Controllers**: ~95% (all major endpoints tested)
-- **Models**: ~90% (relationships, scopes, business logic)
-- **Policies**: ~95% (authorization rules)
-- **Services**: ~80% (PDF generation, email sending)
-- **Overall**: ~485 tests, ~1775 assertions
+**Form:** Dritte Person Indikativ, kleinschreibung, Deutsch.
+Das `it` wird gedanklich vorangestellt — also "es liefert …", "es speichert …",
+"es weist … zurück".
 
-## Continuous Integration
+**Beispiele aus der Domäne:**
 
-### Running Tests in CI/CD
-
-```bash
-# Setup test database
-php artisan migrate:fresh --seed
-
-# Run all tests
-php artisan test --parallel
-
-# Generate coverage report
-php artisan test --coverage-html coverage
+```php
+it('listet alle anamnese-antworten für admins auf', …);
+it('speichert eine neue anamnese-antwort wenn die daten valide sind', …);
+it('weist die anfrage zurück wenn die rolle nicht admin ist', …);
+it('gibt 404 zurück wenn die anamnese nicht existiert', …);
+it('generiert ein pdf mit allen antworten des hundes', …);
+it('lehnt das senden ab wenn pflichtfelder fehlen', …);
 ```
 
-## Performance Testing
+**Verboten** (häufige Anti-Patterns):
 
-### Load Testing Endpoints
-
-Use tools like Apache Bench or Artillery to test API performance:
-
-```bash
-# Test booking endpoint
-ab -n 100 -c 10 http://localhost:8000/api/v1/bookings
-
-# Test dashboard endpoint
-ab -n 100 -c 10 http://localhost:8000/api/v1/dashboard
+```php
+it('test create response', …);                              // ❌ "test" + Englisch + ohne Verb
+it('Speichert Antwort', …);                                 // ❌ Großschreibung, kein "es"-Kontext
+it('Anamnese-Antwort-Speicherung', …);                      // ❌ kein Verb, nur Substantiv-Kette
+it('should save response', …);                              // ❌ "should" ist Pest-Anti-Pattern, "it" reicht
 ```
 
-### Expected Response Times
-- List endpoints: < 200ms
-- Show endpoints: < 100ms
-- Create/Update: < 300ms
-- PDF generation: < 2s
+**Regel für den Tester-Agent:** Beginne die Beschreibung mit einem konjugierten
+Verb in dritter Person Singular (liefert, speichert, weist, gibt, generiert,
+lehnt, validiert, akzeptiert, ignoriert, ruft, …). Wenn dir kein Verb einfällt,
+ist der Test vermutlich zu unklar formuliert — überlege, was die Funktion *tut*.
 
-## Security Testing
+## 3. Factory-Verwendung
 
-### Authentication Tests
-- ✅ Protected endpoints require authentication
-- ✅ Invalid tokens are rejected
-- ✅ Sessions expire correctly
-- ✅ CORS is configured properly
+### 3.1 User-Erstellung — verbindlich: Factory-States
 
-### Authorization Tests
-- ✅ Users can only access authorized resources
-- ✅ Role-based access is enforced
-- ✅ Ownership checks prevent data leakage
-- ✅ Soft-deleted users cannot login
-
-### Input Validation
-- ✅ All inputs are validated
-- ✅ SQL injection is prevented (via Eloquent)
-- ✅ XSS is prevented (via Blade escaping)
-- ✅ CSRF protection is enabled
-
-## Debugging Failed Tests
-
-### View Test Output
-```bash
-docker-compose exec php php artisan test --testdox -v
+**Richtig:**
+```php
+$admin    = User::factory()->admin()->create();
+$trainer  = User::factory()->trainer()->create();
+$customer = User::factory()->customer()->create();
 ```
 
-### Debug Specific Test
-```bash
-docker-compose exec php php artisan test --filter="test name" -v
+**Falsch (nicht mehr verwenden):**
+```php
+$admin = User::factory()->create(['role' => 'admin']);     // Magic String
 ```
 
-### Check Logs
-```bash
-docker-compose exec php tail -f storage/logs/laravel.log
+**Begründung:** semantischer, refactoring-sicher, IDE-unterstützt.
+Falls ein State fehlt, MUSS er in `database/factories/UserFactory.php` ergänzt werden
+(eigene Sub-Task im selben Change). Tester-Agent darf NICHT auf Magic Strings ausweichen.
+
+### 3.2 Relations — Wenn-Dann-Regel
+
+| Situation                                                              | Verwende                                                              |
+|------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| Du brauchst nur das Beziehungs-Verhältnis, referenzierst den Record nie | `User::factory()->hasCustomer()->create()`                            |
+| Du brauchst den verbundenen Record als Variable für Folge-Zuweisungen   | Manuell: `$customer = Customer::factory()->create(['user_id' => $u]);` |
+
+**Beispiel für Variante 2** (Folge-Zuweisungen, aus dem Bestand):
+```php
+$user = User::factory()->customer()->create();
+$customer = Customer::factory()->create(['user_id' => $user->id]);
+$dog = Dog::factory()->create(['customer_id' => $customer->id]);
 ```
 
-## Support
+### 3.3 Mehrere Records auf einmal
 
-For testing issues or questions:
-- Check test output for specific error messages
-- Review test file for test logic
-- Check application logs in `storage/logs/`
-- Verify database state in test database
-- Ensure Docker containers are running
+```php
+AnamnesisResponse::factory()->count(3)->create();
+AnamnesisResponse::factory()->count(3)->for($dog)->create();
+```
+
+`count()` immer als erste Methode nach `factory()`, damit auf einen Blick
+erkennbar ist, dass mehrere erzeugt werden.
+
+## 4. Authentication in Tests
+
+**Verbindlich:** `actingAs()` für alle Tests, die einen authentifizierten User brauchen.
+
+```php
+$response = $this->actingAs($this->admin)->getJson('/api/v1/anamnesis-responses');
+```
+
+**Nicht verwenden:**
+- `Auth::login(...)` direkt
+- `Sanctum::actingAs(...)` außer wenn explizit Sanctum-Token-Verhalten getestet wird
+  (dann separate Test-Datei mit dritter Group `auth-sanctum`)
+
+## 5. Assertion-Stile — Domain-getrennt
+
+Die Regel ist deterministisch und mechanisch prüfbar: **welche Domäne, welcher Stil.**
+
+### 5.1 HTTP-Responses → Laravel-Style
+
+```php
+$response->assertOk()
+    ->assertJsonCount(3, 'data')
+    ->assertJsonStructure(['data' => [['id', 'created_at']]]);
+
+$response->assertCreated();
+$response->assertForbidden();
+$response->assertJsonValidationErrors(['email']);
+```
+
+**Verboten** für HTTP-Responses:
+```php
+expect($response->status())->toBe(200);                     // ❌ Laravel-Idiom verloren
+```
+
+### 5.2 Datenbank-Zustand → Laravel-Style
+
+```php
+$this->assertDatabaseHas('anamnesis_responses', [
+    'dog_id' => $dog->id,
+    'status' => 'submitted',
+]);
+$this->assertDatabaseCount('anamnesis_responses', 1);
+$this->assertDatabaseMissing('anamnesis_responses', ['id' => $deleted->id]);
+$this->assertSoftDeleted($model);
+```
+
+### 5.3 Domain-Werte und Sammlungen → Pest-`expect()`
+
+```php
+expect($response->refresh()->status)->toBe('completed');
+expect($dog->customer_id)->toBe($customer->id);
+expect($answers)->toHaveCount(3);
+expect($pdf->bytes())->toBeGreaterThan(1000);
+expect($dogs)->each->toBeInstanceOf(Dog::class);
+expect($collection->pluck('name')->toArray())->toContain('Bello');
+```
+
+**Verboten** für reine Werte:
+```php
+$this->assertEquals('completed', $response->status);        // ❌ veraltet im Pest-Kontext
+$this->assertCount(3, $answers);                            // ❌ Pest-expect ist ausdrucksstärker
+$this->assertTrue($dog->is_active);                         // ❌ `expect(...)->toBeTrue()`
+```
+
+### 5.4 Entscheidungsbaum für den Tester-Agent
+
+```
+Was prüfst du?
+├── HTTP-Response-Eigenschaft (Status, Headers, JSON-Body)
+│   → Laravel-Style: $response->assert*()
+├── Datenbank-Zustand (Zeile da/nicht da, Anzahl)
+│   → Laravel-Style: $this->assertDatabase*()
+├── Eigenschaft eines Eloquent-Models (Spalte, Beziehung)
+│   → Pest-expect(): expect($model->property)->toBe(...)
+├── Collection / Array / Wert
+│   → Pest-expect(): expect($value)->to*()
+└── Exception / Boolean / Null
+    → Pest-expect(): expect(...)->toBeTrue() / ->toThrow(...)
+```
+
+**Mischen in einer Test-Funktion ist erlaubt und idiomatisch** — solange die
+Domain-Trennung respektiert wird. Beispiel aus einem realistischen Test:
+
+```php
+it('speichert eine anamnese-antwort und gibt sie als JSON zurück', function () {
+    $response = $this->actingAs($this->admin)
+        ->postJson('/api/v1/anamnesis-responses', $payload);
+
+    $response->assertCreated()                              // 5.1 HTTP
+        ->assertJsonPath('data.status', 'draft');           // 5.1 HTTP
+
+    $this->assertDatabaseHas('anamnesis_responses', [       // 5.2 DB
+        'dog_id' => $this->dog->id,
+    ]);
+
+    $created = AnamnesisResponse::latest()->first();
+    expect($created->answers)->toHaveCount(5);              // 5.3 Sammlung
+    expect($created->submitted_at)->toBeNull();             // 5.3 Wert
+});
+```
+
+## 6. RefreshDatabase
+
+- **Immer verwenden** in Feature-Tests, die DB-Operationen ausführen.
+- **NICHT verwenden** in reinen Unit-Tests, die keine DB anfassen.
+- Begründung: `RefreshDatabase` ist langsam auf MySQL (kein Transactional DDL).
+  Pro Test ein Schema-Refresh kostet — wenn der Test keine DB braucht, weglassen.
+
+## 7. Groups — verbindlich für alle neuen Tests
+
+**Regel:** Jede neue Test-Datei MUSS genau eine `uses()->group(...)`-Zeile mit
+mindestens zwei Group-Namen haben: Test-Typ + Feature-Bereich.
+
+### 7.1 Schema
+
+| Group-Name (erste) | Bedeutung                                                          | Pfad                          |
+|--------------------|--------------------------------------------------------------------|-------------------------------|
+| `api`              | HTTP-Endpunkte unter `/api/v1/...`                                 | `tests/Feature/Api/`          |
+| `feature`          | Feature-Tests ohne HTTP (Mailables, Jobs, Notifications, Events)   | `tests/Feature/`              |
+| `pdf`              | PDF-Generierung                                                    | `tests/Feature/Pdf/`          |
+| `domain`           | Reine Geschäftslogik mit DB-Zugriff                                | `tests/Feature/Domain/`       |
+| `unit`             | Unit-Tests ohne DB-Zugriff, ohne Container                         | `tests/Unit/`                 |
+
+**Zweite Group:** Feature- oder Domänen-Bereich in **Singular**, kleinschreibung.
+Beispiele: `anamnesis`, `dog`, `customer`, `trainer`, `course`, `booking`,
+`payment`, `notification`.
+
+### 7.2 Beispiele
+
+```php
+// tests/Feature/Api/AnamnesisResponseApiTest.php
+uses()->group('api', 'anamnesis');
+
+// tests/Feature/Pdf/AnamnesisResponsePdfTest.php
+uses()->group('pdf', 'anamnesis');
+
+// tests/Feature/Domain/Customer/RegisterCustomerTest.php
+uses()->group('domain', 'customer');
+
+// tests/Unit/Support/CurrencyFormatterTest.php
+uses()->group('unit', 'support');
+```
+
+### 7.3 Selektives Ausführen
+
+```bash
+composer test -- --group=api                                # alle API-Tests
+composer test -- --group=anamnesis                          # alle Anamnese-Tests, egal welcher Typ
+composer test -- --group=api --group=anamnesis              # Schnittmenge: API-Tests im Anamnese-Bereich
+composer test -- --exclude-group=pdf                        # alles außer PDF (z. B. wenn dompdf gerade kaputt ist)
+```
+
+### 7.4 Mehr als zwei Groups
+
+Erlaubt, aber nur wenn ein zusätzlicher Aspekt zweifelsfrei zutrifft. Beispiele:
+
+```php
+uses()->group('api', 'anamnesis', 'slow');                  // Test deutlich länger als Durchschnitt
+uses()->group('api', 'anamnesis', 'auth-sanctum');          // Sanctum-spezifisch (siehe Abschnitt 4)
+```
+
+Drei Groups sind die Obergrenze. Mehr macht die `--group=`-Filterung wertlos.
+
+## 8. Naming und Datei-Struktur
+
+- **Test-Dateien:** `<Subject><Art>Test.php`, z. B. `AnamnesisResponseApiTest.php`, `AnamnesisResponsePdfTest.php`.
+- **Pfad:** entspricht dem Typ aus Abschnitt 7.1.
+- **Eine Klasse/Domain-Aspekt = eine Test-Datei.** Wenn eine Datei länger als ~300 Zeilen wird, in Unter-Dateien splitten (`AnamnesisResponseApiListTest.php`, `AnamnesisResponseApiStoreTest.php`, …).
+
+## 9. Was der Tester-Agent NIE darf
+
+- `markTestSkipped()` ohne Begründung in einem Kommentar.
+- `markTestIncomplete()` als Workaround für rote Tests.
+- Tests entfernen oder auskommentieren, um sie grün zu kriegen.
+- `dd()`, `dump()`, `var_dump()`, `print_r()` im Test-Code committen.
+- `@beforeAll`/`@afterAll`-PHPUnit-Annotations — Pest hat eigene Helper (`beforeAll()`, `afterAll()`).
+- Eigene Database-Truncations oder direkte `DB::statement('TRUNCATE …')`-Aufrufe — `RefreshDatabase` macht das.
+- Tests gegen die Produktiv-DB schreiben — `phpunit.xml` setzt `testing`-DB; das nicht überschreiben.
+- `test('...', …)` statt `it('...', …)` für neue Tests verwenden.
+- `$this->assertEquals(...)`, `$this->assertTrue(...)` etc. für Werte verwenden — das ist `expect()`-Territorium (siehe 5.3).
+- `expect($response->status())->toBe(200)` o. ä. statt `$response->assertOk()` — das ist Laravel-Territorium (siehe 5.1).
+- Die `uses()->group(...)`-Zeile weglassen.
+
+## 10. Was der Reviewer-Agent prüft
+
+Bei jedem PR mit Test-Änderungen prüft der Reviewer zusätzlich zur normalen Code-Review **diese Checkliste mechanisch**:
+
+- [ ] **`it(` statt `test(`** in neuen Test-Definitionen (`grep -n "test('" <datei>` sollte 0 Treffer haben in neuen Dateien)
+- [ ] **`uses()->group(` vorhanden** und mindestens zweistellig
+- [ ] **Erste Group passt zum Pfad** (`api` ↔ `Api/`, `pdf` ↔ `Pdf/`, etc.)
+- [ ] **Factory-States verwendet**: kein `factory()->create(['role' => ...])`
+- [ ] **Datei-Header passt zur Schablone** aus Abschnitt 2 (`declare(strict_types=1)`, `RefreshDatabase` wenn DB)
+- [ ] **HTTP-Assertions Laravel-Style**: kein `expect($response->status())`
+- [ ] **Werte-Assertions Pest-Style**: kein `$this->assertEquals(`, `$this->assertTrue(`, `$this->assertCount(`
+- [ ] **DB-Assertions Laravel-Style**: bleibt `$this->assertDatabase*()`, kein `expect()` für DB-Zustand
+- [ ] **Keine `dd()`, `dump()`, auskommentierte Tests**, oder leere `it()`-Stubs
+
+Diese Checkliste ist **zusätzlich** zur allgemeinen Review-Checkliste in `~/.claude/agents/reviewer.md`. Jeder Punkt, der fehlschlägt, ist mindestens ein "Sollte"-Befund; bei mehreren Fehlschlägen "Muss"-Befund (= blockiert Abnahme).
+
+## 11. Erweiterung dieser Datei
+
+Wenn der Tester-Agent während einer Task auf eine Situation trifft, die hier
+nicht abgedeckt ist:
+
+1. **Sofortlösung** — er trifft eine pragmatische Entscheidung und dokumentiert
+   sie in `task-T<ID>.notes.md` unter "Annahmen".
+2. **Dauerhafte Lösung** — beim User-Gate 2 schlägt der Architekt vor, ob die
+   getroffene Annahme als neue Regel hier verankert werden soll.
+
+So wächst diese Datei mit dem Projekt mit, statt zu veralten.

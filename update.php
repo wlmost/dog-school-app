@@ -180,7 +180,8 @@ function runArtisan(string $command): array
     $lower   = strtolower($output);
     $success = !str_contains($lower, 'fatal error')
         && !str_contains($lower, 'uncaught exception')
-        && !str_contains($lower, 'error:');
+        && !str_contains($lower, 'error:')
+        && !str_contains($lower, 'permission denied');
 
     return ['success' => $success, 'output' => $output];
 }

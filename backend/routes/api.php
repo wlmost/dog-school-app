@@ -55,6 +55,11 @@ Route::prefix('v1')->group(function () {
     Route::get('/pricing-items', [PricingItemController::class, 'publicIndex']);
 });
 
+// Public course detail route (no auth required, rate limited)
+Route::prefix('v1')->middleware('throttle:60,1')->group(function () {
+    Route::get('/public/courses/{course}', [CourseController::class, 'publicShow']);
+});
+
 // PayPal webhook - separate without rate limiting (PayPal needs reliable access)
 Route::post('/api/v1/payments/paypal/webhook', [PaymentController::class, 'handleWebhook']);
 
@@ -122,6 +127,9 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // Course Management
     Route::apiResource('courses', CourseController::class);
     Route::get('/courses/{course}/sessions', [CourseController::class, 'sessions']);
+    Route::post('/courses/{course}/sessions', [CourseController::class, 'storeSession']);
+    Route::put('/courses/{course}/sessions/{session}', [CourseController::class, 'updateSession']);
+    Route::delete('/courses/{course}/sessions/{session}', [CourseController::class, 'destroySession']);
     Route::get('/courses/{course}/participants', [CourseController::class, 'participants']);
     
     // Trainer Management

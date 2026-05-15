@@ -852,9 +852,9 @@ function checkServerRequirements() {
     $result = [
         'can_proceed' => true,
         'php_version' => [
-            'required' => '8.4',
+            'required' => '8.2',
             'current' => PHP_VERSION,
-            'status' => version_compare(PHP_VERSION, '8.4.0', '>=') ? 'pass' : 'fail'
+            'status' => version_compare(PHP_VERSION, '8.2.0', '>=') ? 'pass' : 'fail'
         ],
         'extensions' => [
             'required' => [],
@@ -1262,8 +1262,22 @@ function configureHtaccess() {
             . '    RewriteEngine On' . "\n"
             . '    RewriteBase ' . $rewriteBase . "\n"
             . "\n"
+            . '    # MAINTENANCE_MODE – redirect all traffic to maintenance.html while update.php runs.' . "\n"
+            . '    # update.php creates/deletes maintenance.flag to toggle this block.' . "\n"
+            . '    RewriteCond %{REQUEST_URI} !maintenance\.html$' . "\n"
+            . '    RewriteCond %{REQUEST_URI} !update\.php$' . "\n"
+            . '    RewriteCond %{DOCUMENT_ROOT}/maintenance.flag -f' . "\n"
+            . '    RewriteRule ^ /maintenance.html [R=302,L]' . "\n"
+            . '    # /MAINTENANCE_MODE' . "\n"
+            . "\n"
             . '    # Allow direct access to install.php (shows locked screen post-install)' . "\n"
             . '    RewriteRule ^install\.php$ - [L]' . "\n"
+            . "\n"
+            . '    # Allow direct access to update.php' . "\n"
+            . '    RewriteRule ^update\.php$ - [L]' . "\n"
+            . "\n"
+            . '    # Allow direct access to maintenance.html' . "\n"
+            . '    RewriteRule ^maintenance\.html$ - [L]' . "\n"
             . "\n"
             . '    # Route storage requests to backend public storage symlink' . "\n"
             . '    RewriteRule ^storage/(.*)$ backend/public/storage/$1 [L]' . "\n"
@@ -1291,10 +1305,53 @@ function configureHtaccess() {
             . '</IfModule>' . "\n"
             . "\n"
             . '# Disable directory browsing' . "\n"
-            . 'Options -Indexes' . "\n";
+            . 'Options -Indexes' . "\n"
+            . "\n"
+            . '# ── Caching headers ────────────────────────────────────────────────────────────' . "\n"
+            . '<IfModule mod_headers.c>' . "\n"
+            . '    # Never cache index.html so browsers always fetch the latest SPA entry point.' . "\n"
+            . '    <FilesMatch "index\.html$">' . "\n"
+            . '        Header set Cache-Control "no-cache, no-store, must-revalidate"' . "\n"
+            . '        Header set Pragma "no-cache"' . "\n"
+            . '        Header set Expires "0"' . "\n"
+            . '    </FilesMatch>' . "\n"
+            . "\n"
+            . '    # Cache hashed JS / CSS / font / image assets for 1 year (content-addressed).' . "\n"
+            . '    <FilesMatch "\.(js|css|woff2?|ttf|eot|svg|png|jpg|jpeg|gif|webp|ico)$">' . "\n"
+            . '        Header set Cache-Control "public, max-age=31536000, immutable"' . "\n"
+            . '    </FilesMatch>' . "\n"
+            . '</IfModule>' . "\n";
 
         file_put_contents($rootHtaccess, $rootContent);
         logMessage("Wrote production root .htaccess");
+
+        // If the app is installed in a subdirectory (e.g. /dog-school-app), the Vite-built
+        // index.html contains absolute asset paths like /assets/main-abc123.js.
+        // Patch index.html so these paths include the subdirectory prefix, otherwise
+        // the browser fetches them from the server root and gets 404s.
+        if ($rewriteBase !== '/') {
+            $base = rtrim($rewriteBase, '/') . '/';
+            $indexHtml = dirname(__FILE__) . '/frontend/dist/index.html';
+            if (file_exists($indexHtml)) {
+                $html = file_get_contents($indexHtml);
+
+                // Patch ALL root-relative src="/" and href="/" attributes (but not
+                // protocol-relative "//cdn..." URLs). This covers /assets/*, /manifest.json,
+                // /favicon.ico and anything else Vite or the template may reference with an
+                // absolute path.
+                $html = preg_replace('/(src|href)="\/(?!\/)/', '$1="' . $base, $html);
+                // Patch <base href="/"> to the actual base (for Vue Router history mode)
+                if (preg_match('/<base\s+href="[^"]*"/', $html)) {
+                    $html = preg_replace('/<base\s+href="[^"]*"/', '<base href="' . $base . '"', $html);
+                } else {
+                    $html = str_replace('<head>', '<head><base href="' . $base . '">', $html);
+                }
+                file_put_contents($indexHtml, $html);
+                logMessage("Patched frontend/dist/index.html asset paths for base: $base");
+            } else {
+                logMessage("frontend/dist/index.html not found – skipping asset path patch", 'WARNING');
+            }
+        }
 
         // Update RewriteBase in backend/public/.htaccess
         $backendHtaccess = BACKEND_DIR . '/public/.htaccess';
@@ -1770,89 +1827,160 @@ function runMigrations(): array
         ];
     }
 
-    // Primary: run via shell so Laravel is loaded in a separate process.
-    // Avoids memory/crash issues inside the PHP-FPM worker serving install.php.
-    $phpBin = function_exists('shell_exec') ? findPhpBinary() : null;
-    if ($phpBin !== null) {
-        $command = 'cd ' . escapeshellarg(BACKEND_DIR)
-            . ' && ' . escapeshellarg($phpBin) . ' artisan migrate:fresh --force 2>&1';
-        logMessage("Running: $command");
-        $output = shell_exec($command);
-        logMessage("Migration output: " . substr((string) $output, 0, 1000));
+    // Primary: bootstrap Laravel directly in this process – no shell required.
+    // Works on all shared hosting environments regardless of shell/CLI availability.
+    $bootstrapError = null;
+    if (file_exists(BACKEND_DIR . '/vendor/autoload.php')) {
+        try {
+            // Explicitly inject .env values into the process environment BEFORE
+            // Laravel bootstraps, so env() / getenv() always return the correct
+            // values regardless of how Dotenv is configured on this host.
+            $envRaw = (string) file_get_contents(ENV_FILE);
+            foreach (explode("\n", $envRaw) as $line) {
+                $line = trim($line);
+                if ($line === '' || str_starts_with($line, '#')) {
+                    continue;
+                }
+                $eqPos = strpos($line, '=');
+                if ($eqPos === false) {
+                    continue;
+                }
+                $key = trim(substr($line, 0, $eqPos));
+                $val = trim(substr($line, $eqPos + 1), " \t\r\n\"'");
+                putenv("$key=$val");
+                $_ENV[$key]    = $val;
+                $_SERVER[$key] = $val;
+            }
+            logMessage('Injected .env into process env. DB_PREFIX=' . (getenv('DB_PREFIX') ?: '(empty)'));
 
-        if ($output === null) {
-            logMessage('shell_exec returned null – likely disabled on this host. Trying fallback.', 'WARNING');
-        } else {
-            $lower   = strtolower($output);
-            $success = !str_contains($lower, 'error')
-                && !str_contains($lower, 'exception')
-                && !str_contains($lower, 'fatal');
-            return [
-                'success' => $success,
-                'message' => $success
-                    ? 'Datenbank-Migrationen erfolgreich ausgeführt'
-                    : 'Migration fehlgeschlagen – Ausgabe: ' . $output,
-                'output'  => $output,
-            ];
+            require_once BACKEND_DIR . '/vendor/autoload.php';
+
+            // Clear cached config BEFORE bootstrap so that DB_PREFIX and other
+            // freshly-written .env values are picked up from the real config files,
+            // not from a stale bootstrap/cache/config.php written before the .env existed.
+            $configCache = BACKEND_DIR . '/bootstrap/cache/config.php';
+            if (file_exists($configCache)) {
+                @unlink($configCache);
+                logMessage('Cleared stale config cache before bootstrap.');
+            }
+
+            $app    = require BACKEND_DIR . '/bootstrap/app.php';
+            $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
+            $kernel->bootstrap();
+            $status = $kernel->call('migrate:fresh', ['--force' => true]);
+            $output = $kernel->output();
+            logMessage("Direct migration status: $status output: " . substr($output, 0, 500));
+
+            if ($status === 0) {
+                return ['success' => true, 'message' => 'Datenbank-Migrationen erfolgreich ausgeführt', 'output' => $output];
+            }
+            return ['success' => false, 'message' => 'Migration fehlgeschlagen', 'output' => $output ?: '(no output)'];
+        } catch (Throwable $e) {
+            $bootstrapError = get_class($e) . ': ' . $e->getMessage()
+                . ' in ' . basename($e->getFile()) . ':' . $e->getLine();
+            logMessage('Direct migration error: ' . $bootstrapError . ' – trying shell fallback.', 'WARNING');
+            // Fall through to shell fallback below
         }
+    } else {
+        $bootstrapError = 'vendor/autoload.php nicht gefunden – composer install wurde nicht ausgeführt?';
+        logMessage($bootstrapError, 'WARNING');
     }
 
-    // Fallback: bootstrap Laravel directly (no working PHP CLI binary found or shell_exec unavailable).
-    // NOTE: this must be the ONLY Laravel bootstrap in the request; do NOT call
-    // createInitialAdmin() with a second bootstrap afterwards.
-    try {
-        require_once BACKEND_DIR . '/vendor/autoload.php';
-        $app    = require_once BACKEND_DIR . '/bootstrap/app.php';
-        $kernel = $app->make(Illuminate\Contracts\Console\Kernel::class);
-        $kernel->bootstrap();
-        $status = $kernel->call('migrate:fresh', ['--force' => true]);
-        $output = $kernel->output();
-        logMessage("Direct migration status: $status output: " . substr($output, 0, 500));
-
-        if ($status === 0) {
-            return ['success' => true, 'message' => 'Datenbank-Migrationen erfolgreich ausgeführt', 'output' => $output];
-        }
-        return ['success' => false, 'message' => 'Migration fehlgeschlagen', 'output' => $output ?: '(no output)'];
-    } catch (Throwable $e) {
-        logMessage('Direct migration error: ' . $e->getMessage(), 'ERROR');
-        return ['success' => false, 'message' => 'Migration error: ' . $e->getMessage(), 'output' => ''];
+    // Fallback: run via shell (separate process – avoids potential autoload conflicts
+    // if vendor/autoload.php was already loaded before this function was called).
+    if (!function_exists('shell_exec')) {
+        return [
+            'success' => false,
+            'message' => 'Migration nicht möglich: shell_exec ist deaktiviert und der direkte Bootstrap ist fehlgeschlagen.',
+            'output'  => 'Bootstrap-Fehler: ' . $bootstrapError,
+        ];
     }
+
+    $phpBin = findPhpBinary();
+    if ($phpBin === null) {
+        return [
+            'success' => false,
+            'message' => 'Kein ausführbares PHP CLI Binary gefunden und direkter Bootstrap fehlgeschlagen.',
+            'output'  => 'Bootstrap-Fehler: ' . $bootstrapError,
+        ];
+    }
+
+    $command = 'cd ' . escapeshellarg(BACKEND_DIR)
+        . ' && ' . escapeshellarg($phpBin) . ' artisan migrate:fresh --force 2>&1';
+    logMessage("Shell fallback: $command");
+    $output = (string) shell_exec($command);
+    logMessage("Migration output: " . substr($output, 0, 1000));
+
+    $lower   = strtolower($output);
+    $success = !str_contains($lower, 'error')
+        && !str_contains($lower, 'exception')
+        && !str_contains($lower, 'fatal')
+        && !str_contains($lower, 'permission denied');
+
+    return [
+        'success' => $success,
+        'message' => $success
+            ? 'Datenbank-Migrationen erfolgreich ausgeführt'
+            : 'Migration fehlgeschlagen – Ausgabe: ' . $output,
+        'output'  => $output,
+    ];
 }
 
 /**
  * Run database seeders
  */
-function runSeeders() {
-    try {
-        $phpBinary = function_exists('shell_exec') ? findPhpBinary() : null;
-        if ($phpBinary === null) {
-            logMessage('No executable PHP CLI binary found – skipping demo seeder.', 'WARNING');
-            return ['success' => false, 'message' => 'Kein ausführbares PHP CLI Binary gefunden', 'output' => ''];
+function runSeeders(): array
+{
+    // Primary: use already-bootstrapped Laravel kernel (class exists after runMigrations() ran via direct bootstrap)
+    if (class_exists(\Illuminate\Contracts\Console\Kernel::class)) {
+        try {
+            $app    = require BACKEND_DIR . '/bootstrap/app.php';
+            $kernel = $app->make(\Illuminate\Contracts\Console\Kernel::class);
+            $kernel->bootstrap();
+            $status = $kernel->call('db:seed', ['--class' => 'DemoDataSeeder', '--force' => true]);
+            $output = $kernel->output();
+            logMessage("Direct seeder status: $status output: " . substr($output, 0, 500));
+            $success = $status === 0;
+            return [
+                'success' => $success,
+                'message' => $success
+                    ? 'Demo-Daten installiert (Trainer: trainer@example.com / demo1234, Kunde: customer@example.com / demo1234)'
+                    : 'Demo-Seeder fehlgeschlagen',
+                'output'  => $output ?: '(no output)',
+            ];
+        } catch (Throwable $e) {
+            logMessage('Direct seeder error: ' . $e->getMessage() . ' – trying shell fallback.', 'WARNING');
         }
-        $command = 'cd ' . escapeshellarg(BACKEND_DIR)
-            . ' && ' . escapeshellarg($phpBinary) . ' artisan db:seed --class=DemoDataSeeder --force 2>&1';
-        $output = shell_exec($command);
-
-        logMessage("Demo seeder output: $output");
-
-        // artisan exits with output containing 'INFO' or 'Seeding' on success
-        $success = $output !== null && !str_contains(strtolower($output), 'error');
-
-        return [
-            'success' => $success,
-            'message' => $success
-                ? 'Demo-Daten installiert (Trainer: trainer@example.com / demo1234, Kunde: customer@example.com / demo1234)'
-                : 'Demo-Seeder fehlgeschlagen',
-            'output'  => $output ?: '(no output)'
-        ];
-    } catch (Exception $e) {
-        logMessage('Seeder error: ' . $e->getMessage(), 'ERROR');
-        return [
-            'success' => false,
-            'message' => 'Seeder error: ' . $e->getMessage(),
-            'output'  => ''
-        ];
     }
+
+    // Fallback: shell execution
+    if (!function_exists('shell_exec')) {
+        logMessage('shell_exec nicht verfügbar und direkter Seeder fehlgeschlagen – Demo-Daten übersprungen.', 'WARNING');
+        return ['success' => false, 'message' => 'Demo-Seeder nicht ausführbar (kein CLI-Zugriff)', 'output' => ''];
+    }
+
+    $phpBinary = findPhpBinary();
+    if ($phpBinary === null) {
+        logMessage('No executable PHP CLI binary found – skipping demo seeder.', 'WARNING');
+        return ['success' => false, 'message' => 'Kein ausführbares PHP CLI Binary gefunden', 'output' => ''];
+    }
+
+    $command = 'cd ' . escapeshellarg(BACKEND_DIR)
+        . ' && ' . escapeshellarg($phpBinary) . ' artisan db:seed --class=DemoDataSeeder --force 2>&1';
+    $output  = (string) shell_exec($command);
+    logMessage("Shell seeder output: $output");
+
+    $lower   = strtolower($output);
+    $success = !str_contains($lower, 'error')
+        && !str_contains($lower, 'permission denied');
+
+    return [
+        'success' => $success,
+        'message' => $success
+            ? 'Demo-Daten installiert (Trainer: trainer@example.com / demo1234, Kunde: customer@example.com / demo1234)'
+            : 'Demo-Seeder fehlgeschlagen',
+        'output'  => $output ?: '(no output)',
+    ];
 }
 
 /**

@@ -184,7 +184,6 @@ patch_php_version_requirement() {
     local minor="${PHP_VERSION#*.}"
 
     local files=(
-        "$BUILD_DIR/install.php"
         "$BUILD_DIR/backend/requirements-check.php"
     )
 
@@ -377,6 +376,30 @@ verify_htaccess_files() {
     success_msg "All .htaccess files verified"
 }
 
+# Replace symlinks with real directories so the archive is safe to upload via FTP.
+# Symlinks created inside Docker containers (e.g. storage:link) point to absolute
+# container paths that don't exist on the target server.
+resolve_symlinks() {
+    info_msg "Resolving symlinks for FTP-safe deployment..."
+
+    local found=0
+    while IFS= read -r -d '' link; do
+        found=1
+        local target
+        target=$(readlink "$link")
+        warn_msg "Symlink found: ${link#$BUILD_DIR/} → $target"
+        rm "$link"
+        mkdir -p "$link"
+        success_msg "Replaced with empty directory: ${link#$BUILD_DIR/}"
+    done < <(find "$BUILD_DIR" -type l -print0)
+
+    if [ "$found" -eq 0 ]; then
+        info_msg "No symlinks found in build directory"
+    else
+        success_msg "All symlinks resolved to real directories"
+    fi
+}
+
 # Copy installer script
 copy_installer() {
     info_msg "Adding installation wizard..."
@@ -502,6 +525,9 @@ main() {
     
     # Step 5: Copy application files
     copy_application_files
+
+    # Step 5.5: Resolve symlinks (Docker creates absolute paths, unusable on target server)
+    resolve_symlinks
 
     # Step 6: Verify directory structure
     verify_directory_structure

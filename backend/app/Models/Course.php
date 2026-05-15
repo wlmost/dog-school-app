@@ -27,6 +27,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Support\Carbon|null $end_date
  * @property string $status
  * @property int $cancellation_deadline_hours
+ * @property array|null $recurrence_rule
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read User $trainer
@@ -50,6 +51,7 @@ class Course extends Model
         'duration_minutes',
         'price_per_session',
         'total_sessions',
+        'recurrence_rule',
         'start_date',
         'end_date',
         'status',
@@ -68,6 +70,7 @@ class Course extends Model
             'duration_minutes' => 'integer',
             'price_per_session' => 'float',
             'total_sessions' => 'integer',
+            'recurrence_rule' => 'array',
             'cancellation_deadline_hours' => 'integer',
             'start_date' => 'date',
             'end_date' => 'date',

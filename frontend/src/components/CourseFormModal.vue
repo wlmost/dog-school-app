@@ -92,6 +92,55 @@
                   </div>
                 </div>
 
+                <!-- Course Sessions (Kurs-Einheiten) -->
+                <div class="pt-4 border-t border-gray-200">
+                  <h4 class="text-sm font-medium text-gray-700 mb-3">Kurs-Einheiten</h4>
+
+                  <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Einheitenplanung</label>
+                    <select v-model="form.sessionsMode" class="input">
+                      <option value="">Keine Einheiten jetzt festlegen</option>
+                      <option value="manual">Einzeltermine manuell eintragen</option>
+                      <option value="recurrence">Terminserie definieren</option>
+                    </select>
+                  </div>
+
+                  <!-- Manual sessions -->
+                  <div v-if="form.sessionsMode === 'manual'" class="space-y-2">
+                    <div
+                      v-for="(session, index) in form.sessions"
+                      :key="index"
+                      class="grid grid-cols-4 gap-2 items-center"
+                    >
+                      <input v-model="session.sessionDate" type="date" class="input" placeholder="Datum" />
+                      <input v-model="session.startTime" type="time" class="input" placeholder="Von" />
+                      <input v-model="session.endTime" type="time" class="input" placeholder="Bis" />
+                      <div class="flex gap-2 items-center">
+                        <input v-model="session.location" type="text" class="input" placeholder="Ort (optional)" />
+                        <button
+                          type="button"
+                          @click="form.sessions.splice(index, 1)"
+                          class="flex-shrink-0 text-red-500 hover:text-red-700 font-bold text-lg leading-none"
+                          aria-label="Termin entfernen"
+                        >&times;</button>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      @click="addSession"
+                      class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm mt-2"
+                    >
+                      + Termin hinzufügen
+                    </button>
+                  </div>
+
+                  <!-- Recurrence form -->
+                  <CourseRecurrenceForm
+                    v-if="form.sessionsMode === 'recurrence'"
+                    v-model="form.recurrenceRule"
+                  />
+                </div>
+
                 <!-- Pricing -->
                 <div class="pt-4 border-t border-gray-200 grid grid-cols-3 gap-4">
                   <div>
@@ -137,6 +186,9 @@
                   <button type="button" @click="closeModal" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700">
                     Abbrechen
                   </button>
+                  <button type="button" @click="resetForm" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700">
+                    Zurücksetzen
+                  </button>
                   <button type="submit" :disabled="loading" class="btn btn-primary disabled:opacity-50">
                     <span v-if="loading">Speichert...</span>
                     <span v-else>{{ course ? 'Aktualisieren' : 'Erstellen' }}</span>
@@ -155,8 +207,16 @@
 import { ref, watch, onMounted } from 'vue'
 import { TransitionRoot, TransitionChild, Dialog, DialogPanel, DialogTitle } from '@headlessui/vue'
 import apiClient from '@/api/client'
-import { handleApiError, showSuccess } from '@/utils/errorHandler'
+import { handleApiError, showSuccess, showWarning } from '@/utils/errorHandler'
 import HtmlEditor from '@/components/HtmlEditor.vue'
+import CourseRecurrenceForm, { type RecurrenceRule } from '@/components/CourseRecurrenceForm.vue'
+
+interface SessionRow {
+  sessionDate: string
+  startTime: string
+  endTime: string
+  location: string
+}
 
 const props = defineProps<{
   isOpen: boolean
@@ -175,7 +235,25 @@ onMounted(() => {
   loadTrainers()
 })
 
-const form = ref({
+const form = ref<{
+  trainer_id: string
+  name: string
+  description: string
+  course_type: string
+  max_participants: number
+  start_date: string
+  end_date: string
+  start_time: string
+  end_time: string
+  price_per_session: number
+  total_sessions: number
+  duration_minutes: number
+  cancellation_deadline_hours: number
+  notes: string
+  sessionsMode: '' | 'manual' | 'recurrence'
+  sessions: SessionRow[]
+  recurrenceRule: RecurrenceRule | null
+}>({
   trainer_id: '',
   name: '',
   description: '',
@@ -189,7 +267,10 @@ const form = ref({
   total_sessions: 8,
   duration_minutes: 60,
   cancellation_deadline_hours: 24,
-  notes: ''
+  notes: '',
+  sessionsMode: '',
+  sessions: [],
+  recurrenceRule: null
 })
 
 async function loadTrainers() {
@@ -217,7 +298,10 @@ watch(() => props.course, (newCourse) => {
       total_sessions: newCourse.totalSessions || 8,
       duration_minutes: newCourse.durationMinutes || 60,
       cancellation_deadline_hours: newCourse.cancellationDeadlineHours ?? 24,
-      notes: newCourse.notes || ''
+      notes: newCourse.notes || '',
+      sessionsMode: '',
+      sessions: [],
+      recurrenceRule: null
     }
   } else {
     resetForm()
@@ -225,29 +309,63 @@ watch(() => props.course, (newCourse) => {
 }, { immediate: true })
 
 function resetForm() {
-  form.value = {
-    trainer_id: '',
-    name: '',
-    description: '',
-    course_type: '',
-    max_participants: 8,
-    start_date: '',
-    end_date: '',
-    start_time: '',
-    end_time: '',
-    price_per_session: 25,
-    total_sessions: 8,
-    duration_minutes: 60,
-    cancellation_deadline_hours: 24,
-    notes: ''
+  if (props.course) {
+    form.value = {
+      trainer_id: props.course.trainerId || '',
+      name: props.course.name,
+      description: props.course.description || '',
+      course_type: props.course.courseType,
+      max_participants: props.course.maxParticipants,
+      start_date: props.course.startDate || '',
+      end_date: props.course.endDate || '',
+      start_time: '',
+      end_time: '',
+      price_per_session: props.course.pricePerSession || 25,
+      total_sessions: props.course.totalSessions || 8,
+      duration_minutes: props.course.durationMinutes || 60,
+      cancellation_deadline_hours: props.course.cancellationDeadlineHours ?? 24,
+      notes: props.course.notes || '',
+      sessionsMode: '',
+      sessions: [],
+      recurrenceRule: null
+    }
+  } else {
+    form.value = {
+      trainer_id: '',
+      name: '',
+      description: '',
+      course_type: '',
+      max_participants: 8,
+      start_date: '',
+      end_date: '',
+      start_time: '',
+      end_time: '',
+      price_per_session: 25,
+      total_sessions: 8,
+      duration_minutes: 60,
+      cancellation_deadline_hours: 24,
+      notes: '',
+      sessionsMode: '',
+      sessions: [],
+      recurrenceRule: null
+    }
   }
+}
+
+function addSession() {
+  form.value.sessions.push({
+    sessionDate: '',
+    startTime: '',
+    endTime: '',
+    location: ''
+  })
 }
 
 async function handleSubmit() {
   loading.value = true
 
   try {
-    const payload = {
+    const basePayload = {
       trainerId: form.value.trainer_id,
       name: form.value.name,
       description: form.value.description || null,
@@ -262,12 +380,30 @@ async function handleSubmit() {
       status: 'active'
     }
 
+    const payload: Record<string, unknown> = { ...basePayload }
+
+    if (form.value.sessionsMode === 'manual') {
+      payload.sessionsMode = 'manual'
+      payload.sessions = form.value.sessions
+    } else if (form.value.sessionsMode === 'recurrence') {
+      payload.sessionsMode = 'recurrence'
+      payload.recurrenceRule = form.value.recurrenceRule
+    }
+
+    let response
     if (props.course) {
-      await apiClient.put(`/api/v1/courses/${props.course.id}`, payload)
+      response = await apiClient.put(`/api/v1/courses/${props.course.id}`, payload)
       showSuccess('Kurs aktualisiert', 'Der Kurs wurde erfolgreich aktualisiert')
     } else {
-      await apiClient.post('/api/v1/courses', payload)
+      response = await apiClient.post('/api/v1/courses', payload)
       showSuccess('Kurs erstellt', 'Der Kurs wurde erfolgreich erstellt')
+    }
+
+    if (response.data.meta?.warnings?.length) {
+      showWarning(
+        'Hinweis',
+        `${response.data.meta.warnings.length} Session(s) konnten wegen bestehender Buchungen nicht verändert werden.`
+      )
     }
 
     emit('saved')

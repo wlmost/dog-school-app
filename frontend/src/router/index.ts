@@ -38,6 +38,12 @@ const routes: RouteRecordRaw[] = [
         name: 'Agb',
         component: () => import('@/views/AgbView.vue'),
         meta: { title: 'AGB - Hundeschule HomoCanis' }
+      },
+      {
+        path: 'courses/:id',
+        name: 'CourseDetail',
+        component: () => import('@/views/CourseDetailView.vue'),
+        meta: { requiresAuth: false, title: 'Kursdetails' }
       }
     ]
   },
@@ -130,7 +136,10 @@ const routes: RouteRecordRaw[] = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  // Do NOT pass BASE_URL here – let Vue Router read the runtime <base href="..."> tag.
+  // install.php injects <base href="/subdir/"> into index.html for subdirectory installs.
+  // Passing a hardcoded value (even '/') would override that auto-detection.
+  history: createWebHistory(),
   routes
 })
 

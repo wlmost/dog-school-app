@@ -46,6 +46,29 @@ class UpdateCourseRequest extends FormRequest
             'endDate' => ['nullable', 'date', 'after:startDate'],
             'cancellationDeadlineHours' => ['sometimes', 'integer', 'min:0', 'max:720'],
             'status' => ['sometimes', 'in:planned,active,completed,cancelled'],
+
+            // Session mode
+            'sessionsMode' => ['sometimes', 'nullable', 'in:manual,recurrence'],
+
+            // Manual sessions
+            'sessions' => ['sometimes', 'nullable', 'array', 'max:52', 'required_if:sessionsMode,manual'],
+            'sessions.*.sessionDate' => ['required', 'date'],
+            'sessions.*.startTime' => ['required', 'date_format:H:i'],
+            'sessions.*.endTime' => ['required', 'date_format:H:i', 'after:sessions.*.startTime'],
+            'sessions.*.location' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'sessions.*.maxParticipants' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:50'],
+
+            // Recurrence rule
+            'recurrenceRule' => ['sometimes', 'nullable', 'array', 'required_if:sessionsMode,recurrence'],
+            'recurrenceRule.type' => ['required_with:recurrenceRule', 'in:weekly,monthly'],
+            'recurrenceRule.weekday' => ['sometimes', 'required_if:recurrenceRule.type,weekly', 'integer', 'min:0', 'max:6'],
+            'recurrenceRule.dayOfMonth' => ['sometimes', 'required_if:recurrenceRule.type,monthly', 'integer', 'min:1', 'max:28'],
+            'recurrenceRule.startTime' => ['required_with:recurrenceRule', 'date_format:H:i'],
+            'recurrenceRule.endTime' => ['required_with:recurrenceRule', 'date_format:H:i'],
+            'recurrenceRule.startDate' => ['required_with:recurrenceRule', 'date'],
+            'recurrenceRule.count' => ['required_with:recurrenceRule', 'integer', 'min:1', 'max:52'],
+            'recurrenceRule.location' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'recurrenceRule.maxParticipants' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:50'],
         ];
     }
 
@@ -68,7 +91,50 @@ class UpdateCourseRequest extends FormRequest
             $snakeCase['description'] = $this->sanitizeHtmlDescription($snakeCase['description']);
         }
 
+        // Exclude session fields — handled separately via getSessionsPayload() / getRecurrenceRule()
+        unset($snakeCase['sessions'], $snakeCase['recurrence_rule'], $snakeCase['sessions_mode']);
+
         return $snakeCase;
+    }
+
+    /**
+     * Returns the manual sessions payload from the request, or null if not present.
+     *
+     * @return array<int, array<string, mixed>>|null
+     */
+    public function getSessionsPayload(): ?array
+    {
+        $sessions = $this->validated()['sessions'] ?? null;
+
+        if (!is_array($sessions) || empty($sessions)) {
+            return null;
+        }
+
+        return $sessions;
+    }
+
+    /**
+     * Returns the recurrence rule from the request with keys converted from camelCase to snake_case,
+     * or null if not present.
+     *
+     * E.g. recurrenceRule.startDate → start_date, recurrenceRule.dayOfMonth → day_of_month
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getRecurrenceRule(): ?array
+    {
+        $rule = $this->validated()['recurrenceRule'] ?? null;
+
+        if (!is_array($rule) || empty($rule)) {
+            return null;
+        }
+
+        $converted = [];
+        foreach ($rule as $key => $value) {
+            $converted[Str::snake((string) $key)] = $value;
+        }
+
+        return $converted;
     }
 
     /**

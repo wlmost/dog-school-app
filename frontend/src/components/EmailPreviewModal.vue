@@ -192,9 +192,13 @@ function getLogoUrl(path: string | File): string {
     return pathStr
   }
   
-  const apiUrl = import.meta.env.VITE_API_BASE_URL
-    || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8081')
-  return `${apiUrl}/storage/${pathStr}`
+  // Use document.baseURI so subdirectory installs get the correct prefix.
+  // install.php sets <base href="/subdir/"> in index.html for non-root installs.
+  const baseUri = (typeof document !== 'undefined' && document.baseURI && !document.baseURI.startsWith('about:'))
+    ? document.baseURI
+    : (typeof window !== 'undefined' ? window.location.origin + '/' : 'http://localhost:8081/')
+  const pathClean = pathStr.startsWith('/') ? pathStr.slice(1) : pathStr
+  return new URL(`storage/${pathClean}`, baseUri).href
 }
 </script>
 
