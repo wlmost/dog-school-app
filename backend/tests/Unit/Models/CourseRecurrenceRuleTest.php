@@ -23,7 +23,7 @@ it('speichert recurrence_rule als array und liest es korrekt zurück', function 
     $fresh = $course->fresh();
 
     expect($fresh->recurrence_rule)->toBeArray();
-    expect($fresh->recurrence_rule)->toBe($rule);
+    expect($fresh->recurrence_rule)->toEqual($rule);
 });
 
 it('setzt recurrence_rule auf null wenn das feld beim erstellen weggelassen wird', function () {
