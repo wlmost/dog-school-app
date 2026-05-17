@@ -132,9 +132,6 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::delete('/courses/{course}/sessions/{session}', [CourseController::class, 'destroySession']);
     Route::get('/courses/{course}/participants', [CourseController::class, 'participants']);
     
-    // Trainer Management
-    Route::apiResource('trainers', TrainerController::class);
-    
     // Anamnesis Template Management
     Route::apiResource('anamnesis-templates', AnamnesisTemplateController::class);
     Route::get('/anamnesis-templates/{anamnesisTemplate}/questions', [AnamnesisTemplateController::class, 'questions']);
@@ -179,6 +176,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::apiResource('payments', PaymentController::class);
     Route::post('/payments/{payment}/mark-completed', [PaymentController::class, 'markAsCompleted']);
     
+    // Trainer Management (Admin only)
+    Route::middleware('can:admin')->group(function () {
+        Route::apiResource('trainers', TrainerController::class);
+    });
+
     // Settings Management (Admin only)
     Route::middleware('can:admin')->group(function () {
         Route::get('/settings', [SettingsController::class, 'index']);
