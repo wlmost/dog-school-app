@@ -61,6 +61,23 @@ HomoCanis
 
 # Deployment archives
 *.tar.gz
+*.zip
+
+# Generated server requirement check output
+backend/requirements.html
+
+# Development session notes & credentials
+SESSION-*.md
+ZUGANGSDATEN.md
+
+# Local test/extract directories
+test-extract/
+
+# Temporary/local files
+id
+
+# Deployment archives
+*.tar.gz
 
 # Test artifacts
 frontend/playwright-report/
