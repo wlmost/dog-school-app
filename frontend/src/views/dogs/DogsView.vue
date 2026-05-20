@@ -2,13 +2,10 @@
   <div class="space-y-6">
     <!-- Header Actions -->
     <div class="flex justify-between items-center">
-      <div class="flex-1">
-        <input
+      <div class="flex-1 max-w-md">
+        <SearchInput
           v-model="searchQuery"
-          @input="loadDogs"
-          type="text"
           placeholder="Hunde durchsuchen..."
-          class="input max-w-md"
         />
       </div>
       <!-- Admin / Trainer: open full DogFormModal -->
@@ -103,12 +100,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import apiClient from '@/api/client'
 import DogFormModal from '@/components/DogFormModal.vue'
 import CustomerDogRequestModal from '@/components/CustomerDogRequestModal.vue'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
+import SearchInput from '@/components/SearchInput.vue'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
 
 const authStore = useAuthStore()
@@ -122,6 +120,10 @@ const selectedDog = ref<any>(null)
 const showCustomerRequestModal = ref(false)
 
 onMounted(() => {
+  loadDogs()
+})
+
+watch(searchQuery, () => {
   loadDogs()
 })
 

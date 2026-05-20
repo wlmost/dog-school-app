@@ -2,7 +2,12 @@
   <div class="space-y-6">
     <!-- Header Actions -->
     <div class="flex justify-between items-center">
-      <div class="flex gap-4">
+      <div class="flex gap-4 flex-1 max-w-lg">
+        <SearchInput
+          v-model="searchQuery"
+          placeholder="Kurse suchen..."
+          class="flex-1"
+        />
         <select v-model="filterStatus" @change="loadCourses" class="input max-w-xs">
           <option :value="null">Alle Kurse</option>
           <option value="active">Aktive Kurse</option>
@@ -127,16 +132,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import apiClient from '@/api/client'
 import CourseFormModal from '@/components/CourseFormModal.vue'
 import CustomerBookingModal from '@/components/CustomerBookingModal.vue'
+import SearchInput from '@/components/SearchInput.vue'
 import { useAuthStore } from '@/stores/auth'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
 import DOMPurify from 'dompurify'
 
 const loading = ref(true)
 const filterStatus = ref<string | null>(null)
+const searchQuery = ref('')
 const courses = ref<any[]>([])
 const showFormModal = ref(false)
 const selectedCourse = ref<any>(null)
@@ -153,6 +160,10 @@ onMounted(() => {
   if (isCustomer.value) {
     loadOwnBookings()
   }
+})
+
+watch(searchQuery, () => {
+  loadCourses()
 })
 
 async function loadOwnBookings(): Promise<void> {
@@ -192,6 +203,9 @@ async function loadCourses() {
     const params: any = {}
     if (filterStatus.value) {
       params.status = filterStatus.value
+    }
+    if (searchQuery.value) {
+      params.search = searchQuery.value
     }
     
     const response = await apiClient.get('/api/v1/courses', { params })
