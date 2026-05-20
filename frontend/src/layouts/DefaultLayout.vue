@@ -198,7 +198,7 @@ const navigation = computed(() => {
       name: 'Anamnese',
       to: { name: 'Anamnesis' },
       icon: ClipboardDocumentListIcon,
-      roles: ['admin', 'trainer']
+      roles: ['trainer']
     },
     {
       name: 'Kurse',

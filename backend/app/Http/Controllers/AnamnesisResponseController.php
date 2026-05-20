@@ -26,6 +26,8 @@ class AnamnesisResponseController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
+        $this->authorize('viewAny', AnamnesisResponse::class);
+
         $query = AnamnesisResponse::query()
             ->with(['dog.customer', 'template', 'completedBy']);
 
@@ -89,6 +91,8 @@ class AnamnesisResponseController extends Controller
      */
     public function store(StoreAnamnesisResponseRequest $request): JsonResponse
     {
+        $this->authorize('create', AnamnesisResponse::class);
+
         $data = $request->validatedSnakeCase();
         $answers = $data['answers'] ?? [];
         unset($data['answers']);

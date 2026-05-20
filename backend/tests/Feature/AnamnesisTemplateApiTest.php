@@ -19,9 +19,9 @@ beforeEach(function () {
 });
 
 test('can list anamnesis templates', function () {
-    $templates = AnamnesisTemplate::factory()->count(3)->create();
+    $templates = AnamnesisTemplate::factory()->count(3)->create(['trainer_id' => $this->trainer->id]);
 
-    $response = $this->actingAs($this->admin)->getJson('/api/v1/anamnesis-templates');
+    $response = $this->actingAs($this->trainer)->getJson('/api/v1/anamnesis-templates');
 
     $response->assertOk()
         ->assertJsonCount(3, 'data')
@@ -32,11 +32,17 @@ test('can list anamnesis templates', function () {
         ]);
 });
 
+test('admin cannot list anamnesis templates', function () {
+    $response = $this->actingAs($this->admin)->getJson('/api/v1/anamnesis-templates');
+
+    $response->assertForbidden();
+});
+
 test('can filter templates by trainer', function () {
     AnamnesisTemplate::factory()->create(['trainer_id' => $this->trainer->id]);
     AnamnesisTemplate::factory()->create(['trainer_id' => $this->anotherTrainer->id]);
 
-    $response = $this->actingAs($this->admin)
+    $response = $this->actingAs($this->trainer)
         ->getJson('/api/v1/anamnesis-templates?trainerId=' . $this->trainer->id);
 
     $response->assertOk()
@@ -46,9 +52,9 @@ test('can filter templates by trainer', function () {
 
 test('can filter default templates', function () {
     AnamnesisTemplate::factory()->create(['is_default' => true]);
-    AnamnesisTemplate::factory()->create(['is_default' => false]);
+    AnamnesisTemplate::factory()->create(['is_default' => false, 'trainer_id' => $this->trainer->id]);
 
-    $response = $this->actingAs($this->admin)
+    $response = $this->actingAs($this->trainer)
         ->getJson('/api/v1/anamnesis-templates?isDefault=1');
 
     $response->assertOk()
@@ -57,10 +63,10 @@ test('can filter default templates', function () {
 });
 
 test('can search templates by name', function () {
-    AnamnesisTemplate::factory()->create(['name' => 'Puppy Assessment']);
-    AnamnesisTemplate::factory()->create(['name' => 'Adult Dog Evaluation']);
+    AnamnesisTemplate::factory()->create(['name' => 'Puppy Assessment', 'trainer_id' => $this->trainer->id]);
+    AnamnesisTemplate::factory()->create(['name' => 'Adult Dog Evaluation', 'trainer_id' => $this->trainer->id]);
 
-    $response = $this->actingAs($this->admin)
+    $response = $this->actingAs($this->trainer)
         ->getJson('/api/v1/anamnesis-templates?search=Puppy');
 
     $response->assertOk()
@@ -137,7 +143,7 @@ test('can view template details with questions', function () {
     $template = AnamnesisTemplate::factory()->create();
     AnamnesisQuestion::factory()->count(3)->create(['template_id' => $template->id]);
 
-    $response = $this->actingAs($this->admin)
+    $response = $this->actingAs($this->trainer)
         ->getJson("/api/v1/anamnesis-templates/{$template->id}");
 
     $response->assertOk()
@@ -152,6 +158,15 @@ test('can view template details with questions', function () {
                 ]
             ]
         ]);
+});
+
+test('admin cannot view anamnesis template', function () {
+    $template = AnamnesisTemplate::factory()->create();
+
+    $response = $this->actingAs($this->admin)
+        ->getJson("/api/v1/anamnesis-templates/{$template->id}");
+
+    $response->assertForbidden();
 });
 
 test('trainer can update own template', function () {
@@ -185,22 +200,21 @@ test('trainer cannot update another trainers template', function () {
     $response->assertForbidden();
 });
 
-test('admin can update any template', function () {
+test('admin cannot update template', function () {
     $template = AnamnesisTemplate::factory()->create(['trainer_id' => $this->trainer->id]);
 
-    $data = ['name' => 'Admin Updated'];
+    $data = ['name' => 'Admin Attempt'];
 
     $response = $this->actingAs($this->admin)
         ->putJson("/api/v1/anamnesis-templates/{$template->id}", $data);
 
-    $response->assertOk()
-        ->assertJsonPath('data.name', 'Admin Updated');
+    $response->assertForbidden();
 });
 
-test('admin can delete template without responses', function () {
-    $template = AnamnesisTemplate::factory()->create();
+test('trainer can delete own template', function () {
+    $template = AnamnesisTemplate::factory()->create(['trainer_id' => $this->trainer->id]);
 
-    $response = $this->actingAs($this->admin)
+    $response = $this->actingAs($this->trainer)
         ->deleteJson("/api/v1/anamnesis-templates/{$template->id}");
 
     $response->assertNoContent();
@@ -208,11 +222,29 @@ test('admin can delete template without responses', function () {
     $this->assertDatabaseMissing('anamnesis_templates', ['id' => $template->id]);
 });
 
-test('cannot delete template with responses', function () {
+test('trainer cannot delete other trainers template', function () {
+    $template = AnamnesisTemplate::factory()->create(['trainer_id' => $this->anotherTrainer->id]);
+
+    $response = $this->actingAs($this->trainer)
+        ->deleteJson("/api/v1/anamnesis-templates/{$template->id}");
+
+    $response->assertForbidden();
+});
+
+test('admin cannot delete template', function () {
     $template = AnamnesisTemplate::factory()->create();
-    AnamnesisResponse::factory()->create(['template_id' => $template->id]);
 
     $response = $this->actingAs($this->admin)
+        ->deleteJson("/api/v1/anamnesis-templates/{$template->id}");
+
+    $response->assertForbidden();
+});
+
+test('cannot delete template with responses', function () {
+    $template = AnamnesisTemplate::factory()->create(['trainer_id' => $this->trainer->id]);
+    AnamnesisResponse::factory()->create(['template_id' => $template->id]);
+
+    $response = $this->actingAs($this->trainer)
         ->deleteJson("/api/v1/anamnesis-templates/{$template->id}");
 
     $response->assertStatus(422)
@@ -221,11 +253,23 @@ test('cannot delete template with responses', function () {
     $this->assertDatabaseHas('anamnesis_templates', ['id' => $template->id]);
 });
 
-test('trainer cannot delete template', function () {
+test('customer cannot delete template', function () {
     $template = AnamnesisTemplate::factory()->create(['trainer_id' => $this->trainer->id]);
 
-    $response = $this->actingAs($this->trainer)
+    $response = $this->actingAs($this->customer)
         ->deleteJson("/api/v1/anamnesis-templates/{$template->id}");
+
+    $response->assertForbidden();
+});
+
+test('admin cannot create anamnesis template', function () {
+    $data = [
+        'name' => 'Admin Template',
+        'description' => 'Should not be created',
+    ];
+
+    $response = $this->actingAs($this->admin)
+        ->postJson('/api/v1/anamnesis-templates', $data);
 
     $response->assertForbidden();
 });
@@ -236,7 +280,7 @@ test('can get template questions ordered', function () {
     AnamnesisQuestion::factory()->create(['template_id' => $template->id, 'order' => 0]);
     AnamnesisQuestion::factory()->create(['template_id' => $template->id, 'order' => 1]);
 
-    $response = $this->actingAs($this->admin)
+    $response = $this->actingAs($this->trainer)
         ->getJson("/api/v1/anamnesis-templates/{$template->id}/questions");
 
     $response->assertOk()
