@@ -14,7 +14,7 @@ class AnamnesisTemplatePolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->role !== 'admin';
     }
 
     /**
@@ -22,7 +22,7 @@ class AnamnesisTemplatePolicy
      */
     public function view(User $user, AnamnesisTemplate $anamnesisTemplate): bool
     {
-        return true;
+        return $user->role !== 'admin';
     }
 
     /**
@@ -30,7 +30,7 @@ class AnamnesisTemplatePolicy
      */
     public function create(User $user): bool
     {
-        return in_array($user->role, ['trainer', 'admin']);
+        return $user->role === 'trainer';
     }
 
     /**
@@ -38,17 +38,8 @@ class AnamnesisTemplatePolicy
      */
     public function update(User $user, AnamnesisTemplate $anamnesisTemplate): bool
     {
-        // Admins can update any template
-        if ($user->role === 'admin') {
-            return true;
-        }
-
         // Trainers can only update their own templates
-        if ($user->role === 'trainer') {
-            return $anamnesisTemplate->trainer_id === $user->id;
-        }
-
-        return false;
+        return $user->role === 'trainer' && $anamnesisTemplate->trainer_id === $user->id;
     }
 
     /**
@@ -56,7 +47,7 @@ class AnamnesisTemplatePolicy
      */
     public function delete(User $user, AnamnesisTemplate $anamnesisTemplate): bool
     {
-        // Only admins can delete templates
-        return $user->role === 'admin';
+        // Trainers can delete their own templates
+        return $user->role === 'trainer' && $anamnesisTemplate->trainer_id === $user->id;
     }
 }

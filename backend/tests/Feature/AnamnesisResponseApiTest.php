@@ -22,9 +22,11 @@ beforeEach(function () {
 });
 
 test('can list anamnesis responses', function () {
-    AnamnesisResponse::factory()->count(3)->create();
+    $customer = Customer::factory()->create(['trainer_id' => $this->trainer->id]);
+    $dog = Dog::factory()->create(['customer_id' => $customer->id]);
+    AnamnesisResponse::factory()->count(3)->create(['dog_id' => $dog->id]);
 
-    $response = $this->actingAs($this->admin)->getJson('/api/v1/anamnesis-responses');
+    $response = $this->actingAs($this->trainer)->getJson('/api/v1/anamnesis-responses');
 
     $response->assertOk()
         ->assertJsonCount(3, 'data')
@@ -33,6 +35,12 @@ test('can list anamnesis responses', function () {
                 '*' => ['id', 'dogId', 'templateId', 'completedAt', 'completedBy', 'createdAt']
             ]
         ]);
+});
+
+test('admin cannot list anamnesis responses', function () {
+    $response = $this->actingAs($this->admin)->getJson('/api/v1/anamnesis-responses');
+
+    $response->assertForbidden();
 });
 
 test('customer only sees own dogs responses', function () {
@@ -51,13 +59,14 @@ test('customer only sees own dogs responses', function () {
 });
 
 test('can filter responses by dog', function () {
-    $dog = Dog::factory()->create();
-    $otherDog = Dog::factory()->create();
+    $customer = Customer::factory()->create(['trainer_id' => $this->trainer->id]);
+    $dog = Dog::factory()->create(['customer_id' => $customer->id]);
+    $otherDog = Dog::factory()->create(['customer_id' => $customer->id]);
 
     AnamnesisResponse::factory()->create(['dog_id' => $dog->id]);
     AnamnesisResponse::factory()->create(['dog_id' => $otherDog->id]);
 
-    $response = $this->actingAs($this->admin)
+    $response = $this->actingAs($this->trainer)
         ->getJson("/api/v1/anamnesis-responses?dogId={$dog->id}");
 
     $response->assertOk()
@@ -66,13 +75,15 @@ test('can filter responses by dog', function () {
 });
 
 test('can filter responses by template', function () {
+    $customer = Customer::factory()->create(['trainer_id' => $this->trainer->id]);
+    $dog = Dog::factory()->create(['customer_id' => $customer->id]);
     $template1 = AnamnesisTemplate::factory()->create();
     $template2 = AnamnesisTemplate::factory()->create();
 
-    AnamnesisResponse::factory()->create(['template_id' => $template1->id]);
-    AnamnesisResponse::factory()->create(['template_id' => $template2->id]);
+    AnamnesisResponse::factory()->create(['dog_id' => $dog->id, 'template_id' => $template1->id]);
+    AnamnesisResponse::factory()->create(['dog_id' => $dog->id, 'template_id' => $template2->id]);
 
-    $response = $this->actingAs($this->admin)
+    $response = $this->actingAs($this->trainer)
         ->getJson("/api/v1/anamnesis-responses?templateId={$template1->id}");
 
     $response->assertOk()
@@ -81,10 +92,13 @@ test('can filter responses by template', function () {
 });
 
 test('can filter completed responses', function () {
-    AnamnesisResponse::factory()->create(['completed_at' => now()]);
-    AnamnesisResponse::factory()->create(['completed_at' => null]);
+    $customer = Customer::factory()->create(['trainer_id' => $this->trainer->id]);
+    $dog = Dog::factory()->create(['customer_id' => $customer->id]);
 
-    $response = $this->actingAs($this->admin)
+    AnamnesisResponse::factory()->create(['dog_id' => $dog->id, 'completed_at' => now()]);
+    AnamnesisResponse::factory()->create(['dog_id' => $dog->id, 'completed_at' => null]);
+
+    $response = $this->actingAs($this->trainer)
         ->getJson('/api/v1/anamnesis-responses?completed=1');
 
     $response->assertOk()
@@ -94,10 +108,13 @@ test('can filter completed responses', function () {
 });
 
 test('can filter incomplete responses', function () {
-    AnamnesisResponse::factory()->create(['completed_at' => now()]);
-    AnamnesisResponse::factory()->create(['completed_at' => null]);
+    $customer = Customer::factory()->create(['trainer_id' => $this->trainer->id]);
+    $dog = Dog::factory()->create(['customer_id' => $customer->id]);
 
-    $response = $this->actingAs($this->admin)
+    AnamnesisResponse::factory()->create(['dog_id' => $dog->id, 'completed_at' => now()]);
+    AnamnesisResponse::factory()->create(['dog_id' => $dog->id, 'completed_at' => null]);
+
+    $response = $this->actingAs($this->trainer)
         ->getJson('/api/v1/anamnesis-responses?completed=0');
 
     $response->assertOk()
@@ -107,15 +124,15 @@ test('can filter incomplete responses', function () {
 });
 
 test('can filter responses by customer', function () {
-    $customer1 = Customer::factory()->create();
-    $customer2 = Customer::factory()->create();
+    $customer1 = Customer::factory()->create(['trainer_id' => $this->trainer->id]);
+    $customer2 = Customer::factory()->create(['trainer_id' => $this->trainer->id]);
     $dog1 = Dog::factory()->create(['customer_id' => $customer1->id]);
     $dog2 = Dog::factory()->create(['customer_id' => $customer2->id]);
 
     AnamnesisResponse::factory()->create(['dog_id' => $dog1->id]);
     AnamnesisResponse::factory()->create(['dog_id' => $dog2->id]);
 
-    $response = $this->actingAs($this->admin)
+    $response = $this->actingAs($this->trainer)
         ->getJson("/api/v1/anamnesis-responses?customerId={$customer1->id}");
 
     $response->assertOk()
@@ -242,6 +259,30 @@ test('trainer can view any response', function () {
     $response->assertOk();
 });
 
+test('admin cannot view anamnesis response', function () {
+    $anamnesisResponse = AnamnesisResponse::factory()->create();
+
+    $response = $this->actingAs($this->admin)
+        ->getJson("/api/v1/anamnesis-responses/{$anamnesisResponse->id}");
+
+    $response->assertForbidden();
+});
+
+test('admin cannot create anamnesis response', function () {
+    $dog = Dog::factory()->create();
+    $template = AnamnesisTemplate::factory()->create();
+
+    $data = [
+        'dogId' => $dog->id,
+        'templateId' => $template->id,
+    ];
+
+    $response = $this->actingAs($this->admin)
+        ->postJson('/api/v1/anamnesis-responses', $data);
+
+    $response->assertForbidden();
+});
+
 test('can update response answers', function () {
     $dog = Dog::factory()->create(['customer_id' => $this->customer->customer->id]);
     $template = AnamnesisTemplate::factory()->create();
@@ -303,15 +344,15 @@ test('trainer can update any response', function () {
     $response->assertOk();
 });
 
-test('admin can delete response', function () {
+test('admin cannot delete response', function () {
     $anamnesisResponse = AnamnesisResponse::factory()->create();
 
     $response = $this->actingAs($this->admin)
         ->deleteJson("/api/v1/anamnesis-responses/{$anamnesisResponse->id}");
 
-    $response->assertNoContent();
+    $response->assertForbidden();
 
-    $this->assertDatabaseMissing('anamnesis_responses', ['id' => $anamnesisResponse->id]);
+    $this->assertDatabaseHas('anamnesis_responses', ['id' => $anamnesisResponse->id]);
 });
 
 test('customer cannot delete response', function () {

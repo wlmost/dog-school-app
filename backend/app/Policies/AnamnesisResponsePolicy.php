@@ -14,7 +14,7 @@ class AnamnesisResponsePolicy
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->role !== 'admin';
     }
 
     /**
@@ -22,8 +22,8 @@ class AnamnesisResponsePolicy
      */
     public function view(User $user, AnamnesisResponse $anamnesisResponse): bool
     {
-        // Admins and trainers can view any response
-        if (in_array($user->role, ['admin', 'trainer'])) {
+        // Trainers can view any response
+        if ($user->role === 'trainer') {
             return true;
         }
 
@@ -40,7 +40,7 @@ class AnamnesisResponsePolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $user->role !== 'admin';
     }
 
     /**
@@ -48,8 +48,8 @@ class AnamnesisResponsePolicy
      */
     public function update(User $user, AnamnesisResponse $anamnesisResponse): bool
     {
-        // Admins and trainers can update any response
-        if (in_array($user->role, ['admin', 'trainer'])) {
+        // Trainers can update any response
+        if ($user->role === 'trainer') {
             return true;
         }
 
@@ -63,10 +63,11 @@ class AnamnesisResponsePolicy
 
     /**
      * Determine whether the user can delete the anamnesis response.
+     * Anamnesis responses cannot be deleted to preserve the audit trail.
      */
     public function delete(User $user, AnamnesisResponse $anamnesisResponse): bool
     {
-        // Only admins can delete responses
-        return $user->role === 'admin';
+        // Nobody can delete anamnesis responses
+        return false;
     }
 }

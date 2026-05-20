@@ -24,6 +24,8 @@ class AnamnesisTemplateController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
+        $this->authorize('viewAny', AnamnesisTemplate::class);
+
         $query = AnamnesisTemplate::query()->with(['trainer']);
 
         // Role-based filtering
