@@ -14,17 +14,10 @@
     <div class="mb-6 flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
       <!-- Search Bar -->
       <div class="flex-1 max-w-md">
-        <div class="relative">
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="Trainer suchen..."
-            class="input pl-10"
-          />
-          <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-        </div>
+        <SearchInput
+          v-model="searchQuery"
+          placeholder="Trainer suchen..."
+        />
       </div>
 
       <!-- Sort and View Controls -->
@@ -234,6 +227,7 @@
 import { ref, onMounted, computed } from 'vue'
 import apiClient from '@/api/client'
 import TrainerFormModal from '@/components/TrainerFormModal.vue'
+import SearchInput from '@/components/SearchInput.vue'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
 
 const loading = ref(false)

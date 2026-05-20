@@ -2,13 +2,10 @@
   <div class="space-y-6">
     <!-- Header Actions -->
     <div class="flex justify-between items-center">
-      <div class="flex-1">
-        <input
+      <div class="flex-1 max-w-md">
+        <SearchInput
           v-model="searchQuery"
-          @input="loadCustomers"
-          type="text"
           placeholder="Kunden durchsuchen..."
-          class="input max-w-md"
         />
       </div>
       <button @click="openCreateModal" class="btn btn-primary">
@@ -95,10 +92,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import apiClient from '@/api/client'
 import CustomerFormModal from '@/components/CustomerFormModal.vue'
 import CustomerDetailModal from '@/components/CustomerDetailModal.vue'
+import SearchInput from '@/components/SearchInput.vue'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
 
 const loading = ref(true)
@@ -109,6 +107,10 @@ const showDetailModal = ref(false)
 const selectedCustomer = ref<any>(null)
 
 onMounted(() => {
+  loadCustomers()
+})
+
+watch(searchQuery, () => {
   loadCustomers()
 })
 
