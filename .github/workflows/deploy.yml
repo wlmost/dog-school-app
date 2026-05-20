@@ -1,0 +1,239 @@
+name: Deploy to Shared Hosting
+
+# Trigger automatically after CI passes on main, or manually via workflow_dispatch.
+on:
+  workflow_run:
+    workflows: ["CI – Build & Test"]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Branch or commit SHA to deploy (default: main)'
+        required: false
+        default: 'main'
+
+# Prevent concurrent deployments – never cancel an in-progress deploy.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    # For workflow_run: only proceed when CI succeeded.
+    # For workflow_dispatch: always proceed (caller takes responsibility).
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    # Uses a GitHub Environment named "production".
+    # Configure Secrets and optional approval rules there:
+    #   Settings → Environments → production
+    #
+    # Required secrets:
+    #   DEPLOY_SSH_KEY  – PEM-encoded private SSH key
+    #   DEPLOY_HOST     – SSH hostname / IP of the server
+    #   DEPLOY_USER     – SSH username
+    #   DEPLOY_PATH     – Absolute path on the server (e.g. /home/user/public_html)
+    #
+    # Optional variable (Settings → Environments → production → Variables):
+    #   DEPLOY_PORT     – SSH port (default: 22)
+    environment: production
+
+    env:
+      DEPLOY_PORT: ${{ vars.DEPLOY_PORT || 22 }}
+
+    steps:
+      # -----------------------------------------------------------------------
+      # 1. Checkout
+      # -----------------------------------------------------------------------
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          # When triggered by workflow_run, check out the exact commit that
+          # passed CI. For manual dispatch, honour the user-supplied ref.
+          ref: >-
+            ${{
+              github.event_name == 'workflow_run'
+                && github.event.workflow_run.head_sha
+                || (github.event.inputs.ref || github.ref)
+            }}
+
+      # -----------------------------------------------------------------------
+      # 2. Backend build (production dependencies only)
+      # -----------------------------------------------------------------------
+      - name: Setup PHP 8.2
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, ctype, json, bcmath, pdo_mysql
+          coverage: none
+
+      - name: Install Composer dependencies (no dev)
+        working-directory: backend
+        run: composer install --no-dev --optimize-autoloader --no-interaction
+
+      # -----------------------------------------------------------------------
+      # 3. Frontend build
+      # -----------------------------------------------------------------------
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package.json
+
+      - name: Install npm dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build frontend assets
+        working-directory: frontend
+        run: npm run build:deploy
+
+      # -----------------------------------------------------------------------
+      # 4. Assemble deployment package
+      #    Mirrors the structure produced by build-deployment.sh, but without
+      #    creating a tar.gz – we sync directly via rsync.
+      # -----------------------------------------------------------------------
+      - name: Prepare deployment package
+        run: |
+          mkdir -p deploy-package
+
+          # Backend – exclude dev/sensitive paths
+          rsync -a \
+            --exclude='.git' \
+            --exclude='.env' \
+            --exclude='.env.*' \
+            --exclude='tests/' \
+            --exclude='storage/logs/' \
+            --exclude='storage/framework/cache/' \
+            --exclude='storage/framework/sessions/' \
+            --exclude='storage/framework/views/' \
+            --exclude='node_modules/' \
+            backend/ deploy-package/backend/
+
+          # Ensure required writable directories exist (empty placeholders)
+          mkdir -p deploy-package/backend/storage/{logs,app/public,framework/{cache,sessions,views}}
+          mkdir -p deploy-package/backend/bootstrap/cache
+
+          # Frontend build output
+          mkdir -p deploy-package/frontend/dist
+          rsync -a frontend/dist/ deploy-package/frontend/dist/
+
+          # .htaccess files
+          cp deployment-templates/htaccess/root-post-install.htaccess  deploy-package/.htaccess
+          cp deployment-templates/htaccess/backend-public.htaccess      deploy-package/backend/public/.htaccess
+          cp deployment-templates/htaccess/backend-root.htaccess        deploy-package/backend/.htaccess
+          cp deployment-templates/htaccess/storage.htaccess             deploy-package/backend/storage/.htaccess
+          cp deployment-templates/htaccess/frontend.htaccess            deploy-package/frontend/.htaccess
+          cp deployment-templates/htaccess/frontend-dist.htaccess       deploy-package/frontend/dist/.htaccess
+
+          # Update wizard and maintenance page
+          cp update.php        deploy-package/update.php
+          cp maintenance.html  deploy-package/maintenance.html
+
+      # -----------------------------------------------------------------------
+      # 5. SSH setup
+      # -----------------------------------------------------------------------
+      - name: Configure SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.DEPLOY_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$DEPLOY_PORT" -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      # -----------------------------------------------------------------------
+      # 6. Enable maintenance mode (best-effort – may fail on first deploy)
+      # -----------------------------------------------------------------------
+      - name: Enable maintenance mode
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -p "$DEPLOY_PORT" \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "cd '${{ secrets.DEPLOY_PATH }}/backend' && php artisan down --retry=60" \
+          || echo "::warning::Maintenance mode could not be activated (first deploy or artisan not reachable yet)"
+
+      # -----------------------------------------------------------------------
+      # 7. Upload files via rsync
+      #    --delete removes files that no longer exist in the source.
+      #    Excludes protect server-side .env and user-generated storage content.
+      # -----------------------------------------------------------------------
+      - name: Deploy files via rsync
+        run: |
+          rsync -az --delete \
+            --exclude='backend/.env' \
+            --exclude='backend/storage/app/' \
+            --exclude='backend/storage/logs/' \
+            --exclude='backend/storage/framework/sessions/' \
+            --exclude='backend/storage/framework/cache/' \
+            --exclude='backend/storage/framework/views/' \
+            -e "ssh -i ~/.ssh/deploy_key -p $DEPLOY_PORT" \
+            deploy-package/ \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
+
+      # -----------------------------------------------------------------------
+      # 8. Run database migrations
+      # -----------------------------------------------------------------------
+      - name: Run database migrations
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -p "$DEPLOY_PORT" \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "cd '${{ secrets.DEPLOY_PATH }}/backend' && php artisan migrate --force"
+
+      # -----------------------------------------------------------------------
+      # 9. Rebuild application caches
+      # -----------------------------------------------------------------------
+      - name: Rebuild application caches
+        # Note: route:cache is intentionally omitted – the application contains
+        # closure-based routes (web.php) which are incompatible with route caching.
+        # If all routes are migrated to controller classes, route:cache can be added.
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -p "$DEPLOY_PORT" \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "cd '${{ secrets.DEPLOY_PATH }}/backend' \
+              && php artisan config:clear \
+              && php artisan config:cache \
+              && php artisan view:cache"
+
+      # -----------------------------------------------------------------------
+      # 10. Disable maintenance mode
+      #     Runs even if a previous step failed so the app always comes back up.
+      # -----------------------------------------------------------------------
+      - name: Disable maintenance mode
+        if: always()
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -p "$DEPLOY_PORT" \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "cd '${{ secrets.DEPLOY_PATH }}/backend' && php artisan up" \
+          || echo "::warning::Could not disable maintenance mode – check the server manually"
+
+      # -----------------------------------------------------------------------
+      # 11. Cleanup
+      # -----------------------------------------------------------------------
+      - name: Remove SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key
+
+      # -----------------------------------------------------------------------
+      # 12. Write deployment summary to the Actions run page
+      # -----------------------------------------------------------------------
+      - name: Deployment summary
+        if: always()
+        run: |
+          {
+            echo "## Deployment Summary"
+            echo "| Key | Value |"
+            echo "|-----|-------|"
+            echo "| Triggered by | \`${{ github.event_name }}\` |"
+            echo "| Commit | \`${{ github.sha }}\` |"
+            echo "| Actor | @${{ github.actor }} |"
+            echo "| Time (UTC) | $(date -u '+%Y-%m-%d %H:%M:%S') |"
+          } >> "$GITHUB_STEP_SUMMARY"
