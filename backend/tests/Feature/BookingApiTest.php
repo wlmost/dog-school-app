@@ -260,12 +260,22 @@ test('customer cannot cancel already attended booking', function () {
         ->assertForbidden();
 });
 
-test('admin can cancel any booking', function () {
+test('admin cannot cancel booking', function () {
     $booking = Booking::factory()->create();
 
     $this->actingAs($this->admin)
         ->postJson('/api/v1/bookings/' . $booking->id . '/cancel', [
             'cancellationReason' => 'Admin cancellation',
+        ])
+        ->assertForbidden();
+});
+
+test('trainer can cancel any booking', function () {
+    $booking = Booking::factory()->create();
+
+    $this->actingAs($this->trainer)
+        ->postJson('/api/v1/bookings/' . $booking->id . '/cancel', [
+            'cancellationReason' => 'Trainer cancellation',
         ])
         ->assertOk()
         ->assertJsonPath('data.status', 'cancelled');
@@ -530,5 +540,64 @@ test('customer cannot approve cancellation request', function () {
     $this->actingAs($this->customerUser)
         ->postJson('/api/v1/bookings/' . $booking->id . '/approve-cancellation')
         ->assertForbidden();
+});
+
+test('admin cannot create booking', function () {
+    $data = [
+        'trainingSessionId' => $this->session->id,
+        'customerId' => $this->customer->id,
+        'dogId' => $this->dog->id,
+        'notes' => 'Admin booking attempt',
+    ];
+
+    $this->actingAs($this->admin)
+        ->postJson('/api/v1/bookings', $data)
+        ->assertForbidden();
+});
+
+test('admin cannot update booking', function () {
+    $booking = Booking::factory()->create(['status' => 'pending']);
+
+    $this->actingAs($this->admin)
+        ->putJson('/api/v1/bookings/' . $booking->id, ['status' => 'confirmed'])
+        ->assertForbidden();
+});
+
+test('admin cannot approve cancellation request', function () {
+    $booking = Booking::factory()->create(['status' => 'cancellation_requested']);
+
+    $this->actingAs($this->admin)
+        ->postJson('/api/v1/bookings/' . $booking->id . '/approve-cancellation')
+        ->assertForbidden();
+});
+
+test('customer cannot create booking for another customer', function () {
+    $otherCustomer = Customer::factory()->create();
+    $otherDog = Dog::factory()->create(['customer_id' => $otherCustomer->id]);
+
+    $data = [
+        'trainingSessionId' => $this->session->id,
+        'customerId' => $otherCustomer->id,
+        'dogId' => $otherDog->id,
+    ];
+
+    $this->actingAs($this->customerUser)
+        ->postJson('/api/v1/bookings', $data)
+        ->assertForbidden();
+});
+
+test('trainer can create booking on behalf of a customer', function () {
+    $data = [
+        'trainingSessionId' => $this->session->id,
+        'customerId' => $this->customer->id,
+        'dogId' => $this->dog->id,
+        'notes' => 'Trainer support booking',
+    ];
+
+    $this->actingAs($this->trainer)
+        ->postJson('/api/v1/bookings', $data)
+        ->assertCreated()
+        ->assertJsonPath('data.customer.id', $this->customer->id)
+        ->assertJsonPath('data.status', 'pending');
 });
 

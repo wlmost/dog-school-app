@@ -12,6 +12,7 @@ use App\Http\Requests\UpdateBookingRequest;
 use App\Http\Resources\BookingResource;
 use App\Mail\BookingCancellationApproved;
 use App\Models\Booking;
+use App\Models\Customer;
 use App\Models\TrainingSession;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
@@ -120,7 +121,7 @@ class BookingController extends Controller
         $this->authorize('create', Booking::class);
 
         $data = $request->validatedSnakeCase();
-        
+
         // Check session capacity
         $session = TrainingSession::findOrFail($data['training_session_id']);
         $currentBookings = $session->bookings()->whereIn('status', ['pending', 'confirmed'])->count();
@@ -193,7 +194,7 @@ class BookingController extends Controller
     /**
      * Cancel or request cancellation for the specified booking.
      *
-     * - Admins / trainers: cancel immediately.
+     * - Trainers: cancel immediately.
      * - Customers: if within the cancellation window, set status to
      *   'cancellation_requested' so the responsible trainer can approve it.
      *   If the window has passed, return a 422 with a descriptive message.
@@ -212,8 +213,8 @@ class BookingController extends Controller
 
         $user = $request->user();
 
-        // Admins and trainers cancel immediately without a deadline check
-        if ($user->isAdminOrTrainer()) {
+        // Trainers cancel immediately without a deadline check
+        if ($user->isTrainer()) {
             $booking->update([
                 'status' => 'cancelled',
                 'cancellation_reason' => $request->input('cancellationReason'),
