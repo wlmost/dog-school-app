@@ -12,7 +12,7 @@
           <option value="attended">Teilgenommen</option>
         </select>
       </div>
-      <button v-if="!isCustomer" @click="openCreateModal" class="btn btn-primary">
+      <button v-if="isTrainer" @click="openCreateModal" class="btn btn-primary">
         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
         </svg>
@@ -84,7 +84,7 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                 <!-- Admin / trainer actions -->
-                <template v-if="!isCustomer">
+                <template v-if="isTrainer">
                   <button @click="editBooking(booking)" class="text-primary-600 hover:text-primary-900">Bearbeiten</button>
                   <button v-if="booking.status === 'pending'" @click="confirmBooking(booking)" class="text-green-600 hover:text-green-900">Bestätigen</button>
                   <button
@@ -98,7 +98,7 @@
                 </template>
 
                 <!-- Customer actions -->
-                <template v-else>
+                <template v-else-if="isCustomer">
                   <!-- Already cancelled or cancellation in progress -->
                   <span v-if="booking.status === 'cancelled'" class="text-gray-400 text-sm">Storniert</span>
                   <span v-else-if="booking.status === 'cancellation_requested'" class="text-orange-500 text-sm">Stornierung beantragt</span>
@@ -117,6 +117,11 @@
                     </span>
                   </template>
                 </template>
+
+                <!-- Admin: read-only, no booking actions -->
+                <template v-else>
+                  <span class="text-gray-400 text-xs">Leserecht</span>
+                </template>
               </td>
             </tr>
           </tbody>
@@ -124,9 +129,9 @@
       </div>
     </div>
 
-    <!-- Booking Form Modal (admin/trainer only) -->
+    <!-- Booking Form Modal (trainer only) -->
     <BookingFormModal
-      v-if="!isCustomer"
+      v-if="isTrainer"
       :is-open="showFormModal"
       :booking="selectedBooking"
       @close="closeFormModal"
@@ -165,6 +170,7 @@ import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
 const isCustomer = computed(() => authStore.user?.role === 'customer')
+const isTrainer = computed(() => authStore.user?.role === 'trainer')
 
 const loading = ref(true)
 const filterStatus = ref<string | null>(null)

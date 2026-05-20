@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Models\Customer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 
@@ -16,11 +17,31 @@ class StoreBookingRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
+     *
+     * Customers and trainers can create bookings.
+     * Admins have read-only access and cannot create bookings.
+     * Customers may only create bookings for themselves.
      */
     public function authorize(): bool
     {
-        // Admins, trainers, and customers can create bookings
-        return $this->user() !== null;
+        $user = $this->user();
+
+        if ($user === null || ! ($user->isCustomer() || $user->isTrainer())) {
+            return false;
+        }
+
+        // Customers can only create bookings for their own customer record
+        if ($user->isCustomer()) {
+            $customerRecord = Customer::where('user_id', $user->id)->first();
+
+            if ($customerRecord === null) {
+                return false;
+            }
+
+            return (int) $this->input('customerId') === $customerRecord->id;
+        }
+
+        return true;
     }
 
     /**

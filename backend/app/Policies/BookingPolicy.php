@@ -40,29 +40,38 @@ class BookingPolicy
 
     /**
      * Determine whether the user can create bookings.
+     *
+     * Customers can create their own bookings.
+     * Trainers can create bookings on behalf of customers.
+     * Admins have read-only access and cannot create bookings.
      */
     public function create(User $user): bool
     {
-        // All authenticated users can create bookings
-        return true;
+        return $user->isCustomer() || $user->isTrainer();
     }
 
     /**
      * Determine whether the user can update the booking.
+     *
+     * Only trainers can update bookings (mark attendance, change status).
+     * Admins have read-only access.
      */
     public function update(User $user, Booking $booking): bool
     {
-        // Only admins and trainers can update bookings
-        return $user->isAdminOrTrainer();
+        return $user->isTrainer();
     }
 
     /**
      * Determine whether the user can cancel the booking.
+     *
+     * Trainers can cancel any booking on behalf of customers.
+     * Customers can cancel their own bookings if not yet attended.
+     * Admins have read-only access and cannot cancel bookings.
      */
     public function cancel(User $user, Booking $booking): bool
     {
-        // Admins and trainers can cancel any booking
-        if ($user->isAdminOrTrainer()) {
+        // Trainers can cancel any booking
+        if ($user->isTrainer()) {
             return true;
         }
 
@@ -77,11 +86,11 @@ class BookingPolicy
     /**
      * Determine whether the user can approve a cancellation request.
      *
-     * Only trainers (for their own courses) and admins may approve.
+     * Only trainers may approve cancellation requests.
      */
     public function approveCancellation(User $user, Booking $booking): bool
     {
-        return $user->isAdminOrTrainer();
+        return $user->isTrainer();
     }
 
     /**
