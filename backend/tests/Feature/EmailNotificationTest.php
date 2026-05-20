@@ -55,7 +55,7 @@ describe('Booking Confirmation Emails', function () {
             ->for($this->dog)
             ->create(['status' => 'pending']);
 
-        $this->actingAs($this->admin);
+        $this->actingAs($this->trainer);
 
         $this->postJson("/api/v1/bookings/{$booking->id}/confirm");
 
