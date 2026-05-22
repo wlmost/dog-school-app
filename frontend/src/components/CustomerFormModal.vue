@@ -407,6 +407,9 @@ async function removeDog(dog: any) {
 // Cryptographically secure random integer in [0, max) using rejection sampling.
 // Rejection sampling eliminates modulo bias for character selection.
 function secureRandom(max: number): number {
+  if (max <= 0) {
+    throw new RangeError(`secureRandom: max must be greater than 0, got ${max}`)
+  }
   const limit = Math.floor(0x100000000 / max) * max
   const arr = new Uint32Array(1)
   let val: number
@@ -424,17 +427,18 @@ function generatePassword(): string {
   const special = '!@#$%^&*()_+-='
   const all = uppercase + lowercase + digits + special
 
-  // Guarantee at least one character from each required group
+  // Guarantee at least one character from each required group.
+  // charAt() is used instead of index access to avoid string | undefined TypeScript inference.
   const chars: string[] = [
-    uppercase[secureRandom(uppercase.length)] as string,
-    lowercase[secureRandom(lowercase.length)] as string,
-    digits[secureRandom(digits.length)] as string,
-    special[secureRandom(special.length)] as string,
+    uppercase.charAt(secureRandom(uppercase.length)),
+    lowercase.charAt(secureRandom(lowercase.length)),
+    digits.charAt(secureRandom(digits.length)),
+    special.charAt(secureRandom(special.length)),
   ]
 
   // Fill up to 12 characters total
   for (let i = chars.length; i < 12; i++) {
-    chars.push(all[secureRandom(all.length)] as string)
+    chars.push(all.charAt(secureRandom(all.length)))
   }
 
   // Fisher-Yates shuffle with secure random values
@@ -459,13 +463,13 @@ async function copyPassword() {
     passwordCopied.value = true
     setTimeout(() => { passwordCopied.value = false }, 2000)
   } catch {
-    // Fallback for environments without Clipboard API
+    // Fallback for insecure contexts or older browsers that lack the Clipboard API.
+    // document.execCommand('copy') is deprecated; remove once Clipboard API is universal.
     try {
       const input = document.createElement('input')
       input.value = generatedPassword.value
       document.body.appendChild(input)
       input.select()
-      // execCommand is deprecated but kept as fallback for older browsers
       const succeeded = document.execCommand('copy')
       document.body.removeChild(input)
       if (succeeded) {
