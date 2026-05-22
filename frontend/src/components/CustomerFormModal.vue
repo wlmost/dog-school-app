@@ -54,60 +54,46 @@
 
                 <div v-if="!customer" class="space-y-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Passwort *</label>
-                    <div class="relative">
-                      <input 
-                        v-model="form.password" 
-                        :type="showPassword ? 'text' : 'password'" 
-                        required 
-                        class="input pr-10" 
-                        :class="{'border-red-500': passwordError}"
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Initiales Passwort</label>
+                    <div class="flex items-center gap-2">
+                      <input
+                        :value="generatedPassword"
+                        type="text"
+                        readonly
+                        class="input flex-1 bg-gray-50 font-mono text-sm"
                       />
-                      <button 
-                        type="button" 
-                        @click="showPassword = !showPassword"
-                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                      <button
+                        type="button"
+                        @click="copyPassword"
+                        class="btn bg-white hover:bg-gray-50 border border-gray-300 flex items-center gap-1 whitespace-nowrap"
+                        :class="passwordCopied ? 'text-green-600' : 'text-gray-700'"
                       >
-                        <svg v-if="showPassword" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        <svg v-if="!passwordCopied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                         </svg>
-                        <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                        <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                         </svg>
+                        {{ passwordCopied ? 'Kopiert!' : 'Kopieren' }}
+                      </button>
+                      <button
+                        type="button"
+                        @click="refreshPassword"
+                        class="btn bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 flex items-center gap-1 whitespace-nowrap"
+                        title="Neues Passwort generieren"
+                      >
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Neu
                       </button>
                     </div>
-                    <p class="mt-1 text-xs text-gray-500">
-                      Mind. 8 Zeichen, 1 Groß-, 1 Kleinbuchstabe, 1 Ziffer, 1 Sonderzeichen
+                    <p class="mt-2 text-xs text-amber-600 flex items-start gap-1">
+                      <svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      Bitte notieren oder kopieren Sie das Passwort jetzt – es wird nach der Bestätigung nicht mehr angezeigt.
                     </p>
-                    <p v-if="passwordError" class="mt-1 text-xs text-red-600">{{ passwordError }}</p>
-                  </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Passwort bestätigen *</label>
-                    <div class="relative">
-                      <input 
-                        v-model="form.password_confirmation" 
-                        :type="showPasswordConfirmation ? 'text' : 'password'" 
-                        required 
-                        class="input pr-10" 
-                        :class="{'border-red-500': passwordConfirmError}"
-                      />
-                      <button 
-                        type="button" 
-                        @click="showPasswordConfirmation = !showPasswordConfirmation"
-                        class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                      >
-                        <svg v-if="showPasswordConfirmation" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                        </svg>
-                      </button>
-                    </div>
-                    <p v-if="passwordConfirmError" class="mt-1 text-xs text-red-600">{{ passwordConfirmError }}</p>
                   </div>
                 </div>
 
@@ -267,10 +253,8 @@ const authStore = useAuthStore()
 const currentUser = computed(() => authStore.user)
 
 const loading = ref(false)
-const passwordError = ref<string | null>(null)
-const passwordConfirmError = ref<string | null>(null)
-const showPassword = ref(false)
-const showPasswordConfirmation = ref(false)
+const generatedPassword = ref('')
+const passwordCopied = ref(false)
 const trainers = ref<any[]>([])
 const dogs = ref<any[]>([])
 const showDogForm = ref(false)
@@ -288,8 +272,6 @@ const form = ref({
   last_name: '',
   email: '',
   phone: '',
-  password: '',
-  password_confirmation: '',
   trainer_id: null as number | null,
   street: '',
   postal_code: '',
@@ -304,6 +286,8 @@ watch(() => props.isOpen, (isOpen) => {
     if (props.customer) {
       loadDogs()
     } else {
+      generatedPassword.value = generatePassword()
+      passwordCopied.value = false
       // Set trainer_id to current user if they are a trainer
       if (currentUser.value?.role === 'trainer') {
         form.value.trainer_id = currentUser.value.id
@@ -322,8 +306,6 @@ watch(() => props.customer, (newCustomer) => {
       last_name: newCustomer.user?.lastName || '',
       email: newCustomer.user?.email || '',
       phone: newCustomer.user?.phone || '',
-      password: '',
-      password_confirmation: '',
       trainer_id: newCustomer.trainerId || null,
       street: newCustomer.street || '',
       postal_code: newCustomer.postalCode || '',
@@ -342,8 +324,6 @@ function resetForm() {
     last_name: '',
     email: '',
     phone: '',
-    password: '',
-    password_confirmation: '',
     trainer_id: null,
     street: '',
     postal_code: '',
@@ -351,10 +331,8 @@ function resetForm() {
     country: 'Deutschland',
     notes: ''
   }
-  passwordError.value = null
-  passwordConfirmError.value = null
-  showPassword.value = false
-  showPasswordConfirmation.value = false
+  generatedPassword.value = ''
+  passwordCopied.value = false
 }
 
 async function loadTrainers() {
@@ -426,46 +404,88 @@ async function removeDog(dog: any) {
   }
 }
 
-function validatePassword(password: string): string | null {
-  if (password.length < 8) {
-    return 'Passwort muss mindestens 8 Zeichen lang sein'
+// Cryptographically secure random integer in [0, max) using rejection sampling.
+// Rejection sampling eliminates modulo bias for character selection.
+function secureRandom(max: number): number {
+  if (max <= 0) {
+    throw new RangeError(`secureRandom: max must be greater than 0, got ${max}`)
   }
-  if (!/[a-z]/.test(password)) {
-    return 'Passwort muss mindestens einen Kleinbuchstaben enthalten'
+  const limit = Math.floor(0x100000000 / max) * max
+  const arr = new Uint32Array(1)
+  let val: number
+  do {
+    crypto.getRandomValues(arr)
+    val = arr[0] as number
+  } while (val >= limit)
+  return val % max
+}
+
+function generatePassword(): string {
+  const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+  const lowercase = 'abcdefghijklmnopqrstuvwxyz'
+  const digits = '0123456789'
+  const special = '!@#$%^&*()_+-='
+  const all = uppercase + lowercase + digits + special
+
+  // Guarantee at least one character from each required group.
+  // charAt() is used instead of index access to avoid string | undefined TypeScript inference.
+  const chars: string[] = [
+    uppercase.charAt(secureRandom(uppercase.length)),
+    lowercase.charAt(secureRandom(lowercase.length)),
+    digits.charAt(secureRandom(digits.length)),
+    special.charAt(secureRandom(special.length)),
+  ]
+
+  // Fill up to 12 characters total
+  for (let i = chars.length; i < 12; i++) {
+    chars.push(all.charAt(secureRandom(all.length)))
   }
-  if (!/[A-Z]/.test(password)) {
-    return 'Passwort muss mindestens einen Großbuchstaben enthalten'
+
+  // Fisher-Yates shuffle with secure random values
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = secureRandom(i + 1)
+    const temp = chars[i]!
+    chars[i] = chars[j]!
+    chars[j] = temp
   }
-  if (!/[0-9]/.test(password)) {
-    return 'Passwort muss mindestens eine Ziffer enthalten'
+
+  return chars.join('')
+}
+
+function refreshPassword() {
+  generatedPassword.value = generatePassword()
+  passwordCopied.value = false
+}
+
+async function copyPassword() {
+  try {
+    await navigator.clipboard.writeText(generatedPassword.value)
+    passwordCopied.value = true
+    setTimeout(() => { passwordCopied.value = false }, 2000)
+  } catch {
+    // Fallback for insecure contexts or older browsers that lack the Clipboard API.
+    // document.execCommand('copy') is deprecated; remove once Clipboard API is universal.
+    try {
+      const input = document.createElement('input')
+      input.value = generatedPassword.value
+      document.body.appendChild(input)
+      input.select()
+      const succeeded = document.execCommand('copy')
+      document.body.removeChild(input)
+      if (succeeded) {
+        passwordCopied.value = true
+        setTimeout(() => { passwordCopied.value = false }, 2000)
+      } else {
+        throw new Error('execCommand copy failed')
+      }
+    } catch {
+      handleApiError(new Error('Kopieren fehlgeschlagen'), 'Das Passwort konnte nicht in die Zwischenablage kopiert werden. Bitte manuell kopieren.')
+    }
   }
-  if (!/[^a-zA-Z0-9]/.test(password)) {
-    return 'Passwort muss mindestens ein Sonderzeichen enthalten'
-  }
-  return null
 }
 
 async function handleSubmit() {
   loading.value = true
-  passwordError.value = null
-  passwordConfirmError.value = null
-
-  // Validate password for new customers
-  if (!props.customer) {
-    const pwdValidation = validatePassword(form.value.password)
-    if (pwdValidation) {
-      passwordError.value = pwdValidation
-      loading.value = false
-      return
-    }
-
-    // Check if passwords match
-    if (form.value.password !== form.value.password_confirmation) {
-      passwordConfirmError.value = 'Passwörter stimmen nicht überein'
-      loading.value = false
-      return
-    }
-  }
 
   try {
     if (props.customer) {
@@ -484,11 +504,11 @@ async function handleSubmit() {
       })
       showSuccess('Kunde aktualisiert', 'Der Kunde wurde erfolgreich aktualisiert')
     } else {
-      // Create new customer with user
+      // Create new customer with auto-generated password
       const userResponse = await apiClient.post('/api/v1/auth/register', {
         email: form.value.email,
-        password: form.value.password,
-        password_confirmation: form.value.password_confirmation,
+        password: generatedPassword.value,
+        password_confirmation: generatedPassword.value,
         role: 'customer',
         first_name: form.value.first_name,
         last_name: form.value.last_name,
