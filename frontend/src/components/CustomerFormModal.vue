@@ -404,6 +404,19 @@ async function removeDog(dog: any) {
   }
 }
 
+// Cryptographically secure random integer in [0, max) using rejection sampling.
+// Rejection sampling eliminates modulo bias for character selection.
+function secureRandom(max: number): number {
+  const limit = Math.floor(0x100000000 / max) * max
+  const arr = new Uint32Array(1)
+  let val: number
+  do {
+    crypto.getRandomValues(arr)
+    val = arr[0] as number
+  } while (val >= limit)
+  return val % max
+}
+
 function generatePassword(): string {
   const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
   const lowercase = 'abcdefghijklmnopqrstuvwxyz'
@@ -411,36 +424,24 @@ function generatePassword(): string {
   const special = '!@#$%^&*()_+-='
   const all = uppercase + lowercase + digits + special
 
-  // Guarantee at least one character from each required group using secure random.
-  // Rejection sampling avoids modulo bias for character selection.
-  const secureRandom = (max: number): number => {
-    const limit = Math.floor(0x100000000 / max) * max
-    const arr = new Uint32Array(1)
-    let val: number
-    do {
-      crypto.getRandomValues(arr)
-      val = arr[0] as number
-    } while (val >= limit)
-    return val % max
-  }
-
-  const chars = [
-    uppercase[secureRandom(uppercase.length)],
-    lowercase[secureRandom(lowercase.length)],
-    digits[secureRandom(digits.length)],
-    special[secureRandom(special.length)],
+  // Guarantee at least one character from each required group
+  const chars: string[] = [
+    uppercase[secureRandom(uppercase.length)] as string,
+    lowercase[secureRandom(lowercase.length)] as string,
+    digits[secureRandom(digits.length)] as string,
+    special[secureRandom(special.length)] as string,
   ]
 
   // Fill up to 12 characters total
   for (let i = chars.length; i < 12; i++) {
-    chars.push(all[secureRandom(all.length)])
+    chars.push(all[secureRandom(all.length)] as string)
   }
 
   // Fisher-Yates shuffle with secure random values
   for (let i = chars.length - 1; i > 0; i--) {
     const j = secureRandom(i + 1)
-    const temp = chars[i] as string
-    chars[i] = chars[j] as string
+    const temp = chars[i]!
+    chars[i] = chars[j]!
     chars[j] = temp
   }
 
@@ -465,10 +466,14 @@ async function copyPassword() {
       document.body.appendChild(input)
       input.select()
       // execCommand is deprecated but kept as fallback for older browsers
-      document.execCommand('copy')
+      const succeeded = document.execCommand('copy')
       document.body.removeChild(input)
-      passwordCopied.value = true
-      setTimeout(() => { passwordCopied.value = false }, 2000)
+      if (succeeded) {
+        passwordCopied.value = true
+        setTimeout(() => { passwordCopied.value = false }, 2000)
+      } else {
+        throw new Error('execCommand copy failed')
+      }
     } catch {
       handleApiError(new Error('Kopieren fehlgeschlagen'), 'Das Passwort konnte nicht in die Zwischenablage kopiert werden. Bitte manuell kopieren.')
     }
