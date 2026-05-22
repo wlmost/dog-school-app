@@ -411,21 +411,34 @@ function generatePassword(): string {
   const special = '!@#$%^&*()_+-='
   const all = uppercase + lowercase + digits + special
 
-  // Guarantee at least one character from each required group
-  const required = [
-    uppercase[Math.floor(Math.random() * uppercase.length)],
-    lowercase[Math.floor(Math.random() * lowercase.length)],
-    digits[Math.floor(Math.random() * digits.length)],
-    special[Math.floor(Math.random() * special.length)],
+  // Guarantee at least one character from each required group using secure random
+  const secureRandom = (max: number) => {
+    const arr = new Uint32Array(1)
+    crypto.getRandomValues(arr)
+    return (arr[0] as number) % max
+  }
+
+  const chars = [
+    uppercase[secureRandom(uppercase.length)],
+    lowercase[secureRandom(lowercase.length)],
+    digits[secureRandom(digits.length)],
+    special[secureRandom(special.length)],
   ]
 
   // Fill up to 12 characters total
-  for (let i = required.length; i < 12; i++) {
-    required.push(all[Math.floor(Math.random() * all.length)])
+  for (let i = chars.length; i < 12; i++) {
+    chars.push(all[secureRandom(all.length)])
   }
 
-  // Shuffle to avoid predictable positions
-  return required.sort(() => Math.random() - 0.5).join('')
+  // Fisher-Yates shuffle with secure random values
+  for (let i = chars.length - 1; i > 0; i--) {
+    const j = secureRandom(i + 1)
+    const temp = chars[i] as string
+    chars[i] = chars[j] as string
+    chars[j] = temp
+  }
+
+  return chars.join('')
 }
 
 function refreshPassword() {
@@ -439,15 +452,19 @@ async function copyPassword() {
     passwordCopied.value = true
     setTimeout(() => { passwordCopied.value = false }, 2000)
   } catch {
-    // Fallback for environments without clipboard API
-    const input = document.createElement('input')
-    input.value = generatedPassword.value
-    document.body.appendChild(input)
-    input.select()
-    document.execCommand('copy')
-    document.body.removeChild(input)
-    passwordCopied.value = true
-    setTimeout(() => { passwordCopied.value = false }, 2000)
+    // Fallback for environments without Clipboard API
+    try {
+      const input = document.createElement('input')
+      input.value = generatedPassword.value
+      document.body.appendChild(input)
+      input.select()
+      document.execCommand('copy')
+      document.body.removeChild(input)
+      passwordCopied.value = true
+      setTimeout(() => { passwordCopied.value = false }, 2000)
+    } catch {
+      handleApiError(new Error('Kopieren fehlgeschlagen'), 'Das Passwort konnte nicht in die Zwischenablage kopiert werden. Bitte manuell kopieren.')
+    }
   }
 }
 
