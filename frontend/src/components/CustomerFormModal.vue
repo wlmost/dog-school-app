@@ -411,11 +411,17 @@ function generatePassword(): string {
   const special = '!@#$%^&*()_+-='
   const all = uppercase + lowercase + digits + special
 
-  // Guarantee at least one character from each required group using secure random
-  const secureRandom = (max: number) => {
+  // Guarantee at least one character from each required group using secure random.
+  // Rejection sampling avoids modulo bias for character selection.
+  const secureRandom = (max: number): number => {
+    const limit = Math.floor(0x100000000 / max) * max
     const arr = new Uint32Array(1)
-    crypto.getRandomValues(arr)
-    return (arr[0] as number) % max
+    let val: number
+    do {
+      crypto.getRandomValues(arr)
+      val = arr[0] as number
+    } while (val >= limit)
+    return val % max
   }
 
   const chars = [
@@ -458,6 +464,7 @@ async function copyPassword() {
       input.value = generatedPassword.value
       document.body.appendChild(input)
       input.select()
+      // execCommand is deprecated but kept as fallback for older browsers
       document.execCommand('copy')
       document.body.removeChild(input)
       passwordCopied.value = true
