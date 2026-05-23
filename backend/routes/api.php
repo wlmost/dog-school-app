@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\CourseController;
+use App\Http\Controllers\Api\CourseRunController;
 use App\Http\Controllers\Api\CreditPackageController;
 use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\CustomerCreditController;
@@ -58,6 +59,8 @@ Route::prefix('v1')->group(function () {
 // Public course detail route (no auth required, rate limited)
 Route::prefix('v1')->middleware('throttle:60,1')->group(function () {
     Route::get('/public/courses/{course}', [CourseController::class, 'publicShow']);
+    // Public course runs (also accessible without auth)
+    Route::get('/public/courses/{course}/runs', [CourseRunController::class, 'index']);
 });
 
 // PayPal webhook - separate without rate limiting (PayPal needs reliable access)
@@ -131,6 +134,11 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::put('/courses/{course}/sessions/{session}', [CourseController::class, 'updateSession']);
     Route::delete('/courses/{course}/sessions/{session}', [CourseController::class, 'destroySession']);
     Route::get('/courses/{course}/participants', [CourseController::class, 'participants']);
+
+    // Course Run Management
+    Route::get('/courses/{course}/runs', [CourseRunController::class, 'index']);
+    Route::post('/courses/{course}/runs', [CourseRunController::class, 'store']);
+    Route::post('/course-runs/{courseRun}/book', [CourseRunController::class, 'book']);
     
     // Anamnesis Template Management
     Route::apiResource('anamnesis-templates', AnamnesisTemplateController::class);

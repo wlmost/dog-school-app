@@ -20,6 +20,14 @@ interface Session {
   status: string
 }
 
+interface CourseRun {
+  id: number
+  startDate: string
+  endDate: string | null
+  status: string
+  sessions: Session[]
+}
+
 interface Dog {
   id: number
   name: string
@@ -40,7 +48,12 @@ const emit = defineEmits<{
   booked: []
 }>()
 
+// Legacy session state (used when no runs are present)
 const sessions = ref<Session[]>([])
+// CourseRun state
+const runs = ref<CourseRun[]>([])
+const selectedRunId = ref<number | null>(null)
+
 const dogs = ref<Dog[]>([])
 const customerId = ref<number | null>(null)
 const selectedSessionIds = ref<Set<number>>(new Set())
@@ -49,6 +62,15 @@ const notes = ref('')
 const loading = ref(false)
 const submitting = ref(false)
 const loadError = ref<string | null>(null)
+
+/** Sessions to display: from the selected run (CourseRun flow) or standalone sessions (legacy flow). */
+const displaySessions = computed<Session[]>(() => {
+  if (runs.value.length > 0) {
+    const run = runs.value.find((r) => r.id === selectedRunId.value)
+    return run?.sessions ?? []
+  }
+  return sessions.value
+})
 
 watch(
   () => props.isOpen,
@@ -61,15 +83,28 @@ watch(
     loading.value = true
     loadError.value = null
     try {
-      const [sessionsRes, profileRes, dogsRes] = await Promise.all([
+      const [sessionsRes, profileRes, dogsRes, runsRes] = await Promise.all([
         apiClient.get(`/api/v1/courses/${props.courseId}/sessions`),
         apiClient.get('/api/v1/customers/profile'),
         apiClient.get('/api/v1/dogs'),
+        apiClient.get(`/api/v1/courses/${props.courseId}/runs`),
       ])
 
-      const allSessions: Session[] = sessionsRes.data.data ?? sessionsRes.data
-      sessions.value = allSessions.filter((s) => s.status === 'scheduled')
-      selectedSessionIds.value = new Set(sessions.value.map((s) => s.id))
+      // CourseRun path: filter to active runs only
+      const allRuns: CourseRun[] = runsRes.data.data ?? runsRes.data
+      runs.value = allRuns.filter((r: CourseRun) => r.status === 'active')
+
+      if (runs.value.length === 1 && runs.value[0]) {
+        // Auto-select the only available run
+        selectedRunId.value = runs.value[0].id
+      }
+
+      // Legacy path: standalone sessions (used only when no runs exist)
+      if (runs.value.length === 0) {
+        const allSessions: Session[] = sessionsRes.data.data ?? sessionsRes.data
+        sessions.value = allSessions.filter((s) => s.status === 'scheduled')
+        selectedSessionIds.value = new Set(sessions.value.map((s) => s.id))
+      }
 
       customerId.value = profileRes.data.data.id
 
@@ -86,12 +121,16 @@ watch(
   },
 )
 
-const canSubmit = computed(
-  () =>
+const canSubmit = computed(() => {
+  if (runs.value.length > 0) {
+    return selectedRunId.value !== null && selectedDogId.value !== null && customerId.value !== null
+  }
+  return (
     selectedSessionIds.value.size > 0 &&
     selectedDogId.value !== null &&
-    customerId.value !== null,
-)
+    customerId.value !== null
+  )
+})
 
 function toggleSession(id: number): void {
   const set = new Set(selectedSessionIds.value)
@@ -109,35 +148,62 @@ function extractErrorMessage(err: unknown): string {
 
 async function handleSubmit(): Promise<void> {
   submitting.value = true
-  let successCount = 0
-  const errors: string[] = []
-  for (const sessionId of selectedSessionIds.value) {
+
+  if (runs.value.length > 0) {
+    // ── CourseRun booking path ──────────────────────────────────────────────
     try {
-      await apiClient.post('/api/v1/bookings', {
-        trainingSessionId: sessionId,
+      const res = await apiClient.post(`/api/v1/course-runs/${selectedRunId.value}/book`, {
         customerId: customerId.value,
         dogId: selectedDogId.value,
         notes: notes.value || undefined,
       })
-      successCount++
+      const skipped: string[] = res.data.skipped ?? []
+      if (skipped.length > 0) {
+        showWarning('Einige Termine übersprungen', skipped.join('\n'))
+      }
+      showSuccess('Buchung erfolgreich', 'Kursdurchlauf erfolgreich gebucht.')
+      emit('booked')
+      resetForm()
+      emit('close')
     } catch (err) {
-      errors.push(`Termin ${sessionId}: ${extractErrorMessage(err)}`)
+      handleApiError(err)
+    } finally {
+      submitting.value = false
     }
-  }
-  submitting.value = false
-  if (successCount > 0) {
-    showSuccess('Buchung erfolgreich', `${successCount} Termin(e) erfolgreich gebucht.`)
-    emit('booked')
-    resetForm()
-    emit('close')
-  }
-  if (errors.length > 0) {
-    showWarning('Einige Termine konnten nicht gebucht werden', errors.join('\n'))
+  } else {
+    // ── Legacy per-session booking path ────────────────────────────────────
+    let successCount = 0
+    const errors: string[] = []
+    for (const sessionId of selectedSessionIds.value) {
+      try {
+        await apiClient.post('/api/v1/bookings', {
+          trainingSessionId: sessionId,
+          customerId: customerId.value,
+          dogId: selectedDogId.value,
+          notes: notes.value || undefined,
+        })
+        successCount++
+      } catch (err) {
+        errors.push(`Termin ${sessionId}: ${extractErrorMessage(err)}`)
+      }
+    }
+    submitting.value = false
+    if (successCount > 0) {
+      showSuccess('Buchung erfolgreich', `${successCount} Termin(e) erfolgreich gebucht.`)
+      emit('booked')
+      resetForm()
+      emit('close')
+    }
+    if (errors.length > 0) {
+      showWarning('Einige Termine konnten nicht gebucht werden', errors.join('\n'))
+    }
   }
 }
 
 function resetForm(): void {
   sessions.value = []
+  runs.value = []
+  selectedRunId.value = null
   dogs.value = []
   customerId.value = null
   selectedSessionIds.value = new Set()
@@ -154,6 +220,13 @@ function formatSessionDate(dateStr: string): string {
 function formatTime(timeStr: string | null): string {
   if (!timeStr) return ''
   return timeStr.slice(0, 5)
+}
+
+function formatRunLabel(run: CourseRun): string {
+  const start = formatSessionDate(run.startDate)
+  if (!run.endDate) return `ab ${start}`
+  const end = formatSessionDate(run.endDate)
+  return `${start} – ${end}`
 }
 </script>
 
@@ -212,8 +285,8 @@ function formatTime(timeStr: string | null): string {
                 </div>
               </div>
 
-              <!-- Keine buchbaren Termine -->
-              <div v-else-if="sessions.length === 0" class="py-4">
+              <!-- Keine buchbaren Termine (nur im Legacy-Pfad ohne Runs) -->
+              <div v-else-if="runs.length === 0 && sessions.length === 0" class="py-4">
                 <p class="text-gray-500 text-sm mb-4">
                   Keine buchbaren Termine verfügbar.
                 </p>
@@ -230,8 +303,51 @@ function formatTime(timeStr: string | null): string {
 
               <!-- Formular -->
               <form v-else @submit.prevent="handleSubmit" class="space-y-4">
+
+                <!-- ── CourseRun-Pfad ──────────────────────────────────── -->
+
+                <!-- Kursdurchlauf-Auswahl (nur wenn Runs vorhanden) -->
+                <div v-if="runs.length > 0">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Kursdurchlauf *
+                  </label>
+                  <select v-model="selectedRunId" required class="input">
+                    <option :value="null">Durchlauf auswählen...</option>
+                    <option v-for="run in runs" :key="run.id" :value="run.id">
+                      {{ formatRunLabel(run) }}
+                    </option>
+                  </select>
+                </div>
+
+                <!-- Enthaltene Termine des gewählten Durchlaufs (read-only) -->
+                <div v-if="runs.length > 0 && selectedRunId !== null">
+                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                    Enthaltene Termine
+                  </label>
+                  <ul class="space-y-1 rounded-lg border border-gray-200 p-3 bg-gray-50">
+                    <li v-if="displaySessions.length === 0" class="text-sm text-gray-500">
+                      Keine Termine in diesem Durchlauf.
+                    </li>
+                    <li
+                      v-for="session in displaySessions"
+                      :key="session.id"
+                      class="text-sm text-gray-800"
+                    >
+                      {{ formatSessionDate(session.sessionDate) }}
+                      <span v-if="session.startTime">
+                        {{ formatTime(session.startTime) }} – {{ formatTime(session.endTime) }}
+                      </span>
+                      <span v-if="session.location" class="text-gray-500">
+                        · {{ session.location }}
+                      </span>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- ── Legacy-Pfad (keine Runs) ───────────────────────── -->
+
                 <!-- Session-Auswahl -->
-                <div>
+                <div v-if="runs.length === 0">
                   <label class="block text-sm font-medium text-gray-700 mb-2">
                     Termine
                   </label>

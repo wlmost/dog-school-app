@@ -32,6 +32,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read User $trainer
  * @property-read \Illuminate\Database\Eloquent\Collection<int, TrainingSession> $sessions
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, CourseRun> $runs
  */
 class Course extends Model
 {
@@ -93,6 +94,16 @@ class Course extends Model
     public function sessions(): HasMany
     {
         return $this->hasMany(TrainingSession::class);
+    }
+
+    /**
+     * Get all course runs for this course.
+     *
+     * @return HasMany<CourseRun>
+     */
+    public function runs(): HasMany
+    {
+        return $this->hasMany(CourseRun::class);
     }
 
     /**

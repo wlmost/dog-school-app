@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int $training_session_id
  * @property int $customer_id
  * @property int $dog_id
+ * @property int|null $course_run_id
  * @property string $status
  * @property \Illuminate\Support\Carbon $booking_date
  * @property bool|null $attended
@@ -28,6 +29,7 @@ use Illuminate\Support\Carbon;
  * @property-read TrainingSession $session
  * @property-read Customer $customer
  * @property-read Dog $dog
+ * @property-read CourseRun|null $courseRun
  */
 class Booking extends Model
 {
@@ -42,6 +44,7 @@ class Booking extends Model
         'training_session_id',
         'customer_id',
         'dog_id',
+        'course_run_id',
         'status',
         'booking_date',
         'attended',
@@ -94,6 +97,16 @@ class Booking extends Model
     public function dog(): BelongsTo
     {
         return $this->belongsTo(Dog::class);
+    }
+
+    /**
+     * Get the course run this booking was made as part of (if any).
+     *
+     * @return BelongsTo<CourseRun, Booking>
+     */
+    public function courseRun(): BelongsTo
+    {
+        return $this->belongsTo(CourseRun::class);
     }
 
     /**
