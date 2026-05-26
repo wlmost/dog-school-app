@@ -11,6 +11,7 @@ use App\Http\Requests\StoreCourseSessionRequest;
 use App\Http\Requests\UpdateCourseRequest;
 use App\Http\Requests\UpdateCourseSessionRequest;
 use App\Http\Resources\CourseResource;
+use App\Http\Resources\CourseRunResource;
 use App\Http\Resources\TrainingSessionResource;
 use App\Models\Course;
 use App\Models\TrainingSession;
@@ -387,6 +388,8 @@ class CourseController extends Controller
         $course->load([
             'trainer',
             'sessions' => fn ($query) => $query->orderBy('session_date'),
+            'runs'     => fn ($query) => $query->where('status', 'active')->orderBy('start_date'),
+            'runs.sessions' => fn ($query) => $query->orderBy('session_date'),
         ]);
 
         return response()->json([
@@ -416,6 +419,7 @@ class CourseController extends Controller
                     'maxParticipants'=> $s->max_participants,
                     'status'         => $s->status,
                 ]),
+                'runs' => CourseRunResource::collection($course->runs),
             ],
         ]);
     }

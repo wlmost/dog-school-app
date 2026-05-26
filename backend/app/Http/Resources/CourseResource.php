@@ -36,6 +36,7 @@ class CourseResource extends JsonResource
             
             'trainer' => new UserResource($this->whenLoaded('trainer')),
             'sessions' => TrainingSessionResource::collection($this->whenLoaded('sessions')),
+            'runs' => CourseRunResource::collection($this->whenLoaded('runs')),
         ];
     }
 }

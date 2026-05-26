@@ -3,7 +3,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { nextTick } from 'vue'
 import CustomerBookingModal from '@/components/CustomerBookingModal.vue'
 import apiClient from '@/api/client'
-import { showSuccess } from '@/utils/errorHandler'
+import { showSuccess, showWarning } from '@/utils/errorHandler'
 
 vi.mock('@/api/client', () => ({
   default: {
@@ -36,6 +36,13 @@ const mockSession2 = {
   status: 'scheduled',
 }
 const mockDog = { id: 1, name: 'Rex' }
+const mockRun = {
+  id: 10,
+  startDate: '2026-05-01',
+  endDate: '2026-06-30',
+  status: 'active',
+  sessions: [mockSession1, mockSession2],
+}
 
 // HeadlessUI-Stubs: TransitionRoot respektiert show-Prop; restliche Komponenten
 // rendern den Slot direkt, ohne Transitions-Overhead im Test.
@@ -72,7 +79,10 @@ function mountModal(props: Record<string, unknown> = {}) {
   })
 }
 
-/** Standard-Mocks: 1 Session (scheduled), customerId 42, 1 Hund (Rex) */
+/**
+ * Standard-Mocks (Legacy-Pfad):
+ * 1 Session (scheduled), customerId 42, 1 Hund (Rex), keine Runs → Legacy-Pfad
+ */
 function setupDefaultMocks(): void {
   vi.mocked(apiClient.get).mockImplementation((url: string) => {
     if (url.includes('/sessions'))
@@ -81,6 +91,25 @@ function setupDefaultMocks(): void {
       return Promise.resolve({ data: { data: { id: 42 } } })
     if (url.includes('/dogs'))
       return Promise.resolve({ data: { data: [mockDog] } })
+    if (url.includes('/runs'))
+      return Promise.resolve({ data: { data: [] } })
+    return Promise.reject(new Error(`Unerwartete URL: ${url}`))
+  })
+}
+
+/**
+ * CourseRun-Mocks: 1 aktiver Run mit 2 Sessions, customerId 42, 1 Hund (Rex)
+ */
+function setupRunMocks(runs = [mockRun]): void {
+  vi.mocked(apiClient.get).mockImplementation((url: string) => {
+    if (url.includes('/sessions'))
+      return Promise.resolve({ data: { data: [] } })
+    if (url.includes('/profile'))
+      return Promise.resolve({ data: { data: { id: 42 } } })
+    if (url.includes('/dogs'))
+      return Promise.resolve({ data: { data: [mockDog] } })
+    if (url.includes('/runs'))
+      return Promise.resolve({ data: { data: runs } })
     return Promise.reject(new Error(`Unerwartete URL: ${url}`))
   })
 }
@@ -127,6 +156,7 @@ describe('CustomerBookingModal', () => {
         if (url.includes('/sessions')) return Promise.resolve({ data: { data: [] } })
         if (url.includes('/profile')) return Promise.resolve({ data: { data: { id: 42 } } })
         if (url.includes('/dogs')) return Promise.resolve({ data: { data: [mockDog] } })
+        if (url.includes('/runs')) return Promise.resolve({ data: { data: [] } })
         return Promise.reject(new Error(`Unerwartete URL: ${url}`))
       })
 
@@ -149,7 +179,7 @@ describe('CustomerBookingModal', () => {
   })
 
   // ------------------------------------------------------------------ //
-  // Session-Anzeige                                                      //
+  // Session-Anzeige (Legacy-Pfad, keine Runs)                            //
   // ------------------------------------------------------------------ //
   describe('Session-Anzeige', () => {
     it('zeigt bei einer Session die Info-Anzeige ohne Checkbox an', async () => {
@@ -171,6 +201,8 @@ describe('CustomerBookingModal', () => {
           return Promise.resolve({ data: { data: { id: 42 } } })
         if (url.includes('/dogs'))
           return Promise.resolve({ data: { data: [mockDog] } })
+        if (url.includes('/runs'))
+          return Promise.resolve({ data: { data: [] } })
         return Promise.reject(new Error(`Unerwartete URL: ${url}`))
       })
 
@@ -210,6 +242,8 @@ describe('CustomerBookingModal', () => {
           return Promise.resolve({ data: { data: { id: 42 } } })
         if (url.includes('/dogs'))
           return Promise.resolve({ data: { data: [mockDog, mockDog2] } })
+        if (url.includes('/runs'))
+          return Promise.resolve({ data: { data: [] } })
         return Promise.reject(new Error(`Unerwartete URL: ${url}`))
       })
 
@@ -226,7 +260,7 @@ describe('CustomerBookingModal', () => {
   })
 
   // ------------------------------------------------------------------ //
-  // Submit-Button                                                         //
+  // Submit-Button (Legacy-Pfad)                                          //
   // ------------------------------------------------------------------ //
   describe('Submit-Button', () => {
     it('deaktiviert den Buchen-Button wenn keine Session ausgewählt ist', async () => {
@@ -237,6 +271,8 @@ describe('CustomerBookingModal', () => {
           return Promise.resolve({ data: { data: { id: 42 } } })
         if (url.includes('/dogs'))
           return Promise.resolve({ data: { data: [mockDog] } })
+        if (url.includes('/runs'))
+          return Promise.resolve({ data: { data: [] } })
         return Promise.reject(new Error(`Unerwartete URL: ${url}`))
       })
 
@@ -264,6 +300,8 @@ describe('CustomerBookingModal', () => {
         // Zwei Hunde → kein Auto-Select → selectedDogId bleibt null
         if (url.includes('/dogs'))
           return Promise.resolve({ data: { data: [mockDog, { id: 2, name: 'Bella' }] } })
+        if (url.includes('/runs'))
+          return Promise.resolve({ data: { data: [] } })
         return Promise.reject(new Error(`Unerwartete URL: ${url}`))
       })
 
@@ -289,7 +327,7 @@ describe('CustomerBookingModal', () => {
   })
 
   // ------------------------------------------------------------------ //
-  // Emits                                                                 //
+  // Emits (Legacy-Pfad)                                                  //
   // ------------------------------------------------------------------ //
   describe('Emits', () => {
     it('emittiert close beim Klick auf den Abbrechen-Button', async () => {
@@ -319,6 +357,135 @@ describe('CustomerBookingModal', () => {
       expect(wrapper.emitted('booked')).toBeTruthy()
       expect(wrapper.emitted('close')).toBeTruthy()
       expect(vi.mocked(showSuccess)).toHaveBeenCalled()
+    })
+  })
+
+  // ------------------------------------------------------------------ //
+  // CourseRun-Pfad                                                        //
+  // ------------------------------------------------------------------ //
+  describe('CourseRun-Pfad', () => {
+    it('zeigt das Run-Dropdown wenn aktive Runs vorhanden sind', async () => {
+      setupRunMocks()
+
+      const wrapper = mountModal()
+      await wrapper.setProps({ isOpen: true })
+      await flushPromises()
+
+      expect(wrapper.text()).toContain('Kursdurchlauf')
+      // Run-Dropdown enthält den formatierten Label
+      expect(wrapper.text()).toContain('01.05.2026 – 30.06.2026')
+    })
+
+    it('selektiert automatisch den einzigen Run und zeigt dessen Termine an', async () => {
+      setupRunMocks()
+
+      const wrapper = mountModal()
+      await wrapper.setProps({ isOpen: true })
+      await flushPromises()
+
+      // Der einzige Run wird auto-selektiert → Termine werden angezeigt
+      expect(wrapper.text()).toContain('Enthaltene Termine')
+      expect(wrapper.text()).toContain('20.05.2026')
+      expect(wrapper.text()).toContain('27.05.2026')
+    })
+
+    it('zeigt keine Checkboxen im CourseRun-Pfad', async () => {
+      setupRunMocks()
+
+      const wrapper = mountModal()
+      await wrapper.setProps({ isOpen: true })
+      await flushPromises()
+
+      expect(wrapper.find('input[type="checkbox"]').exists()).toBe(false)
+    })
+
+    it('formatiert Runs ohne endDate als "ab DD.MM.YYYY"', async () => {
+      const runWithoutEnd = { ...mockRun, endDate: null }
+      setupRunMocks([runWithoutEnd])
+
+      const wrapper = mountModal()
+      await wrapper.setProps({ isOpen: true })
+      await flushPromises()
+
+      expect(wrapper.text()).toContain('ab 01.05.2026')
+    })
+
+    it('ignoriert inaktive Runs und fällt auf Legacy-Pfad zurück wenn keine aktiven Runs übrig bleiben', async () => {
+      const inactiveRun = { ...mockRun, status: 'draft' }
+      vi.mocked(apiClient.get).mockImplementation((url: string) => {
+        if (url.includes('/sessions'))
+          return Promise.resolve({ data: { data: [mockSession1] } })
+        if (url.includes('/profile'))
+          return Promise.resolve({ data: { data: { id: 42 } } })
+        if (url.includes('/dogs'))
+          return Promise.resolve({ data: { data: [mockDog] } })
+        if (url.includes('/runs'))
+          return Promise.resolve({ data: { data: [inactiveRun] } })
+        return Promise.reject(new Error(`Unerwartete URL: ${url}`))
+      })
+
+      const wrapper = mountModal()
+      await wrapper.setProps({ isOpen: true })
+      await flushPromises()
+
+      // Kein Run-Dropdown → Legacy-Pfad mit Sessions
+      expect(wrapper.text()).not.toContain('Kursdurchlauf')
+      expect(wrapper.text()).toContain('20.05.2026')
+    })
+
+    it('deaktiviert den Buchen-Button wenn kein Run ausgewählt ist (mehrere Runs)', async () => {
+      const run2 = { ...mockRun, id: 11, startDate: '2026-07-01', endDate: '2026-08-31' }
+      setupRunMocks([mockRun, run2])
+
+      const wrapper = mountModal()
+      await wrapper.setProps({ isOpen: true })
+      await flushPromises()
+
+      // Zwei Runs → kein Auto-Select → Button disabled
+      const submitBtn = wrapper.find('button[type="submit"]')
+      expect(submitBtn.attributes('disabled')).toBeDefined()
+    })
+
+    it('ruft POST /api/v1/course-runs/{id}/book nach erfolgreicher CourseRun-Buchung auf', async () => {
+      setupRunMocks()
+      vi.mocked(apiClient.post).mockResolvedValue({ data: { skipped: [] } })
+
+      const wrapper = mountModal()
+      await wrapper.setProps({ isOpen: true })
+      await flushPromises()
+
+      await wrapper.find('form').trigger('submit')
+      await flushPromises()
+
+      expect(vi.mocked(apiClient.post)).toHaveBeenCalledWith(
+        '/api/v1/course-runs/10/book',
+        expect.objectContaining({
+          customerId: 42,
+          dogId: mockDog.id,
+        }),
+      )
+      expect(wrapper.emitted('booked')).toBeTruthy()
+      expect(wrapper.emitted('close')).toBeTruthy()
+      expect(vi.mocked(showSuccess)).toHaveBeenCalled()
+    })
+
+    it('zeigt eine Warnung wenn Buchung übersprungene Termine enthält', async () => {
+      setupRunMocks()
+      vi.mocked(apiClient.post).mockResolvedValue({
+        data: { skipped: ['20.05.2026 bereits gebucht'] },
+      })
+
+      const wrapper = mountModal()
+      await wrapper.setProps({ isOpen: true })
+      await flushPromises()
+
+      await wrapper.find('form').trigger('submit')
+      await flushPromises()
+
+      expect(vi.mocked(showWarning)).toHaveBeenCalledWith(
+        'Einige Termine übersprungen',
+        '20.05.2026 bereits gebucht',
+      )
     })
   })
 })

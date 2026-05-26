@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property int $id
  * @property int|null $course_id
+ * @property int|null $course_run_id
  * @property int $trainer_id
  * @property \Illuminate\Support\Carbon $session_date
  * @property string $start_time
@@ -27,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read Course|null $course
+ * @property-read CourseRun|null $courseRun
  * @property-read User $trainer
  * @property-read \Illuminate\Database\Eloquent\Collection<int, Booking> $bookings
  * @property-read \Illuminate\Database\Eloquent\Collection<int, TrainingLog> $trainingLogs
@@ -42,6 +44,7 @@ class TrainingSession extends Model
      */
     protected $fillable = [
         'course_id',
+        'course_run_id',
         'trainer_id',
         'session_date',
         'start_time',
@@ -73,6 +76,16 @@ class TrainingSession extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    /**
+     * Get the course run this session belongs to (if any).
+     *
+     * @return BelongsTo<CourseRun, TrainingSession>
+     */
+    public function courseRun(): BelongsTo
+    {
+        return $this->belongsTo(CourseRun::class);
     }
 
     /**
