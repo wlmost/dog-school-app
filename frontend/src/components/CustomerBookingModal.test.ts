@@ -36,7 +36,13 @@ const mockSession2 = {
   status: 'scheduled',
 }
 const mockDog = { id: 1, name: 'Rex' }
-const mockRun = {
+const mockRun: {
+  id: number
+  startDate: string
+  endDate: string | null
+  status: string
+  sessions: typeof mockSession1[]
+} = {
   id: 10,
   startDate: '2026-05-01',
   endDate: '2026-06-30',
