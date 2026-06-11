@@ -3,7 +3,7 @@
     <!-- Header Actions -->
     <div class="flex justify-between items-center">
       <div class="flex gap-4">
-        <select v-model="filterStatus" @change="loadInvoices" class="input max-w-xs">
+        <select v-model="filterStatus" @change="onFilterChange" class="input max-w-xs">
           <option :value="null">Alle Rechnungen</option>
           <option value="draft">Entwurf</option>
           <option value="sent">Versendet</option>
@@ -82,6 +82,15 @@
       </div>
     </div>
 
+    <!-- Pagination -->
+    <PaginationControls
+      v-if="!loading"
+      :current-page="currentPage"
+      :last-page="lastPage"
+      :total="total"
+      @update:current-page="goToPage"
+    />
+
     <!-- Invoice Form Modal -->
     <InvoiceFormModal 
       :is-open="showFormModal" 
@@ -107,8 +116,10 @@ import { ref, onMounted } from 'vue'
 import apiClient from '@/api/client'
 import InvoiceFormModal from '@/components/InvoiceFormModal.vue'
 import InvoiceDetailModal from '@/components/InvoiceDetailModal.vue'
+import PaginationControls from '@/components/PaginationControls.vue'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
 import { useAuthStore } from '@/stores/auth'
+import { usePagination } from '@/composables/usePagination'
 
 const authStore = useAuthStore()
 
@@ -119,6 +130,8 @@ const showFormModal = ref(false)
 const showDetailModal = ref(false)
 const selectedInvoice = ref<any>(null)
 
+const { currentPage, lastPage, total, updateFromMeta, resetPage } = usePagination()
+
 onMounted(() => {
   loadInvoices()
 })
@@ -126,18 +139,31 @@ onMounted(() => {
 async function loadInvoices() {
   loading.value = true
   try {
-    const params: any = {}
+    const params: any = { page: currentPage.value }
     if (filterStatus.value) {
       params.status = filterStatus.value
     }
     
     const response = await apiClient.get('/api/v1/invoices', { params })
     invoices.value = response.data.data
+    if (response.data.meta) {
+      updateFromMeta(response.data.meta)
+    }
   } catch (error) {
     console.error('Error loading invoices:', error)
   } finally {
     loading.value = false
   }
+}
+
+function goToPage(page: number): void {
+  currentPage.value = page
+  loadInvoices()
+}
+
+function onFilterChange(): void {
+  resetPage()
+  loadInvoices()
 }
 
 function openCreateModal() {

@@ -73,6 +73,15 @@
       </div>
     </div>
 
+    <!-- Pagination -->
+    <PaginationControls
+      v-if="!loading"
+      :current-page="currentPage"
+      :last-page="lastPage"
+      :total="total"
+      @update:current-page="goToPage"
+    />
+
     <!-- Customer Form Modal -->
     <CustomerFormModal 
       :is-open="showFormModal" 
@@ -97,7 +106,9 @@ import apiClient from '@/api/client'
 import CustomerFormModal from '@/components/CustomerFormModal.vue'
 import CustomerDetailModal from '@/components/CustomerDetailModal.vue'
 import SearchInput from '@/components/SearchInput.vue'
+import PaginationControls from '@/components/PaginationControls.vue'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
+import { usePagination } from '@/composables/usePagination'
 
 const loading = ref(true)
 const searchQuery = ref('')
@@ -106,29 +117,40 @@ const showFormModal = ref(false)
 const showDetailModal = ref(false)
 const selectedCustomer = ref<any>(null)
 
+const { currentPage, lastPage, total, updateFromMeta, resetPage } = usePagination()
+
 onMounted(() => {
   loadCustomers()
 })
 
 watch(searchQuery, () => {
+  resetPage()
   loadCustomers()
 })
 
 async function loadCustomers() {
   loading.value = true
   try {
-    const params: any = {}
+    const params: any = { page: currentPage.value }
     if (searchQuery.value) {
       params.search = searchQuery.value
     }
     
     const response = await apiClient.get('/api/v1/customers', { params })
     customers.value = response.data.data
+    if (response.data.meta) {
+      updateFromMeta(response.data.meta)
+    }
   } catch (error) {
     console.error('Error loading customers:', error)
   } finally {
     loading.value = false
   }
+}
+
+function goToPage(page: number): void {
+  currentPage.value = page
+  loadCustomers()
 }
 
 function openCreateModal() {

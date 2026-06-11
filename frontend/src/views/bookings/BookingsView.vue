@@ -3,7 +3,7 @@
     <!-- Header Actions -->
     <div class="flex justify-between items-center">
       <div class="flex gap-4">
-        <select v-model="filterStatus" @change="loadBookings" class="input max-w-xs">
+        <select v-model="filterStatus" @change="onFilterChange" class="input max-w-xs">
           <option :value="null">Alle Buchungen</option>
           <option value="confirmed">Bestätigt</option>
           <option value="pending">Ausstehend</option>
@@ -129,6 +129,15 @@
       </div>
     </div>
 
+    <!-- Pagination -->
+    <PaginationControls
+      v-if="!loading"
+      :current-page="currentPage"
+      :last-page="lastPage"
+      :total="total"
+      @update:current-page="goToPage"
+    />
+
     <!-- Booking Form Modal (trainer only) -->
     <BookingFormModal
       v-if="isTrainer"
@@ -165,8 +174,10 @@
 import { ref, onMounted, computed } from 'vue'
 import apiClient from '@/api/client'
 import BookingFormModal from '@/components/BookingFormModal.vue'
+import PaginationControls from '@/components/PaginationControls.vue'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
 import { useAuthStore } from '@/stores/auth'
+import { usePagination } from '@/composables/usePagination'
 
 const authStore = useAuthStore()
 const isCustomer = computed(() => authStore.user?.role === 'customer')
@@ -179,6 +190,8 @@ const showFormModal = ref(false)
 const selectedBooking = ref<any>(null)
 const showDeadlineModal = ref(false)
 
+const { currentPage, lastPage, total, updateFromMeta, resetPage } = usePagination()
+
 onMounted(() => {
   loadBookings()
 })
@@ -186,18 +199,31 @@ onMounted(() => {
 async function loadBookings() {
   loading.value = true
   try {
-    const params: any = {}
+    const params: any = { page: currentPage.value }
     if (filterStatus.value) {
       params.status = filterStatus.value
     }
     
     const response = await apiClient.get('/api/v1/bookings', { params })
     bookings.value = response.data.data
+    if (response.data.meta) {
+      updateFromMeta(response.data.meta)
+    }
   } catch (error) {
     console.error('Error loading bookings:', error)
   } finally {
     loading.value = false
   }
+}
+
+function goToPage(page: number): void {
+  currentPage.value = page
+  loadBookings()
+}
+
+function onFilterChange(): void {
+  resetPage()
+  loadBookings()
 }
 
 function openCreateModal() {

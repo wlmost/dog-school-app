@@ -82,6 +82,15 @@
       </div>
     </div>
 
+    <!-- Pagination -->
+    <PaginationControls
+      v-if="!loading"
+      :current-page="currentPage"
+      :last-page="lastPage"
+      :total="total"
+      @update:current-page="goToPage"
+    />
+
     <!-- Dog Form Modal -->
     <DogFormModal
       :is-open="showFormModal"
@@ -107,7 +116,9 @@ import DogFormModal from '@/components/DogFormModal.vue'
 import CustomerDogRequestModal from '@/components/CustomerDogRequestModal.vue'
 import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import SearchInput from '@/components/SearchInput.vue'
+import PaginationControls from '@/components/PaginationControls.vue'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
+import { usePagination } from '@/composables/usePagination'
 
 const authStore = useAuthStore()
 const user = computed(() => authStore.user)
@@ -119,29 +130,40 @@ const showFormModal = ref(false)
 const selectedDog = ref<any>(null)
 const showCustomerRequestModal = ref(false)
 
+const { currentPage, lastPage, total, updateFromMeta, resetPage } = usePagination()
+
 onMounted(() => {
   loadDogs()
 })
 
 watch(searchQuery, () => {
+  resetPage()
   loadDogs()
 })
 
 async function loadDogs() {
   loading.value = true
   try {
-    const params: any = {}
+    const params: any = { page: currentPage.value }
     if (searchQuery.value) {
       params.search = searchQuery.value
     }
     
     const response = await apiClient.get('/api/v1/dogs', { params })
     dogs.value = response.data.data
+    if (response.data.meta) {
+      updateFromMeta(response.data.meta)
+    }
   } catch (error) {
     console.error('Error loading dogs:', error)
   } finally {
     loading.value = false
   }
+}
+
+function goToPage(page: number): void {
+  currentPage.value = page
+  loadDogs()
 }
 
 function openCreateModal() {

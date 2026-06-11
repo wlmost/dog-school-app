@@ -8,7 +8,7 @@
           placeholder="Kurse suchen..."
           class="flex-1"
         />
-        <select v-model="filterStatus" @change="loadCourses" class="input max-w-xs">
+        <select v-model="filterStatus" @change="onFilterChange" class="input max-w-xs">
           <option :value="null">Alle Kurse</option>
           <option value="active">Aktive Kurse</option>
           <option value="planned">Geplante Kurse</option>
@@ -113,6 +113,15 @@
       </div>
     </div>
 
+    <!-- Pagination -->
+    <PaginationControls
+      v-if="!loading"
+      :current-page="currentPage"
+      :last-page="lastPage"
+      :total="total"
+      @update:current-page="goToPage"
+    />
+
     <!-- Course Form Modal -->
     <CourseFormModal 
       :is-open="showFormModal" 
@@ -138,9 +147,11 @@ import apiClient from '@/api/client'
 import CourseFormModal from '@/components/CourseFormModal.vue'
 import CustomerBookingModal from '@/components/CustomerBookingModal.vue'
 import SearchInput from '@/components/SearchInput.vue'
+import PaginationControls from '@/components/PaginationControls.vue'
 import { useAuthStore } from '@/stores/auth'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
 import DOMPurify from 'dompurify'
+import { usePagination } from '@/composables/usePagination'
 
 const loading = ref(true)
 const filterStatus = ref<string | null>(null)
@@ -148,6 +159,8 @@ const searchQuery = ref('')
 const courses = ref<any[]>([])
 const showFormModal = ref(false)
 const selectedCourse = ref<any>(null)
+
+const { currentPage, lastPage, total, updateFromMeta, resetPage } = usePagination()
 
 const authStore = useAuthStore()
 const isTrainerOrAdmin = computed(() => authStore.isAuthenticated && authStore.isTrainer)
@@ -165,6 +178,7 @@ onMounted(() => {
 })
 
 watch(searchQuery, () => {
+  resetPage()
   loadCourses()
 })
 
@@ -202,7 +216,7 @@ async function onBookingCompleted(): Promise<void> {
 async function loadCourses() {
   loading.value = true
   try {
-    const params: any = {}
+    const params: any = { page: currentPage.value }
     if (filterStatus.value) {
       params.status = filterStatus.value
     }
@@ -212,12 +226,25 @@ async function loadCourses() {
     
     const response = await apiClient.get('/api/v1/courses', { params })
     courses.value = response.data.data || []
+    if (response.data.meta) {
+      updateFromMeta(response.data.meta)
+    }
   } catch (error) {
     handleApiError(error, 'Fehler beim Laden der Kurse')
     courses.value = []
   } finally {
     loading.value = false
   }
+}
+
+function goToPage(page: number): void {
+  currentPage.value = page
+  loadCourses()
+}
+
+function onFilterChange(): void {
+  resetPage()
+  loadCourses()
 }
 
 function openCreateModal() {
