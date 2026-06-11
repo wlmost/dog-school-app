@@ -87,10 +87,11 @@
         </div>
 
         <div class="flex space-x-2 pt-4 border-t border-gray-200">
-          <!-- Trainer: Bearbeiten + Löschen -->
+          <!-- Trainer/Admin: Bearbeiten -->
           <template v-if="isTrainerOrAdmin">
             <button @click="editCourse(course)" class="btn btn-primary flex-1">Bearbeiten</button>
-            <button @click="deleteCourse(course)" class="btn bg-red-100 hover:bg-red-200 text-red-700 flex-1">Löschen</button>
+            <!-- Admin only: Löschen -->
+            <button v-if="isAdmin" @click="deleteCourse(course)" class="btn bg-red-100 hover:bg-red-200 text-red-700 flex-1">Löschen</button>
           </template>
           <!-- Kunde: Buchen oder bereits gebucht -->
           <template v-else-if="isCustomer">
@@ -150,6 +151,7 @@ const selectedCourse = ref<any>(null)
 
 const authStore = useAuthStore()
 const isTrainerOrAdmin = computed(() => authStore.isAuthenticated && authStore.isTrainer)
+const isAdmin = computed(() => authStore.isAuthenticated && authStore.isAdmin)
 const isCustomer = computed(() => authStore.isAuthenticated && authStore.isCustomer)
 const bookedCourseIds = ref<Set<number>>(new Set())
 const showBookingModal = ref(false)
