@@ -573,10 +573,9 @@ php artisan storage:link
 chmod -R 775 storage bootstrap/cache
 ```
 
-### 5. Datenbank migrieren und seeden
+### 5. Datenbank migrieren
 ```bash
 php artisan migrate --force
-php artisan db:seed --force
 ```
 
 ### 6. Caches erstellen
@@ -978,7 +977,7 @@ echo "Deployment completed!"
 - [ ] `.env` mit Production-Werten konfiguriert
 - [ ] `APP_DEBUG=false` gesetzt
 - [ ] `APP_ENV=production` gesetzt
-- [ ] Datenbank migriert und geseeded
+- [ ] Datenbank migriert
 - [ ] Storage-Link erstellt
 - [ ] Caches generiert (config, route, view)
 - [ ] Cron-Jobs eingerichtet

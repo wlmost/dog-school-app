@@ -14,31 +14,37 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Create Admin User
-        User::factory()->create([
-            'first_name' => 'Admin',
-            'last_name' => 'User',
-            'email' => 'admin@example.com',
-            'password' => bcrypt('password'),
-            'role' => 'admin',
-        ]);
+        User::firstOrCreate(
+            ['email' => 'admin@example.com'],
+            [
+                'first_name' => 'Admin',
+                'last_name' => 'User',
+                'password' => bcrypt('password'),
+                'role' => 'admin',
+            ]
+        );
 
         // Create Trainer User
-        User::factory()->create([
-            'first_name' => 'Trainer',
-            'last_name' => 'User',
-            'email' => 'trainer@example.com',
-            'password' => bcrypt('password'),
-            'role' => 'trainer',
-        ]);
+        User::firstOrCreate(
+            ['email' => 'trainer@example.com'],
+            [
+                'first_name' => 'Trainer',
+                'last_name' => 'User',
+                'password' => bcrypt('password'),
+                'role' => 'trainer',
+            ]
+        );
 
         // Create Customer User
-        User::factory()->create([
-            'first_name' => 'Customer',
-            'last_name' => 'User',
-            'email' => 'customer@example.com',
-            'password' => bcrypt('password'),
-            'role' => 'customer',
-        ]);
+        User::firstOrCreate(
+            ['email' => 'customer@example.com'],
+            [
+                'first_name' => 'Customer',
+                'last_name' => 'User',
+                'password' => bcrypt('password'),
+                'role' => 'customer',
+            ]
+        );
 
         // Seed anamnesis templates
         $this->call(AnamnesisTemplateSeeder::class);
