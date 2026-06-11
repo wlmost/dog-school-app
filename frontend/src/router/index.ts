@@ -1,6 +1,16 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useToastStore } from '@/stores/toast'
 import type { RouteRecordRaw } from 'vue-router'
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    title?: string
+    requiresAuth?: boolean
+    requiresAdmin?: boolean
+    requiresRole?: 'admin' | 'trainer' | 'customer'
+  }
+}
 
 const routes: RouteRecordRaw[] = [
   // Public routes with PublicLayout
@@ -146,6 +156,7 @@ const router = createRouter({
 // Navigation Guard for Authentication
 router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore()
+  const toastStore = useToastStore()
   
   // Set page title
   document.title = to.meta.title as string || 'Hundeschule HomoCanis'
@@ -165,6 +176,28 @@ router.beforeEach(async (to, _from, next) => {
   // Redirect logged-in users trying to access login page to dashboard
   if (to.name === 'Login' && authStore.isAuthenticated) {
     return next({ name: 'Dashboard' })
+  }
+
+  // Check if route requires admin role
+  if (to.meta.requiresAdmin && !authStore.isAdmin) {
+    toastStore.warning('Kein Zugriff', 'Diese Seite ist nur für Administratoren zugänglich.')
+    return next({ name: 'Dashboard' })
+  }
+
+  // Check if route requires a specific role
+  if (to.meta.requiresRole) {
+    const requiredRole = to.meta.requiresRole
+    const userRole = authStore.user?.role
+    if (!userRole) {
+      // User object missing despite passing auth check – send back to Login
+      return next({ name: 'Login', query: { redirect: to.fullPath } })
+    }
+    // Admin always has access; other roles must match exactly
+    const hasRole = userRole === 'admin' || userRole === requiredRole
+    if (!hasRole) {
+      toastStore.warning('Kein Zugriff', 'Sie haben keine Berechtigung für diese Seite.')
+      return next({ name: 'Dashboard' })
+    }
   }
 
   next()
