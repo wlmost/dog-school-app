@@ -49,6 +49,16 @@ function mockTrainerAuth(): void {
   vi.mocked(useAuthStore).mockReturnValue({
     isAuthenticated: true,
     isTrainer: true,
+    isAdmin: false,
+    isCustomer: false,
+  } as any)
+}
+
+function mockAdminAuth(): void {
+  vi.mocked(useAuthStore).mockReturnValue({
+    isAuthenticated: true,
+    isTrainer: true,
+    isAdmin: true,
     isCustomer: false,
   } as any)
 }
@@ -57,6 +67,7 @@ function mockCustomerAuth(): void {
   vi.mocked(useAuthStore).mockReturnValue({
     isAuthenticated: true,
     isTrainer: false,
+    isAdmin: false,
     isCustomer: true,
   } as any)
 }
@@ -102,8 +113,33 @@ describe('CoursesView', () => {
       expect(wrapper.text()).toContain('Neuer Kurs')
     })
 
-    it('zeigt die "Bearbeiten"- und "Löschen"-Buttons für Kurse wenn der Nutzer Trainer ist', async () => {
+    it('zeigt den "Bearbeiten"-Button für Kurse wenn der Nutzer Trainer ist', async () => {
       mockTrainerAuth()
+      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { data: [mockCourse] } })
+
+      const wrapper = mountView()
+      await flushPromises()
+
+      expect(wrapper.text()).toContain('Bearbeiten')
+    })
+
+    it('versteckt den "Löschen"-Button wenn der Nutzer Trainer ist', async () => {
+      mockTrainerAuth()
+      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { data: [mockCourse] } })
+
+      const wrapper = mountView()
+      await flushPromises()
+
+      expect(wrapper.text()).not.toContain('Löschen')
+    })
+  })
+
+  // ------------------------------------------------------------------ //
+  // Admin-Ansicht                                                         //
+  // ------------------------------------------------------------------ //
+  describe('Admin-Ansicht', () => {
+    it('zeigt die "Bearbeiten"- und "Löschen"-Buttons für Kurse wenn der Nutzer Admin ist', async () => {
+      mockAdminAuth()
       vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { data: [mockCourse] } })
 
       const wrapper = mountView()
