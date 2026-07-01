@@ -12,9 +12,9 @@
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
     </div>
 
-    <!-- Error State -->
-    <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-      <p class="text-red-800">{{ error }}</p>
+    <!-- Load Error State -->
+    <div v-else-if="loadError" class="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+      <p class="text-red-800">{{ loadError }}</p>
     </div>
 
     <!-- Settings Form -->
@@ -382,6 +382,14 @@
       >
         <p class="text-green-800">{{ successMessage }}</p>
       </div>
+
+      <!-- Save Error Message -->
+      <div
+        v-if="saveError"
+        class="bg-red-50 border border-red-200 rounded-lg p-4"
+      >
+        <p class="text-red-800">{{ saveError }}</p>
+      </div>
     </form>
 
     <!-- Preise-Abschnitt -->
@@ -554,7 +562,8 @@ const formData = ref({
 
 const loading = ref(false)
 const saving = ref(false)
-const error = ref<string | null>(null)
+const loadError = ref<string | null>(null)
+const saveError = ref<string | null>(null)
 const successMessage = ref<string | null>(null)
 const logoPreview = ref<string | null>(null)
 const faviconPreview = ref<string | null>(null)
@@ -564,7 +573,7 @@ const faviconPreview = ref<string | null>(null)
  */
 const loadSettings = async () => {
   loading.value = true
-  error.value = null
+  loadError.value = null
 
   try {
     const response = await settingsApi.getSettings()
@@ -596,7 +605,7 @@ const loadSettings = async () => {
       }
     })
   } catch (err: any) {
-    error.value = err.response?.data?.message || 'Fehler beim Laden der Einstellungen.'
+    loadError.value = err.response?.data?.message || 'Fehler beim Laden der Einstellungen.'
     console.error('Error loading settings:', err)
   } finally {
     loading.value = false
@@ -608,7 +617,7 @@ const loadSettings = async () => {
  */
 const saveSettings = async () => {
   saving.value = true
-  error.value = null
+  saveError.value = null
   successMessage.value = null
 
   try {
@@ -640,7 +649,7 @@ const saveSettings = async () => {
       successMessage.value = null
     }, 5000)
   } catch (err: any) {
-    error.value = err.response?.data?.message || 'Fehler beim Speichern der Einstellungen.'
+    saveError.value = err.response?.data?.message || 'Fehler beim Speichern der Einstellungen.'
     console.error('Error saving settings:', err)
   } finally {
     saving.value = false

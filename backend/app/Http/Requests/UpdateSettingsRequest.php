@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -24,7 +25,7 @@ class UpdateSettingsRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -42,13 +43,13 @@ class UpdateSettingsRequest extends FormRequest
             'company_registration_number' => ['sometimes', 'nullable', 'string', 'max:50'],
             'company_small_business' => ['sometimes', 'nullable', 'in:true,false,1,0'],
             'company_logo' => ['sometimes', 'nullable', 'image', 'max:2048', 'mimes:png,jpg,jpeg,svg'],
-            'company_favicon' => ['sometimes', 'nullable', 'image', 'max:512', 'mimes:png,ico'],
+            'company_favicon' => ['sometimes', 'nullable', 'file', 'max:512', 'mimes:png,ico'],
 
             // Email settings
             'email_from_address' => ['sometimes', 'nullable', 'email', 'max:255'],
             'email_from_name' => ['sometimes', 'nullable', 'string', 'max:255'],
             'email_driver' => ['sometimes', 'nullable', 'string', 'in:smtp,sendmail,mailgun,ses,postmark,log'],
-            
+
             // SMTP settings
             'smtp_host' => ['sometimes', 'nullable', 'string', 'max:255'],
             'smtp_port' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:65535'],
