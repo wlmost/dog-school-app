@@ -345,6 +345,41 @@ chmod 755 install.php
    # Wenn Sie 500 Error bekommen, wird .htaccess gelesen
    ```
 
+#### Problem: Bild-Upload schlägt fehl ("413 Request Entity Too Large" o. ä.)
+
+**Ursache:** Der PHP-Ausführungsmodus des Hosters (`mod_php` vs. PHP-FPM vs.
+klassisches CGI/FastCGI) ist aus dem Deployment-Paket heraus nicht erkennbar.
+Das Paket liefert deshalb **drei parallele, sich gegenseitig nicht störende
+Mechanismen** aus, um `upload_max_filesize`/`post_max_size` auf mindestens
+10 MB/12 MB anzuheben:
+
+- `backend/public/.htaccess` (`LimitRequestBody` + `php_value`-Fallback,
+  wirkt nur unter Apache `mod_php`)
+- `backend/public/.user.ini` (PHP-Core-Mechanismus, greift bei PHP-FPM und
+  den meisten CGI-Setups, sofern der Hoster `user_ini.filename` nicht
+  deaktiviert hat)
+- `backend/public/php.ini` (zusätzlicher Fallback für CGI/FastCGI-
+  Wrapper-Setups, bei denen `.user.ini` nicht ausgewertet wird, z. B. manche
+  cPanel-/Plesk-"Custom php.ini"-Konfigurationen)
+
+Da alle drei Dateien identische Werte enthalten, ist es unerheblich, welcher
+Mechanismus beim Ziel-Hoster tatsächlich greift — es entsteht kein
+Wertekonflikt, falls mehrere gleichzeitig wirken.
+
+**Lösung:**
+1. Prüfen Sie nach dem Deployment, ob die Werte tatsächlich wirksam sind
+   (Hoster-Panel, z. B. cPanel "MultiPHP INI Editor", oder eine temporäre
+   `phpinfo()`-Seite): `upload_max_filesize` sollte ≥ 10 MB und
+   `post_max_size` ≥ 12 MB sein.
+2. **Wichtig bei PHP-FPM:** Änderungen über `.user.ini` werden nicht sofort
+   aktiv, sondern erst nach Ablauf von `user_ini.cache_ttl` (PHP-Default:
+   300 Sekunden). Warten Sie nach dem Deployment einige Minuten, bevor Sie
+   erneut testen.
+3. Greift keiner der drei Mechanismen (z. B. weil der Hoster sowohl
+   `.htaccess`-`php_value` als auch `.user.ini`/`php.ini` ignoriert), setzen
+   Sie die Werte direkt im Hosting-Panel (z. B. "PHP-Einstellungen" bei
+   cPanel/Plesk) oder kontaktieren Sie den Support Ihres Hosters.
+
 ---
 
 ### Post-Installation Schritte

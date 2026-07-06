@@ -1,3 +1,39 @@
+# Increase request body / upload limits to allow image uploads up to
+# Laravel's validation limit (5 MB, see DogController.php:185).
+# Apache's own default (no LimitRequestBody) is unlimited, but many shared
+# hosting PHP defaults (upload_max_filesize/post_max_size) are far below
+# 5 MB. LimitRequestBody caps the raw request body at the web server
+# layer, analogous to nginx's client_max_body_size.
+LimitRequestBody 10485760
+
+# Fallback for hosts running PHP as an Apache module (mod_php). Wrapped in
+# IfModule so this is a no-op on PHP-FPM/CGI setups (see backend-public.user.ini
+# for that case), where php_value in .htaccess would otherwise be ignored
+# or cause a 500.
+<IfModule mod_php.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 12M
+</IfModule>
+<IfModule mod_php8.c>
+    php_value upload_max_filesize 10M
+    php_value post_max_size 12M
+</IfModule>
+
+# Deny direct HTTP access to the PHP config override files above. Unlike
+# .htaccess itself, .user.ini/php.ini are not covered by Apache's built-in
+# "Deny from all" default for ".ht*" files and would otherwise be served as
+# plain text by the static file handler (see backend-public.htaccess's own
+# rewrite fallback below, which only applies to non-existent files).
+<FilesMatch "^(\.user\.ini|php\.ini)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
 <IfModule mod_negotiation.c>
     Options -MultiViews -Indexes
 </IfModule>

@@ -235,6 +235,18 @@ const customers = ref<any[]>([])
 const selectedImageFile = ref<File | null>(null)
 const imagePreview = ref<string | null>(null)
 
+/**
+ * Id of the dog record that was already persisted in a previous submit
+ * attempt within the current modal session. Set once the core dog data
+ * (create/update) succeeds; reset whenever the modal is (re)opened or the
+ * form is fully reset.
+ *
+ * Purpose: if the profile image upload fails after a successful save, the
+ * user can retry via the same "Speichern" button without a second dog
+ * record being created (see handleSubmit).
+ */
+const savedDogId = ref<any>(null)
+
 const form = ref({
   customer_id: '',
   name: '',
@@ -283,6 +295,7 @@ watch(() => props.isOpen, (isOpen) => {
     error.value = null
     selectedImageFile.value = null
     imagePreview.value = null
+    savedDogId.value = null
     if (!isCustomer.value) {
       loadCustomers()
     }
@@ -335,6 +348,7 @@ function resetForm() {
   error.value = null
   selectedImageFile.value = null
   imagePreview.value = null
+  savedDogId.value = null
 }
 
 /**
@@ -369,51 +383,91 @@ function translateError(errorMessage: string): string {
   return errorMessage
 }
 
+/**
+ * Persist the dog's core data (create or update, depending on props.dog).
+ * Returns the id of the saved dog record.
+ */
+async function saveDogRecord(): Promise<any> {
+  const payload: any = {
+    name: form.value.name,
+    breed: form.value.breed,
+    dateOfBirth: form.value.date_of_birth || null,
+    gender: form.value.gender || null,
+    weight: form.value.weight,
+    chipNumber: form.value.chip_number || null,
+    color: form.value.color || null,
+    specialCharacteristics: form.value.special_characteristics || null,
+    neutered: form.value.neutered,
+    notes: form.value.notes || null
+  }
+
+  // Only admins/trainers can change the owner
+  if (!isCustomer.value) {
+    payload.customerId = form.value.customer_id
+  }
+
+  let savedDog: any
+  if (props.dog) {
+    const response = await apiClient.put(`/api/v1/dogs/${props.dog.id}`, payload)
+    savedDog = response.data.data
+    showSuccess('Hund aktualisiert', `${form.value.name} wurde erfolgreich aktualisiert`)
+  } else {
+    const response = await apiClient.post('/api/v1/dogs', payload)
+    savedDog = response.data.data
+    showSuccess('Hund erstellt', `${form.value.name} wurde erfolgreich erstellt`)
+  }
+
+  return savedDog?.id
+}
+
+/**
+ * Upload the currently selected profile image for the given dog id.
+ *
+ * On failure, a persistent (non-toast) error banner is set via `error`, in
+ * addition to the existing toast notification, so the user notices the
+ * partial failure even after the toast has faded.
+ *
+ * @returns true if the upload succeeded, false otherwise.
+ */
+async function uploadDogImage(dogId: any): Promise<boolean> {
+  try {
+    const formData = new FormData()
+    formData.append('image', selectedImageFile.value as File)
+    await apiClient.post(`/api/v1/dogs/${dogId}/upload-image`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+    return true
+  } catch (imgErr: any) {
+    const imgError = imgErr.response?.data?.message || 'Fehler beim Hochladen des Bildes'
+    error.value = `Der Hund wurde gespeichert, aber das Profilbild konnte nicht hochgeladen werden: ${imgError}. Bitte erneut versuchen.`
+    handleApiError(imgErr, imgError)
+    return false
+  }
+}
+
 async function handleSubmit() {
   loading.value = true
   error.value = null
 
   try {
-    const payload: any = {
-      name: form.value.name,
-      breed: form.value.breed,
-      dateOfBirth: form.value.date_of_birth || null,
-      gender: form.value.gender || null,
-      weight: form.value.weight,
-      chipNumber: form.value.chip_number || null,
-      color: form.value.color || null,
-      specialCharacteristics: form.value.special_characteristics || null,
-      neutered: form.value.neutered,
-      notes: form.value.notes || null
-    }
-
-    // Only admins/trainers can change the owner
-    if (!isCustomer.value) {
-      payload.customerId = form.value.customer_id
-    }
-
-    let savedDog: any
-    if (props.dog) {
-      const response = await apiClient.put(`/api/v1/dogs/${props.dog.id}`, payload)
-      savedDog = response.data.data
-      showSuccess('Hund aktualisiert', `${form.value.name} wurde erfolgreich aktualisiert`)
-    } else {
-      const response = await apiClient.post('/api/v1/dogs', payload)
-      savedDog = response.data.data
-      showSuccess('Hund erstellt', `${form.value.name} wurde erfolgreich erstellt`)
+    // If the core dog data was already saved in a previous attempt (only
+    // the image upload failed back then), skip re-sending it and retry
+    // only the image upload. This avoids creating a duplicate dog record
+    // when the user clicks "Speichern" again after a failed image upload.
+    let dogId = savedDogId.value
+    if (!dogId) {
+      dogId = await saveDogRecord()
+      savedDogId.value = dogId
     }
 
     // Upload image if one was selected
-    if (selectedImageFile.value && savedDog?.id) {
-      try {
-        const formData = new FormData()
-        formData.append('image', selectedImageFile.value)
-        await apiClient.post(`/api/v1/dogs/${savedDog.id}/upload-image`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        })
-      } catch (imgErr: any) {
-        const imgError = imgErr.response?.data?.message || 'Fehler beim Hochladen des Bildes'
-        handleApiError(imgErr, imgError)
+    if (selectedImageFile.value && dogId) {
+      const uploadSucceeded = await uploadDogImage(dogId)
+      if (!uploadSucceeded) {
+        // Modal stays open and neither 'saved' nor 'close' is emitted, so
+        // the parent component (DogsView.vue) does not close the modal
+        // (it treats both events as an unconditional "close" signal).
+        return
       }
     }
 
@@ -421,7 +475,7 @@ async function handleSubmit() {
     closeModal()
   } catch (err: any) {
     let errorMessage = err.response?.data?.message || 'Fehler beim Speichern des Hundes'
-    
+
     // Extract first validation error if available
     if (err.response?.data?.errors) {
       const firstError = (Object.values(err.response.data.errors)[0] as string[])?.[0]
@@ -429,10 +483,10 @@ async function handleSubmit() {
         errorMessage = firstError as string
       }
     }
-    
+
     // Translate to German
     errorMessage = translateError(errorMessage)
-    
+
     error.value = errorMessage
     handleApiError(err, errorMessage)
   } finally {
