@@ -1,4 +1,4 @@
-## Requirements
+## MODIFIED Requirements
 
 ### Requirement: Dog profile image upload accepts files up to 5 MB
 The system SHALL accept dog profile image uploads up to the Laravel validation limit
@@ -27,7 +27,7 @@ delivered to the built deployment package by **every** packaging path that
 produces a shared-hosting artifact — `build-deployment.sh`,
 `build-deployment-docker.sh`, and the CI-driven `.github/workflows/deploy.yml`
 packaging step — so that none of them silently omits the PHP-FPM/CGI-FastCGI
-fallback while still shipping the `.htaccess` mechanism.
+fallback while still shipping the `.htaccess` (T01) mechanism.
 
 Because `.user.ini` and `php.ini` are ordinary text files (unlike `.htaccess`,
 which Apache denies by its own built-in `.ht*` default), the shipped
@@ -84,6 +84,8 @@ their respective body-size limits).
   `backend-public.htaccess`), not the plain-text file contents
 - **THEN** the existing rewrite fallback to `index.php` for non-existent paths,
   and the existing security headers, remain unaffected
+
+## ADDED Requirements
 
 ### Requirement: Failed profile image uploads are visibly reported and do not silently close the form
 The system SHALL clearly and persistently report a failed profile image upload to the user, and SHALL NOT close `DogFormModal` as if the entire save operation succeeded.

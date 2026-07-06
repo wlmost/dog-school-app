@@ -338,7 +338,17 @@ copy_htaccess_files() {
     # Backend public .htaccess
     info_msg "Placing backend/public .htaccess..."
     cp "$template_dir/backend-public.htaccess" "$BUILD_DIR/backend/public/.htaccess" || error_exit "Failed to copy backend/public .htaccess"
-    
+
+    # Backend public .user.ini / php.ini – upload_max_filesize/post_max_size
+    # fallbacks for PHP-FPM and CGI/FastCGI hosts, where .htaccess php_value
+    # directives (see backend-public.htaccess) are ignored by the SAPI.
+    info_msg "Placing backend/public .user.ini..."
+    cp "$template_dir/backend-public.user.ini" "$BUILD_DIR/backend/public/.user.ini" \
+        || error_exit "Failed to copy backend/public .user.ini"
+    info_msg "Placing backend/public php.ini..."
+    cp "$template_dir/backend-public.php.ini" "$BUILD_DIR/backend/public/php.ini" \
+        || error_exit "Failed to copy backend/public php.ini"
+
     # Backend root .htaccess (deny all)
     info_msg "Placing backend root .htaccess..."
     cp "$template_dir/backend-root.htaccess" "$BUILD_DIR/backend/.htaccess" || error_exit "Failed to copy backend .htaccess"
@@ -362,6 +372,8 @@ verify_htaccess_files() {
     local htaccess_files=(
         "$BUILD_DIR/.htaccess"
         "$BUILD_DIR/backend/public/.htaccess"
+        "$BUILD_DIR/backend/public/.user.ini"
+        "$BUILD_DIR/backend/public/php.ini"
         "$BUILD_DIR/backend/.htaccess"
         "$BUILD_DIR/backend/storage/.htaccess"
         "$BUILD_DIR/frontend/.htaccess"

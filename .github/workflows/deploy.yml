@@ -132,6 +132,11 @@ jobs:
           cp deployment-templates/htaccess/frontend.htaccess            deploy-package/frontend/.htaccess
           cp deployment-templates/htaccess/frontend-dist.htaccess       deploy-package/frontend/dist/.htaccess
 
+          # PHP config overrides for shared-hosting image upload limits
+          # (see backend-public.htaccess's php_value fallback for mod_php hosts)
+          cp deployment-templates/htaccess/backend-public.user.ini      deploy-package/backend/public/.user.ini
+          cp deployment-templates/htaccess/backend-public.php.ini       deploy-package/backend/public/php.ini
+
           # Update wizard and maintenance page
           cp update.php        deploy-package/update.php
           cp maintenance.html  deploy-package/maintenance.html
