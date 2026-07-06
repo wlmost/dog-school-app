@@ -173,6 +173,7 @@ jobs:
           rsync -az --delete \
             --exclude='backend/.env' \
             --exclude='backend/storage/app/' \
+            --exclude='backend/public/storage' \
             --exclude='backend/storage/logs/' \
             --exclude='backend/storage/framework/sessions/' \
             --exclude='backend/storage/framework/cache/' \
@@ -182,7 +183,29 @@ jobs:
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ secrets.DEPLOY_PATH }}/"
 
       # -----------------------------------------------------------------------
-      # 8. Run database migrations
+      # 8. Ensure public storage symlink exists
+      #    backend/public/storage is gitignored (Laravel standard, see
+      #    backend/.gitignore:5) and therefore never present in the rsync
+      #    source (deploy-package/). Excluding it above protects an
+      #    already-existing symlink on the server from rsync's --delete;
+      #    this step (re-)creates it if missing (first deploy, or if it was
+      #    ever removed by an older workflow run before this fix). Laravel's
+      #    storage:link command exits 0 even if the link already exists (it
+      #    only prints an informational message via the components->error()
+      #    output helper, it does not fail the command – see
+      #    vendor/laravel/framework/src/Illuminate/Foundation/Console/StorageLinkCommand.php),
+      #    so this step is safe to run on every deploy without --force and
+      #    without a best-effort fallback.
+      # -----------------------------------------------------------------------
+      - name: Ensure public storage symlink exists
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -p "$DEPLOY_PORT" \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "cd '${{ secrets.DEPLOY_PATH }}/backend' && php artisan storage:link"
+
+      # -----------------------------------------------------------------------
+      # 9. Run database migrations
       # -----------------------------------------------------------------------
       - name: Run database migrations
         run: |
@@ -192,7 +215,7 @@ jobs:
             "cd '${{ secrets.DEPLOY_PATH }}/backend' && php artisan migrate --force"
 
       # -----------------------------------------------------------------------
-      # 9. Rebuild application caches
+      # 10. Rebuild application caches
       # -----------------------------------------------------------------------
       - name: Rebuild application caches
         # Note: route:cache is intentionally omitted – the application contains
@@ -208,7 +231,7 @@ jobs:
               && php artisan view:cache"
 
       # -----------------------------------------------------------------------
-      # 10. Disable maintenance mode
+      # 11. Disable maintenance mode
       #     Runs even if a previous step failed so the app always comes back up.
       # -----------------------------------------------------------------------
       - name: Disable maintenance mode
@@ -221,14 +244,14 @@ jobs:
           || echo "::warning::Could not disable maintenance mode – check the server manually"
 
       # -----------------------------------------------------------------------
-      # 11. Cleanup
+      # 12. Cleanup
       # -----------------------------------------------------------------------
       - name: Remove SSH key
         if: always()
         run: rm -f ~/.ssh/deploy_key
 
       # -----------------------------------------------------------------------
-      # 12. Write deployment summary to the Actions run page
+      # 13. Write deployment summary to the Actions run page
       # -----------------------------------------------------------------------
       - name: Deployment summary
         if: always()
