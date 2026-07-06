@@ -142,3 +142,19 @@ jobs:
         working-directory: frontend
         run: npm run test
 
+  deploy-workflow-lint:
+    name: Deploy workflow – storage symlink safeguard
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout current branch
+        uses: actions/checkout@v4
+
+      - name: Verify storage symlink is protected and re-created
+        run: |
+          set -e
+          grep -q "exclude='backend/public/storage'" .github/workflows/deploy.yml \
+            || { echo "::error::backend/public/storage exclude missing from rsync step"; exit 1; }
+          grep -q "artisan storage:link" .github/workflows/deploy.yml \
+            || { echo "::error::storage:link step missing from deploy.yml"; exit 1; }
+

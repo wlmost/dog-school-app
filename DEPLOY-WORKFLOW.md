@@ -179,6 +179,7 @@ Der Workflow durchläuft folgende Schritte in Reihenfolge:
 | **SSH konfigurieren** | Schreibt den Deploy-Key und trägt den Server-Fingerabdruck in `known_hosts` ein |
 | **Wartungsmodus an** | `php artisan down --retry=60` (schlägt beim ersten Deployment fehl – kein Abbruch) |
 | **rsync** | Überträgt alle Dateien per `rsync --delete`; `.env` und Benutzerdaten werden **nicht** überschrieben |
+| **Ensure public storage symlink exists** | `php artisan storage:link` – legt `backend/public/storage` an, falls er fehlt (idempotent, kein Fehler bei bereits vorhandenem Symlink) |
 | **Migrationen** | `php artisan migrate --force` – führt neue Datenbankmigrationen aus |
 | **Cache neu aufbauen** | `config:cache` + `view:cache` (kein `route:cache` wegen Closure-Route in `web.php`) |
 | **Wartungsmodus aus** | `php artisan up` – läuft **immer**, auch wenn vorherige Schritte fehlgeschlagen sind |
@@ -194,6 +195,11 @@ backend/storage/logs/         ← Logs
 backend/storage/framework/sessions/
 backend/storage/framework/cache/
 backend/storage/framework/views/
+backend/public/storage        ← Symlink zu storage/app/public (kein
+                                 Nutzerdaten-Verzeichnis, sondern ein
+                                 Symlink, der nach dem rsync-Schritt
+                                 automatisch sichergestellt wird, siehe
+                                 Schritt-Tabelle oben)
 ```
 
 ---
