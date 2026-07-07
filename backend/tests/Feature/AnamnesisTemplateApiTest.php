@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\AnamnesisAnswer;
 use App\Models\AnamnesisQuestion;
 use App\Models\AnamnesisResponse;
 use App\Models\AnamnesisTemplate;
@@ -27,9 +28,28 @@ test('can list anamnesis templates', function () {
         ->assertJsonCount(3, 'data')
         ->assertJsonStructure([
             'data' => [
-                '*' => ['id', 'trainerId', 'name', 'description', 'isDefault', 'createdAt', 'updatedAt']
+                '*' => ['id', 'trainerId', 'name', 'description', 'isDefault', 'createdAt', 'updatedAt', 'questionsCount']
             ]
         ]);
+});
+
+it('listed templates report the correct questions count per template', function () {
+    $templateWithNoQuestions = AnamnesisTemplate::factory()->create(['trainer_id' => $this->trainer->id]);
+    $templateWithTwoQuestions = AnamnesisTemplate::factory()->create(['trainer_id' => $this->trainer->id]);
+    $templateWithFiveQuestions = AnamnesisTemplate::factory()->create(['trainer_id' => $this->trainer->id]);
+
+    AnamnesisQuestion::factory()->count(2)->create(['template_id' => $templateWithTwoQuestions->id]);
+    AnamnesisQuestion::factory()->count(5)->create(['template_id' => $templateWithFiveQuestions->id]);
+
+    $response = $this->actingAs($this->trainer)->getJson('/api/v1/anamnesis-templates');
+
+    $response->assertOk();
+
+    $countsByTemplateId = collect($response->json('data'))->pluck('questionsCount', 'id');
+
+    expect($countsByTemplateId->get($templateWithNoQuestions->id))->toBe(0);
+    expect($countsByTemplateId->get($templateWithTwoQuestions->id))->toBe(2);
+    expect($countsByTemplateId->get($templateWithFiveQuestions->id))->toBe(5);
 });
 
 test('admin cannot list anamnesis templates', function () {
@@ -187,6 +207,245 @@ test('trainer can update own template', function () {
         'id' => $template->id,
         'name' => 'Updated Template Name',
     ]);
+});
+
+it('trainer can add new questions when updating template', function () {
+    $template = AnamnesisTemplate::factory()->create(['trainer_id' => $this->trainer->id]);
+
+    $data = [
+        'questions' => [
+            [
+                'questionText' => 'What is your dog\'s age?',
+                'questionType' => 'text',
+                'isRequired' => true,
+                'order' => 0,
+            ],
+            [
+                'questionText' => 'Does your dog have any allergies?',
+                'questionType' => 'radio',
+                'options' => ['Yes', 'No'],
+                'isRequired' => true,
+                'order' => 1,
+            ],
+        ],
+    ];
+
+    $response = $this->actingAs($this->trainer)
+        ->putJson("/api/v1/anamnesis-templates/{$template->id}", $data);
+
+    $response->assertOk();
+
+    $template->refresh();
+    expect($template->questions)->toHaveCount(2);
+    $this->assertDatabaseHas('anamnesis_questions', [
+        'template_id' => $template->id,
+        'question_text' => 'What is your dog\'s age?',
+    ]);
+});
+
+it('trainer can modify existing question via id when updating template', function () {
+    $template = AnamnesisTemplate::factory()->create(['trainer_id' => $this->trainer->id]);
+    $question = AnamnesisQuestion::factory()->create([
+        'template_id' => $template->id,
+        'question_text' => 'Original question',
+        'question_type' => 'text',
+        'order' => 0,
+    ]);
+
+    $data = [
+        'questions' => [
+            [
+                'id' => $question->id,
+                'questionText' => 'Updated question',
+                'questionType' => 'textarea',
+                'isRequired' => false,
+                'order' => 0,
+            ],
+        ],
+    ];
+
+    $response = $this->actingAs($this->trainer)
+        ->putJson("/api/v1/anamnesis-templates/{$template->id}", $data);
+
+    $response->assertOk();
+
+    expect($template->questions()->count())->toBe(1);
+    $this->assertDatabaseHas('anamnesis_questions', [
+        'id' => $question->id,
+        'question_text' => 'Updated question',
+        'question_type' => 'textarea',
+    ]);
+});
+
+it('trainer can remove a question by omitting it from the update payload', function () {
+    $template = AnamnesisTemplate::factory()->create(['trainer_id' => $this->trainer->id]);
+    $keptQuestion = AnamnesisQuestion::factory()->create(['template_id' => $template->id, 'order' => 0]);
+    $removedQuestion = AnamnesisQuestion::factory()->create(['template_id' => $template->id, 'order' => 1]);
+
+    $data = [
+        'questions' => [
+            [
+                'id' => $keptQuestion->id,
+                'questionText' => $keptQuestion->question_text,
+                'questionType' => $keptQuestion->question_type,
+                'isRequired' => $keptQuestion->is_required,
+                'order' => 0,
+            ],
+        ],
+    ];
+
+    $response = $this->actingAs($this->trainer)
+        ->putJson("/api/v1/anamnesis-templates/{$template->id}", $data);
+
+    $response->assertOk();
+
+    $this->assertDatabaseHas('anamnesis_questions', ['id' => $keptQuestion->id]);
+    $this->assertDatabaseMissing('anamnesis_questions', ['id' => $removedQuestion->id]);
+});
+
+it('removing a question with existing answers from the update payload does not delete the question or its answers', function () {
+    $template = AnamnesisTemplate::factory()->create(['trainer_id' => $this->trainer->id]);
+    $answeredQuestion = AnamnesisQuestion::factory()->create(['template_id' => $template->id, 'order' => 0]);
+    $answer = AnamnesisAnswer::factory()->create(['question_id' => $answeredQuestion->id]);
+
+    $data = [
+        'questions' => [],
+    ];
+
+    $response = $this->actingAs($this->trainer)
+        ->putJson("/api/v1/anamnesis-templates/{$template->id}", $data);
+
+    $response->assertOk();
+
+    $this->assertDatabaseHas('anamnesis_questions', ['id' => $answeredQuestion->id]);
+    $this->assertDatabaseHas('anamnesis_answers', ['id' => $answer->id]);
+});
+
+it('update rejects a question id belonging to a different template', function () {
+    $template = AnamnesisTemplate::factory()->create(['trainer_id' => $this->trainer->id]);
+    $otherTemplate = AnamnesisTemplate::factory()->create(['trainer_id' => $this->trainer->id]);
+    $foreignQuestion = AnamnesisQuestion::factory()->create(['template_id' => $otherTemplate->id]);
+
+    $data = [
+        'questions' => [
+            [
+                'id' => $foreignQuestion->id,
+                'questionText' => 'Hijacked question',
+                'questionType' => 'text',
+                'isRequired' => false,
+                'order' => 0,
+            ],
+        ],
+    ];
+
+    $response = $this->actingAs($this->trainer)
+        ->putJson("/api/v1/anamnesis-templates/{$template->id}", $data);
+
+    $response->assertStatus(422);
+
+    $this->assertDatabaseHas('anamnesis_questions', [
+        'id' => $foreignQuestion->id,
+        'template_id' => $otherTemplate->id,
+        'question_text' => $foreignQuestion->question_text,
+    ]);
+});
+
+it('updating template without the questions key leaves existing questions untouched', function () {
+    $template = AnamnesisTemplate::factory()->create(['trainer_id' => $this->trainer->id]);
+    $question = AnamnesisQuestion::factory()->create(['template_id' => $template->id]);
+
+    $data = [
+        'name' => 'Renamed Template',
+    ];
+
+    $response = $this->actingAs($this->trainer)
+        ->putJson("/api/v1/anamnesis-templates/{$template->id}", $data);
+
+    $response->assertOk()
+        ->assertJsonPath('data.name', 'Renamed Template');
+
+    $this->assertDatabaseHas('anamnesis_questions', ['id' => $question->id]);
+});
+
+it('synchronisiert erstellte, geänderte und gelöschte fragen in einem einzigen realistischen frontend-payload', function () {
+    // Bildet den tatsächlichen PUT-Payload nach, den
+    // AnamnesisTemplateFormModal.vue::save() nach T05 erzeugt (siehe
+    // frontend/src/components/anamnesis/AnamnesisTemplateFormModal.vue,
+    // Funktion save(): name/description/isDefault + questions[] mit
+    // optionalem id-Feld pro Frage), statt nur die Backend-Sync-Logik
+    // isoliert je Testfall zu prüfen. Verifiziert Update-, Create- und
+    // Delete-Semantik in einem einzigen, realitätsnahen Roundtrip.
+    $template = AnamnesisTemplate::factory()->create([
+        'trainer_id' => $this->trainer->id,
+        'name' => 'Vollständige Aufnahme',
+        'description' => 'Alte Beschreibung',
+    ]);
+    $questionToModify = AnamnesisQuestion::factory()->create([
+        'template_id' => $template->id,
+        'question_text' => 'Wie alt ist dein Hund?',
+        'question_type' => 'text',
+        'options' => null,
+        'is_required' => true,
+        'order' => 0,
+    ]);
+    $questionToRemove = AnamnesisQuestion::factory()->create([
+        'template_id' => $template->id,
+        'question_text' => 'Wird beim Speichern entfernt',
+        'order' => 1,
+    ]);
+
+    $payload = [
+        'name' => 'Vollständige Aufnahme',
+        'description' => 'Neue Beschreibung',
+        'isDefault' => false,
+        'questions' => [
+            [
+                'id' => $questionToModify->id,
+                'questionText' => 'Wie alt ist dein Hund in Jahren?',
+                'questionType' => 'textarea',
+                'isRequired' => false,
+                'options' => null,
+                'order' => 0,
+            ],
+            [
+                'questionText' => 'Hat dein Hund Allergien?',
+                'questionType' => 'radio',
+                'isRequired' => true,
+                'options' => ['Ja', 'Nein'],
+                'order' => 1,
+            ],
+        ],
+    ];
+
+    $response = $this->actingAs($this->trainer)
+        ->putJson("/api/v1/anamnesis-templates/{$template->id}", $payload);
+
+    $response->assertOk()
+        ->assertJsonPath('data.name', 'Vollständige Aufnahme')
+        ->assertJsonPath('data.questionsCount', 2);
+
+    $this->assertDatabaseCount('anamnesis_questions', 2);
+
+    // Update-Semantik: bestehende Frage per id aktualisiert, keine neue Zeile
+    $this->assertDatabaseHas('anamnesis_questions', [
+        'id' => $questionToModify->id,
+        'template_id' => $template->id,
+        'question_text' => 'Wie alt ist dein Hund in Jahren?',
+        'question_type' => 'textarea',
+        'is_required' => false,
+    ]);
+
+    // Create-Semantik: neue Frage ohne id wurde angelegt
+    $createdQuestion = AnamnesisQuestion::query()
+        ->where('template_id', $template->id)
+        ->where('question_text', 'Hat dein Hund Allergien?')
+        ->first();
+    expect($createdQuestion)->not->toBeNull();
+    expect($createdQuestion->question_type)->toBe('radio');
+    expect($createdQuestion->options)->toBe(['Ja', 'Nein']);
+
+    // Delete-Semantik: ausgelassene, unbeantwortete Frage wurde gelöscht
+    $this->assertDatabaseMissing('anamnesis_questions', ['id' => $questionToRemove->id]);
 });
 
 test('trainer cannot update another trainers template', function () {

@@ -27,6 +27,14 @@ class UpdateAnamnesisTemplateRequest extends FormRequest
             'name' => ['sometimes', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'isDefault' => ['boolean'],
+            'questions' => ['sometimes', 'array'],
+            'questions.*.id' => ['sometimes', 'integer'],
+            'questions.*.questionText' => ['required_with:questions', 'string'],
+            'questions.*.questionType' => ['required_with:questions', 'string', 'in:text,textarea,select,multiselect,checkbox,radio,file'],
+            'questions.*.options' => ['nullable', 'array'],
+            'questions.*.options.*' => ['string'],
+            'questions.*.isRequired' => ['boolean'],
+            'questions.*.order' => ['integer', 'min:0'],
         ];
     }
 
@@ -50,6 +58,24 @@ class UpdateAnamnesisTemplateRequest extends FormRequest
 
         if (isset($validated['isDefault'])) {
             $data['is_default'] = $validated['isDefault'];
+        }
+
+        if (array_key_exists('questions', $validated)) {
+            $data['questions'] = array_map(function ($question) {
+                $mapped = [
+                    'question_text' => $question['questionText'],
+                    'question_type' => $question['questionType'],
+                    'options' => $question['options'] ?? null,
+                    'is_required' => $question['isRequired'] ?? false,
+                    'order' => $question['order'] ?? 0,
+                ];
+
+                if (array_key_exists('id', $question)) {
+                    $mapped['id'] = $question['id'];
+                }
+
+                return $mapped;
+            }, $validated['questions']);
         }
 
         return $data;

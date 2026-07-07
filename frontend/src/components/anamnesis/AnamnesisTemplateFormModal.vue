@@ -232,6 +232,7 @@ import { ref, computed, watch } from 'vue'
 import { anamnesisTemplatesApi } from '@/api/anamnesis'
 
 interface Question {
+  id?: number
   question_text: string
   question_type: 'text' | 'textarea' | 'radio' | 'select' | 'checkbox'
   is_required: boolean
@@ -290,6 +291,7 @@ watch(() => props.template, (newTemplate) => {
       name: newTemplate.name || '',
       description: newTemplate.description || null,
       questions: newTemplate.questions?.map((q: any, index: number) => ({
+        id: q.id,
         question_text: q.questionText || '',
         question_type: q.questionType || 'text',
         is_required: q.isRequired || false,
@@ -390,10 +392,11 @@ async function save() {
       description: form.value.description?.trim() || null,
       isDefault: false,
       questions: form.value.questions.map((q, index) => ({
+        id: q.id,
         questionText: q.question_text.trim(),
         questionType: q.question_type,
         isRequired: q.is_required,
-        options: ['radio', 'select', 'checkbox'].includes(q.question_type) 
+        options: ['radio', 'select', 'checkbox'].includes(q.question_type)
           ? q.options.filter(opt => opt.trim()).map(opt => opt.trim())
           : null,
         order: index
