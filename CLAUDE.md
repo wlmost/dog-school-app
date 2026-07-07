@@ -22,17 +22,23 @@ auf Shared Hosting bei verschiedenen Webhostern.
 
 ## 2. Verfügbare Entwickler-Agenten
 
-- `dev-php` — für alles unter `app/`, `routes/`, `database/`, `config/`, `tests/Feature/`, `tests/Unit/`, sowie Blade-Templates (`resources/views/`)
-- `dev-javascript` — für Vue-SFCs (`resources/js/**/*.vue`), sonstiges JS unter `resources/js/`, Vitest-Tests
+> **Hinweis Verzeichnisstruktur:** Das Repo ist in `backend/` (Laravel) und
+> `frontend/` (Vue/Vite, eigenständiges Projekt, nicht Laravels
+> `resources/js/`) aufgeteilt. Backend-Pfade wie `app/`, `routes/`,
+> `database/`, `config/`, `tests/` liegen unter `backend/`, nicht am
+> Repo-Root.
+
+- `dev-php` — für alles unter `backend/app/`, `backend/routes/`, `backend/database/`, `backend/config/`, `backend/tests/Feature/`, `backend/tests/Unit/`, sowie Blade-Templates (`backend/resources/views/`)
+- `dev-typescript` — für Vue-SFCs (`frontend/src/**/*.vue`, durchgängig `<script setup lang="ts">`), sonstiges TypeScript unter `frontend/src/`, Vitest-Tests. Das Frontend ist vollständig TypeScript (`vue-tsc -b` ist Teil von `npm run build`) — es gibt keine reinen JS-Dateien im Frontend.
 
 > **Hinweis für den Architekten:** Blade-Templates (`.blade.php`) gehören zu
-> `dev-php`, weil sie PHP-Logik enthalten. Vue-SFCs gehören zu `dev-javascript`.
+> `dev-php`, weil sie PHP-Logik enthalten. Vue-SFCs gehören zu `dev-typescript`.
 > Wenn ein Feature beides braucht (Blade rendert die Seitenhülle, Vue mounted
 > als Insel-Komponente darin), zwei separate Tasks in `tasks.md` anlegen
 > — eine pro Sprache, mit klarem Übergabepunkt (z. B. via Data-Attribut oder
 > `window.__INITIAL_STATE__`).
 
-**Nicht in diesem Projekt verwenden:** `dev-go`, `dev-typescript`.
+**Nicht in diesem Projekt verwenden:** `dev-go`, `dev-javascript` (das Frontend ist reines TypeScript, kein plain JS).
 
 ---
 
@@ -200,17 +206,17 @@ docker compose exec app php artisan test
 
 - **Branch-Namen:** `change/<openspec-change-id>`
 - **Commits:** Conventional Commits (`feat:`, `fix:`, `refactor:`, `chore:`, `docs:`)
-- **PHP-Stil:** PSR-12, `declare(strict_types=1);` in jeder neuen Datei in `app/`
+- **PHP-Stil:** PSR-12, `declare(strict_types=1);` in jeder neuen Datei in `backend/app/`
 - **PHP-Fehlerbehandlung:** Eigene Exception-Klassen pro Domäne, keine generischen `\Exception`-Würfe in Anwendungscode
 - **Eloquent-Konventionen:**
-  - Model-Klassen in `app/Models/`, Singular (z. B. `Dog`, `Owner`, `Course`)
+  - Model-Klassen in `backend/app/Models/`, Singular (z. B. `Dog`, `Owner`, `Course`)
   - Beziehungen explizit typisiert: `public function owner(): BelongsTo`
   - Mass-Assignment-Schutz: `$fillable` oder `$guarded` immer setzen
   - Casts in `protected function casts(): array` (Laravel 11+) statt `$casts`-Property
 - **Vue-Konventionen:**
-  - SFCs in PascalCase-Dateinamen (`DogList.vue`)
+  - SFCs in PascalCase-Dateinamen (`DogList.vue`), durchgängig `<script setup lang="ts">`
   - Komponenten-Tags in Templates in PascalCase (`<DogList />`)
-  - Composables in `resources/js/composables/`, Präfix `use` (`useDogList.js`)
+  - Composables in `frontend/src/composables/`, Präfix `use` (`useDogList.ts`)
 - **Logging:** Über Laravels `Log`-Facade oder `Psr\Log\LoggerInterface`-Injection. Keine `error_log()`-Aufrufe in Anwendungscode.
 - **Test-Konventionen:** **Verbindlich** in `TESTING.md` festgelegt. Der
   `tester`-Agent und der `reviewer`-Agent MÜSSEN diese Datei vor jeder
@@ -272,10 +278,10 @@ docker compose exec app composer test
 
 ### 7.2 Verfügbare dev-Agenten (für tasks.md)
 
-- `dev-php` — für alles unter `app/`, `routes/`, `database/`, `config/`, `tests/Feature/`, `tests/Unit/`, sowie Blade-Templates
-- `dev-javascript` — für Vue-SFCs (`resources/js/**/*.vue`) und JS unter `resources/js/`
+- `dev-php` — für alles unter `backend/app/`, `backend/routes/`, `backend/database/`, `backend/config/`, `backend/tests/Feature/`, `backend/tests/Unit/`, sowie Blade-Templates
+- `dev-typescript` — für Vue-SFCs (`frontend/src/**/*.vue`) und TypeScript unter `frontend/src/`
 
-**Nicht verfügbar in diesem Projekt:** `dev-go`, `dev-typescript`.
+**Nicht verfügbar in diesem Projekt:** `dev-go`, `dev-javascript` (das Frontend ist reines TypeScript, kein plain JS).
 
 ### Projektspezifische Workflow-Regeln
 
