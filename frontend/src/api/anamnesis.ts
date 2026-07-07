@@ -119,6 +119,7 @@ export const anamnesisTemplatesApi = {
     name?: string
     description?: string | null
     questions?: Array<{
+      id?: number
       questionText: string
       questionType: string
       isRequired: boolean

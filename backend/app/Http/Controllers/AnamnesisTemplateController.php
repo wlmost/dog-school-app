@@ -26,7 +26,7 @@ class AnamnesisTemplateController extends Controller
     {
         $this->authorize('viewAny', AnamnesisTemplate::class);
 
-        $query = AnamnesisTemplate::query()->with(['trainer']);
+        $query = AnamnesisTemplate::query()->with(['trainer'])->withCount('questions');
 
         // Role-based filtering
         $user = $request->user();
@@ -117,10 +117,60 @@ class AnamnesisTemplateController extends Controller
     ): AnamnesisTemplateResource {
         $this->authorize('update', $anamnesisTemplate);
 
-        $anamnesisTemplate->update($request->validatedSnakeCase());
+        $data = $request->validatedSnakeCase();
+        $questions = $data['questions'] ?? null;
+        unset($data['questions']);
+
+        DB::transaction(function () use ($anamnesisTemplate, $data, $questions) {
+            $anamnesisTemplate->update($data);
+
+            if ($questions !== null) {
+                $this->syncQuestions($anamnesisTemplate, $questions);
+            }
+        });
+
         $anamnesisTemplate->load(['trainer', 'questions']);
 
         return new AnamnesisTemplateResource($anamnesisTemplate);
+    }
+
+    /**
+     * Synchronize a template's questions with the incoming payload by id.
+     *
+     * Questions with an `id` are updated in place, questions without an
+     * `id` are created as new. Existing questions whose `id` is missing
+     * from the payload are deleted, unless they already have answers —
+     * those are kept to avoid cascading away recorded customer answers
+     * (see `anamnesis_answers.question_id` foreign key `onDelete('cascade')`).
+     *
+     * @param array<int, array<string, mixed>> $questions
+     */
+    private function syncQuestions(AnamnesisTemplate $template, array $questions): void
+    {
+        $existingIds = $template->questions()->pluck('id')->all();
+        $incomingIds = array_values(array_filter(array_column($questions, 'id')));
+
+        $unknownIds = array_diff($incomingIds, $existingIds);
+        abort_if($unknownIds !== [], 422, 'One or more question ids do not belong to this template.');
+
+        foreach ($questions as $questionData) {
+            $id = $questionData['id'] ?? null;
+            unset($questionData['id']);
+
+            if ($id) {
+                $template->questions()->whereKey($id)->update($questionData);
+            } else {
+                $template->questions()->create($questionData);
+            }
+        }
+
+        $toDelete = array_diff($existingIds, $incomingIds);
+        if ($toDelete !== []) {
+            $template->questions()
+                ->whereKey($toDelete)
+                ->whereDoesntHave('answers')
+                ->delete();
+        }
     }
 
     /**

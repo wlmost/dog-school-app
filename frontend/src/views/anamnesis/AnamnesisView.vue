@@ -341,8 +341,17 @@ function handleSaved() {
   loadResponses()
 }
 
-function openTemplateModal(template?: AnamnesisTemplate) {
-  selectedTemplate.value = template || null
+async function openTemplateModal(template?: AnamnesisTemplate) {
+  if (template) {
+    try {
+      selectedTemplate.value = await anamnesisTemplatesApi.getById(template.id)
+    } catch (error) {
+      handleApiError(error, 'Fehler beim Laden der Vorlagendetails')
+      return
+    }
+  } else {
+    selectedTemplate.value = null
+  }
   showTemplateModal.value = true
 }
 

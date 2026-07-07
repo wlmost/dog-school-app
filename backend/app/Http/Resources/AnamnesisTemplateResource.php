@@ -26,10 +26,33 @@ class AnamnesisTemplateResource extends JsonResource
             'updatedAt' => $this->updated_at?->toISOString(),
             'trainer' => new UserResource($this->whenLoaded('trainer')),
             'questions' => AnamnesisQuestionResource::collection($this->whenLoaded('questions')),
+            'questionsCount' => $this->resolveQuestionsCount(),
             'responsesCount' => $this->when(
                 $this->relationLoaded('responses'),
                 fn() => $this->responses->count()
             ),
         ];
+    }
+
+    /**
+     * Resolve the number of questions belonging to this template.
+     *
+     * Prefers the eager-loaded `questions_count` (via `withCount()`, used by
+     * `index()`) to avoid loading the full relation. Falls back to counting
+     * an already loaded `questions` relation (used by `store()`/`show()`,
+     * which load the full relation for the nested `questions` output anyway
+     * and would otherwise trigger a redundant additional query).
+     */
+    private function resolveQuestionsCount(): ?int
+    {
+        if ($this->questions_count !== null) {
+            return (int) $this->questions_count;
+        }
+
+        if ($this->relationLoaded('questions')) {
+            return $this->questions->count();
+        }
+
+        return null;
     }
 }
