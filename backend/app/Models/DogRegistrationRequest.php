@@ -22,6 +22,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property \Illuminate\Support\Carbon|null $date_of_birth
  * @property bool $neutered
  * @property string|null $chip_number
+ * @property \Illuminate\Support\Carbon|null $owner_since
+ * @property string|null $age_at_acquisition
+ * @property string|null $origin  breeder|shelter|private|unknown
  * @property string|null $notes
  * @property string $status  pending|approved|rejected
  * @property int|null $reviewed_by
@@ -48,6 +51,9 @@ class DogRegistrationRequest extends Model
         'date_of_birth',
         'neutered',
         'chip_number',
+        'owner_since',
+        'age_at_acquisition',
+        'origin',
         'notes',
         'status',
         'reviewed_by',
@@ -64,6 +70,7 @@ class DogRegistrationRequest extends Model
         return [
             'date_of_birth' => 'date',
             'neutered'      => 'boolean',
+            'owner_since'   => 'date',
             'reviewed_at'   => 'datetime',
             'created_at'    => 'datetime',
             'updated_at'    => 'datetime',

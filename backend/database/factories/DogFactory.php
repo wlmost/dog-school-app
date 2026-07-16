@@ -31,6 +31,9 @@ class DogFactory extends Factory
             'special_needs' => fake()->optional()->sentence(),
             'notes' => fake()->optional()->paragraph(),
             'is_active' => true,
+            'owner_since' => fake()->optional()->dateTimeBetween('-5 years', 'now'),
+            'age_at_acquisition' => fake()->optional()->randomElement(['ca. 2 Monate', 'ca. 1 Jahr', 'ca. 2 Jahre', 'ca. 4 Jahre']),
+            'origin' => fake()->optional()->randomElement(['breeder', 'shelter', 'private', 'unknown']),
         ];
     }
 

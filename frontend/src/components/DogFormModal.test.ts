@@ -258,4 +258,120 @@ describe('DogFormModal', () => {
       expect(wrapper.emitted('close')).toBeTruthy()
     })
   })
+
+  // ------------------------------------------------------------------ //
+  // Übernahme-Historie: ownerSince / ageAtAcquisition / origin           //
+  // ------------------------------------------------------------------ //
+  describe('Übernahme-Historie (Beim Halter seit / Herkunft / Alter bei Einzug)', () => {
+    function ownerSinceInput(wrapper: VueWrapper<any>) {
+      // date_of_birth ist das erste, owner_since das zweite date-Input im Formular.
+      return wrapper.findAll('input[type="date"]')[1]!
+    }
+
+    function originSelect(wrapper: VueWrapper<any>) {
+      // gender ist das erste, origin das letzte select im Formular.
+      const selects = wrapper.findAll('select')
+      return selects[selects.length - 1]!
+    }
+
+    function ageAtAcquisitionInput(wrapper: VueWrapper<any>) {
+      return wrapper.find('input[placeholder="z.B. ca. 2 Jahre"]')
+    }
+
+    it('zeigt alle drei Felder mit den erwarteten Herkunfts-Optionen an', () => {
+      const wrapper = mountModal()
+
+      expect(ownerSinceInput(wrapper).exists()).toBe(true)
+      expect(ageAtAcquisitionInput(wrapper).exists()).toBe(true)
+
+      const select = originSelect(wrapper)
+      const optionValues = select.findAll('option').map((o) => o.attributes('value'))
+      expect(optionValues).toEqual(['', 'breeder', 'shelter', 'private', 'unknown'])
+    })
+
+    it('befüllt die drei Felder beim Bearbeiten eines bestehenden Hundes aus props.dog', () => {
+      const existingDog = {
+        id: 5,
+        name: 'Bella',
+        breed: 'Mischling',
+        ownerSince: '2022-05-01',
+        ageAtAcquisition: 'ca. 2 Jahre',
+        origin: 'shelter',
+      }
+
+      const wrapper = mountModal({ dog: existingDog })
+
+      expect((ownerSinceInput(wrapper).element as HTMLInputElement).value).toBe('2022-05-01')
+      expect((ageAtAcquisitionInput(wrapper).element as HTMLInputElement).value).toBe('ca. 2 Jahre')
+      expect((originSelect(wrapper).element as HTMLSelectElement).value).toBe('shelter')
+    })
+
+    it('lässt die drei Felder beim Anlegen eines neuen Hundes leer', () => {
+      const wrapper = mountModal()
+
+      expect((ownerSinceInput(wrapper).element as HTMLInputElement).value).toBe('')
+      expect((ageAtAcquisitionInput(wrapper).element as HTMLInputElement).value).toBe('')
+      expect((originSelect(wrapper).element as HTMLSelectElement).value).toBe('')
+    })
+
+    it('sendet ownerSince/ageAtAcquisition/origin als null im Payload, wenn die Felder leer bleiben', async () => {
+      vi.mocked(apiClient.post).mockResolvedValue({ data: { data: mockCreatedDog } })
+
+      const wrapper = mountModal()
+      await fillRequiredFields(wrapper)
+
+      await wrapper.find('form').trigger('submit')
+      await flushPromises()
+
+      const [, payload] = vi.mocked(apiClient.post).mock.calls.find(([url]) => url === '/api/v1/dogs')!
+      expect(payload).toMatchObject({
+        ownerSince: null,
+        ageAtAcquisition: null,
+        origin: null,
+      })
+    })
+
+    it('sendet ownerSince/ageAtAcquisition/origin korrekt befüllt im Payload', async () => {
+      vi.mocked(apiClient.post).mockResolvedValue({ data: { data: mockCreatedDog } })
+
+      const wrapper = mountModal()
+      await fillRequiredFields(wrapper)
+      await ownerSinceInput(wrapper).setValue('2023-09-15')
+      await originSelect(wrapper).setValue('breeder')
+      await ageAtAcquisitionInput(wrapper).setValue('ca. 6 Monate')
+
+      await wrapper.find('form').trigger('submit')
+      await flushPromises()
+
+      const [, payload] = vi.mocked(apiClient.post).mock.calls.find(([url]) => url === '/api/v1/dogs')!
+      expect(payload).toMatchObject({
+        ownerSince: '2023-09-15',
+        ageAtAcquisition: 'ca. 6 Monate',
+        origin: 'breeder',
+      })
+    })
+
+    it('resetForm() setzt alle drei Felder beim Abbrechen zurück', async () => {
+      const existingDog = {
+        id: 5,
+        name: 'Bella',
+        breed: 'Mischling',
+        ownerSince: '2022-05-01',
+        ageAtAcquisition: 'ca. 2 Jahre',
+        origin: 'shelter',
+      }
+
+      const wrapper = mountModal({ dog: existingDog })
+      expect((originSelect(wrapper).element as HTMLSelectElement).value).toBe('shelter')
+
+      const cancelButton = wrapper
+        .findAll('button[type="button"]')
+        .find((btn) => btn.text().includes('Abbrechen'))
+      await cancelButton!.trigger('click')
+
+      expect((ownerSinceInput(wrapper).element as HTMLInputElement).value).toBe('')
+      expect((ageAtAcquisitionInput(wrapper).element as HTMLInputElement).value).toBe('')
+      expect((originSelect(wrapper).element as HTMLSelectElement).value).toBe('')
+    })
+  })
 })

@@ -129,6 +129,47 @@
                     />
                   </div>
 
+                  <!-- Owner Since & Origin -->
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label for="dog-owner-since" class="block text-sm font-medium text-gray-700 mb-1">
+                        Beim Halter seit
+                      </label>
+                      <input
+                        id="dog-owner-since"
+                        v-model="form.ownerSince"
+                        type="date"
+                        class="input"
+                        @click="($event.target as HTMLInputElement).showPicker?.()"
+                      />
+                    </div>
+
+                    <div>
+                      <label for="dog-origin" class="block text-sm font-medium text-gray-700 mb-1">Herkunft</label>
+                      <select id="dog-origin" v-model="form.origin" class="input">
+                        <option value="">Nicht angegeben</option>
+                        <option value="breeder">Züchter</option>
+                        <option value="shelter">Tierschutz</option>
+                        <option value="private">Privat</option>
+                        <option value="unknown">unbekannt</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <!-- Age at Acquisition -->
+                  <div>
+                    <label for="dog-age-at-acquisition" class="block text-sm font-medium text-gray-700 mb-1">
+                      Alter bei Einzug
+                    </label>
+                    <input
+                      id="dog-age-at-acquisition"
+                      v-model="form.ageAtAcquisition"
+                      type="text"
+                      class="input"
+                      placeholder="z.B. ca. 2 Jahre"
+                    />
+                  </div>
+
                   <!-- Notes -->
                   <div>
                     <label for="dog-notes" class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
@@ -202,6 +243,9 @@ const form = ref({
   dateOfBirth: '',
   neutered: false,
   chipNumber: '',
+  ownerSince: '',
+  ageAtAcquisition: '',
+  origin: '',
   notes: ''
 })
 
@@ -223,6 +267,9 @@ function resetForm() {
     dateOfBirth: '',
     neutered: false,
     chipNumber: '',
+    ownerSince: '',
+    ageAtAcquisition: '',
+    origin: '',
     notes: ''
   }
   error.value = null
@@ -242,6 +289,9 @@ async function handleSubmit() {
       dateOfBirth: form.value.dateOfBirth || null,
       neutered: form.value.neutered,
       chipNumber: form.value.chipNumber || null,
+      ownerSince: form.value.ownerSince || null,
+      ageAtAcquisition: form.value.ageAtAcquisition || null,
+      origin: form.value.origin || null,
       notes: form.value.notes || null
     }
 

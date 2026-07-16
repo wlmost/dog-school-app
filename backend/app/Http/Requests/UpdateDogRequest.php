@@ -60,6 +60,9 @@ class UpdateDogRequest extends FormRequest
             'neutered' => ['nullable', 'boolean'],
             'isActive' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string'],
+            'ownerSince' => ['nullable', 'date', 'before_or_equal:today'],
+            'ageAtAcquisition' => ['nullable', 'string', 'max:255'],
+            'origin' => ['nullable', 'in:breeder,shelter,private,unknown'],
         ];
     }
 
@@ -93,6 +96,8 @@ class UpdateDogRequest extends FormRequest
             'chipNumber' => 'chip number',
             'specialNeeds' => 'special needs',
             'isActive' => 'active status',
+            'ownerSince' => 'owner since date',
+            'ageAtAcquisition' => 'age at acquisition',
         ];
     }
 }

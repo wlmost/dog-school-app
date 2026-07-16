@@ -33,6 +33,9 @@ describe('Dog API - Index', function () {
                         'breed',
                         'dateOfBirth',
                         'gender',
+                        'ownerSince',
+                        'ageAtAcquisition',
+                        'origin',
                         'customer',
                     ],
                 ],
@@ -370,6 +373,156 @@ describe('Dog API - Store', function () {
         $response->assertStatus(422)
             ->assertJsonValidationErrors(['dateOfBirth']);
     });
+
+    it('erstellt einen hund mit den drei herkunfts-/übernahmefeldern', function () {
+        $admin = User::factory()->admin()->create();
+        $customer = Customer::factory()->create();
+
+        $data = [
+            'customerId' => $customer->id,
+            'name' => 'Rex',
+            'breed' => 'Mixed Breed',
+            'dateOfBirth' => '2020-05-15',
+            'gender' => 'male',
+            'ownerSince' => '2023-06-01',
+            'ageAtAcquisition' => 'ca. 2 Jahre',
+            'origin' => 'shelter',
+        ];
+
+        $response = $this->actingAs($admin)
+            ->postJson('/api/v1/dogs', $data);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.ownerSince', '2023-06-01')
+            ->assertJsonPath('data.ageAtAcquisition', 'ca. 2 Jahre')
+            ->assertJsonPath('data.origin', 'shelter');
+
+        $this->assertDatabaseHas('dogs', [
+            'name' => 'Rex',
+            'age_at_acquisition' => 'ca. 2 Jahre',
+            'origin' => 'shelter',
+        ]);
+
+        $createdDog = Dog::where('name', 'Rex')->firstOrFail();
+        expect($createdDog->owner_since->toDateString())->toBe('2023-06-01');
+    });
+
+    it('erstellt einen hund ohne die drei herkunfts-/übernahmefelder und lässt sie null', function () {
+        $admin = User::factory()->admin()->create();
+        $customer = Customer::factory()->create();
+
+        $data = [
+            'customerId' => $customer->id,
+            'name' => 'Luna',
+            'breed' => 'Poodle',
+            'dateOfBirth' => '2021-02-01',
+            'gender' => 'female',
+        ];
+
+        $response = $this->actingAs($admin)
+            ->postJson('/api/v1/dogs', $data);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.ownerSince', null)
+            ->assertJsonPath('data.ageAtAcquisition', null)
+            ->assertJsonPath('data.origin', null);
+
+        $this->assertDatabaseHas('dogs', [
+            'name' => 'Luna',
+            'owner_since' => null,
+            'age_at_acquisition' => null,
+            'origin' => null,
+        ]);
+    });
+
+    it('weist einen ungültigen origin-wert mit 422 zurück', function () {
+        $admin = User::factory()->admin()->create();
+        $customer = Customer::factory()->create();
+
+        $data = [
+            'customerId' => $customer->id,
+            'name' => 'Bruno',
+            'breed' => 'Beagle',
+            'dateOfBirth' => '2020-01-01',
+            'gender' => 'male',
+            'origin' => 'invalid-origin',
+        ];
+
+        $response = $this->actingAs($admin)
+            ->postJson('/api/v1/dogs', $data);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['origin']);
+    });
+
+    it('behandelt einen leeren string als origin wie null (globale ConvertEmptyStringsToNull-Middleware)', function () {
+        $admin = User::factory()->admin()->create();
+        $customer = Customer::factory()->create();
+
+        $data = [
+            'customerId' => $customer->id,
+            'name' => 'Nala',
+            'breed' => 'Mixed Breed',
+            'dateOfBirth' => '2020-01-01',
+            'gender' => 'female',
+            'origin' => '',
+        ];
+
+        $response = $this->actingAs($admin)
+            ->postJson('/api/v1/dogs', $data);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.origin', null);
+
+        $this->assertDatabaseHas('dogs', [
+            'name' => 'Nala',
+            'origin' => null,
+        ]);
+    });
+
+    it('weist einen ownerSince-wert in der zukunft mit 422 zurück', function () {
+        $admin = User::factory()->admin()->create();
+        $customer = Customer::factory()->create();
+
+        $data = [
+            'customerId' => $customer->id,
+            'name' => 'Milo',
+            'breed' => 'Mixed Breed',
+            'dateOfBirth' => '2020-01-01',
+            'gender' => 'male',
+            'ownerSince' => now()->addDay()->toDateString(),
+        ];
+
+        $response = $this->actingAs($admin)
+            ->postJson('/api/v1/dogs', $data);
+
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['ownerSince']);
+    });
+
+    it('akzeptiert ownerSince exakt heute als grenzwert für before_or_equal', function () {
+        $admin = User::factory()->admin()->create();
+        $customer = Customer::factory()->create();
+
+        $data = [
+            'customerId' => $customer->id,
+            'name' => 'Frieda',
+            'breed' => 'Mixed Breed',
+            'dateOfBirth' => '2020-01-01',
+            'gender' => 'female',
+            'ownerSince' => now()->toDateString(),
+        ];
+
+        $response = $this->actingAs($admin)
+            ->postJson('/api/v1/dogs', $data);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.ownerSince', now()->toDateString());
+
+        $this->assertDatabaseHas('dogs', [
+            'name' => 'Frieda',
+        ]);
+    });
 });
 
 describe('Dog API - Update', function () {
@@ -430,6 +583,62 @@ describe('Dog API - Update', function () {
             ]);
 
         $response->assertStatus(403);
+    });
+
+    it('aktualisiert die drei herkunfts-/übernahmefelder eines hundes', function () {
+        $admin = User::factory()->admin()->create();
+        $dog = Dog::factory()->create([
+            'owner_since' => null,
+            'age_at_acquisition' => null,
+            'origin' => null,
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->patchJson("/api/v1/dogs/{$dog->id}", [
+                'ownerSince' => '2022-09-15',
+                'ageAtAcquisition' => 'ca. 6 Monate',
+                'origin' => 'breeder',
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.ownerSince', '2022-09-15')
+            ->assertJsonPath('data.ageAtAcquisition', 'ca. 6 Monate')
+            ->assertJsonPath('data.origin', 'breeder');
+
+        $this->assertDatabaseHas('dogs', [
+            'id' => $dog->id,
+            'age_at_acquisition' => 'ca. 6 Monate',
+            'origin' => 'breeder',
+        ]);
+        expect($dog->refresh()->owner_since->toDateString())->toBe('2022-09-15');
+    });
+
+    it('setzt die drei herkunfts-/übernahmefelder explizit auf null zurück', function () {
+        $admin = User::factory()->admin()->create();
+        $dog = Dog::factory()->create([
+            'owner_since' => '2022-01-01',
+            'age_at_acquisition' => 'ca. 3 Jahre',
+            'origin' => 'private',
+        ]);
+
+        $response = $this->actingAs($admin)
+            ->patchJson("/api/v1/dogs/{$dog->id}", [
+                'ownerSince' => null,
+                'ageAtAcquisition' => null,
+                'origin' => null,
+            ]);
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.ownerSince', null)
+            ->assertJsonPath('data.ageAtAcquisition', null)
+            ->assertJsonPath('data.origin', null);
+
+        $this->assertDatabaseHas('dogs', [
+            'id' => $dog->id,
+            'owner_since' => null,
+            'age_at_acquisition' => null,
+            'origin' => null,
+        ]);
     });
 });
 
