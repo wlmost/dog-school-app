@@ -162,6 +162,40 @@
                   </div>
                 </div>
 
+                <!-- Owner History -->
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Beim Halter seit</label>
+                    <input
+                      v-model="form.owner_since"
+                      type="date"
+                      class="input"
+                      @click="($event.target as HTMLInputElement).showPicker?.()"
+                    />
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Herkunft</label>
+                    <select v-model="form.origin" class="input">
+                      <option value="">Nicht angegeben</option>
+                      <option value="breeder">Züchter</option>
+                      <option value="shelter">Tierschutz</option>
+                      <option value="private">Privat</option>
+                      <option value="unknown">unbekannt</option>
+                    </select>
+                  </div>
+
+                  <div class="col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Alter bei Einzug</label>
+                    <input
+                      v-model="form.age_at_acquisition"
+                      type="text"
+                      placeholder="z.B. ca. 2 Jahre"
+                      class="input"
+                    />
+                  </div>
+                </div>
+
                 <!-- Error Message -->
                 <div v-if="error" class="rounded-md bg-red-50 p-4">
                   <p class="text-sm text-red-800">{{ error }}</p>
@@ -258,7 +292,10 @@ const form = ref({
   color: '',
   special_characteristics: '',
   neutered: false,
-  notes: ''
+  notes: '',
+  owner_since: '',
+  age_at_acquisition: '',
+  origin: ''
 })
 
 /**
@@ -279,7 +316,10 @@ watch(() => props.dog, (newDog) => {
       color: newDog.color || '',
       special_characteristics: newDog.specialCharacteristics || '',
       neutered: newDog.neutered ?? false, // Use nullish coalescing to preserve false value
-      notes: newDog.notes || ''
+      notes: newDog.notes || '',
+      owner_since: newDog.ownerSince || '',
+      age_at_acquisition: newDog.ageAtAcquisition || '',
+      origin: newDog.origin || ''
     }
   } else if (!props.isOpen) {
     resetForm()
@@ -343,7 +383,10 @@ function resetForm() {
     color: '',
     special_characteristics: '',
     neutered: false,
-    notes: ''
+    notes: '',
+    owner_since: '',
+    age_at_acquisition: '',
+    origin: ''
   }
   error.value = null
   selectedImageFile.value = null
@@ -365,7 +408,8 @@ function translateError(errorMessage: string): string {
     'The date of birth field is required': 'Das Geburtsdatum ist erforderlich',
     'The date of birth must be a date before today': 'Das Geburtsdatum muss in der Vergangenheit liegen',
     'The gender field must be male or female': 'Das Geschlecht muss Rüde oder Hündin sein',
-    'The chip number has already been taken': 'Diese Chipnummer wird bereits verwendet'
+    'The chip number has already been taken': 'Diese Chipnummer wird bereits verwendet',
+    'The selected origin is invalid': 'Die ausgewählte Herkunft ist ungültig'
   }
   
   // Check for exact match
@@ -398,7 +442,10 @@ async function saveDogRecord(): Promise<any> {
     color: form.value.color || null,
     specialCharacteristics: form.value.special_characteristics || null,
     neutered: form.value.neutered,
-    notes: form.value.notes || null
+    notes: form.value.notes || null,
+    ownerSince: form.value.owner_since || null,
+    ageAtAcquisition: form.value.age_at_acquisition || null,
+    origin: form.value.origin || null
   }
 
   // Only admins/trainers can change the owner
