@@ -145,6 +145,60 @@ test('store request validates dateOfBirth is not in the future', function () {
         ->assertJsonValidationErrors(['dateOfBirth']);
 });
 
+it('erstellt eine anfrage mit den drei herkunfts-/übernahmefeldern', function () {
+    $payload = [
+        'name'              => 'Buddy',
+        'breed'             => 'Golden Retriever',
+        'gender'            => 'male',
+        'dateOfBirth'       => '2021-05-10',
+        'ownerSince'        => '2023-03-01',
+        'ageAtAcquisition'  => 'ca. 1 Jahr',
+        'origin'            => 'private',
+    ];
+
+    $response = $this->actingAs($this->customerUser)
+        ->postJson('/api/v1/dog-registration-requests', $payload)
+        ->assertCreated()
+        ->assertJsonPath('data.ownerSince', '2023-03-01')
+        ->assertJsonPath('data.ageAtAcquisition', 'ca. 1 Jahr')
+        ->assertJsonPath('data.origin', 'private');
+
+    $this->assertDatabaseHas('dog_registration_requests', [
+        'customer_id'        => $this->customer->id,
+        'name'               => 'Buddy',
+        'age_at_acquisition' => 'ca. 1 Jahr',
+        'origin'             => 'private',
+    ]);
+
+    $createdRequest = DogRegistrationRequest::where('name', 'Buddy')->firstOrFail();
+    expect($createdRequest->owner_since->toDateString())->toBe('2023-03-01');
+});
+
+it('weist eine anfrage mit ownerSince in der zukunft mit 422 zurück', function () {
+    $this->actingAs($this->customerUser)
+        ->postJson('/api/v1/dog-registration-requests', [
+            'name'        => 'Rex',
+            'ownerSince'  => now()->addDay()->toDateString(),
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['ownerSince']);
+});
+
+it('behandelt einen leeren string als origin bei einer anfrage wie null (globale ConvertEmptyStringsToNull-Middleware)', function () {
+    $this->actingAs($this->customerUser)
+        ->postJson('/api/v1/dog-registration-requests', [
+            'name'   => 'Rex',
+            'origin' => '',
+        ])
+        ->assertCreated()
+        ->assertJsonPath('data.origin', null);
+
+    $this->assertDatabaseHas('dog_registration_requests', [
+        'name'   => 'Rex',
+        'origin' => null,
+    ]);
+});
+
 // ---------------------------------------------------------------------------
 // show
 // ---------------------------------------------------------------------------
@@ -156,6 +210,31 @@ test('admin can view any registration request', function () {
         ->getJson("/api/v1/dog-registration-requests/{$req->id}")
         ->assertOk()
         ->assertJsonPath('data.id', $req->id);
+});
+
+it('liefert die drei herkunfts-/übernahmefelder beim anzeigen und auflisten von anfragen', function () {
+    $req = DogRegistrationRequest::factory()->create([
+        'customer_id'        => $this->customer->id,
+        'owner_since'        => '2021-07-01',
+        'age_at_acquisition' => 'ca. 5 Jahre',
+        'origin'             => 'unknown',
+    ]);
+
+    $this->actingAs($this->admin)
+        ->getJson("/api/v1/dog-registration-requests/{$req->id}")
+        ->assertOk()
+        ->assertJsonPath('data.ownerSince', '2021-07-01')
+        ->assertJsonPath('data.ageAtAcquisition', 'ca. 5 Jahre')
+        ->assertJsonPath('data.origin', 'unknown');
+
+    $this->actingAs($this->admin)
+        ->getJson('/api/v1/dog-registration-requests')
+        ->assertOk()
+        ->assertJsonStructure([
+            'data' => [
+                '*' => ['id', 'ownerSince', 'ageAtAcquisition', 'origin'],
+            ],
+        ]);
 });
 
 test('customer can view their own request', function () {
@@ -241,6 +320,55 @@ test('customer cannot approve a request', function () {
     $this->actingAs($this->customerUser)
         ->postJson("/api/v1/dog-registration-requests/{$req->id}/approve")
         ->assertForbidden();
+});
+
+it('übernimmt die drei herkunfts-/übernahmefelder beim genehmigen in den neuen hund', function () {
+    $req = DogRegistrationRequest::factory()->create([
+        'customer_id'        => $this->customer->id,
+        'name'               => 'Bella',
+        'breed'              => 'Labrador',
+        'gender'             => 'female',
+        'owner_since'        => '2022-11-20',
+        'age_at_acquisition' => 'ca. 3 Jahre',
+        'origin'             => 'shelter',
+    ]);
+
+    $this->actingAs($this->admin)
+        ->postJson("/api/v1/dog-registration-requests/{$req->id}/approve")
+        ->assertOk()
+        ->assertJsonPath('data.name', 'Bella');
+
+    $this->assertDatabaseHas('dogs', [
+        'customer_id'        => $this->customer->id,
+        'name'               => 'Bella',
+        'age_at_acquisition' => 'ca. 3 Jahre',
+        'origin'             => 'shelter',
+    ]);
+
+    $createdDog = Dog::where('name', 'Bella')->firstOrFail();
+    expect($createdDog->owner_since->toDateString())->toBe('2022-11-20');
+});
+
+it('erzeugt beim genehmigen einen hund mit null in allen drei herkunfts-/übernahmefeldern wenn die anfrage sie nicht gesetzt hat', function () {
+    $req = DogRegistrationRequest::factory()->create([
+        'customer_id'        => $this->customer->id,
+        'name'               => 'Bella',
+        'breed'              => 'Labrador',
+        'gender'             => 'female',
+        'owner_since'        => null,
+        'age_at_acquisition' => null,
+        'origin'             => null,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->postJson("/api/v1/dog-registration-requests/{$req->id}/approve")
+        ->assertOk()
+        ->assertJsonPath('data.name', 'Bella');
+
+    $createdDog = Dog::where('name', 'Bella')->firstOrFail();
+    expect($createdDog->owner_since)->toBeNull();
+    expect($createdDog->age_at_acquisition)->toBeNull();
+    expect($createdDog->origin)->toBeNull();
 });
 
 // ---------------------------------------------------------------------------

@@ -42,6 +42,9 @@ class StoreDogRegistrationRequest extends FormRequest
             'neutered'    => ['nullable', 'boolean'],
             'chipNumber'  => ['nullable', 'string', 'max:50'],
             'notes'       => ['nullable', 'string', 'max:1000'],
+            'ownerSince'       => ['nullable', 'date', 'before_or_equal:today'],
+            'ageAtAcquisition' => ['nullable', 'string', 'max:255'],
+            'origin'           => ['nullable', 'in:breeder,shelter,private,unknown'],
         ];
     }
 
@@ -55,6 +58,8 @@ class StoreDogRegistrationRequest extends FormRequest
         return [
             'dateOfBirth' => 'date of birth',
             'chipNumber'  => 'chip number',
+            'ownerSince'       => 'owner since date',
+            'ageAtAcquisition' => 'age at acquisition',
         ];
     }
 

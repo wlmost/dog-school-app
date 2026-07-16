@@ -145,14 +145,17 @@ class DogRegistrationRequestController extends Controller
         $dog = DB::transaction(function () use ($request, $dogRegistrationRequest): Dog {
             // Create the actual Dog record from the request data
             $dog = Dog::create([
-                'customer_id'  => $dogRegistrationRequest->customer_id,
-                'name'         => $dogRegistrationRequest->name,
-                'breed'        => $dogRegistrationRequest->breed,
-                'gender'       => $dogRegistrationRequest->gender,
-                'date_of_birth' => $dogRegistrationRequest->date_of_birth,
-                'neutered'     => $dogRegistrationRequest->neutered,
-                'chip_number'  => $dogRegistrationRequest->chip_number,
-                'is_active'    => true,
+                'customer_id'        => $dogRegistrationRequest->customer_id,
+                'name'               => $dogRegistrationRequest->name,
+                'breed'              => $dogRegistrationRequest->breed,
+                'gender'             => $dogRegistrationRequest->gender,
+                'date_of_birth'      => $dogRegistrationRequest->date_of_birth,
+                'neutered'           => $dogRegistrationRequest->neutered,
+                'chip_number'        => $dogRegistrationRequest->chip_number,
+                'owner_since'        => $dogRegistrationRequest->owner_since,
+                'age_at_acquisition' => $dogRegistrationRequest->age_at_acquisition,
+                'origin'             => $dogRegistrationRequest->origin,
+                'is_active'          => true,
             ]);
 
             // Mark the request as approved
