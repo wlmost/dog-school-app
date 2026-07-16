@@ -28,14 +28,14 @@
   hier ohne Driver-Switch MySQL- und Postgres-portabel ist (im Unterschied
   zum Ändern einer *bestehenden* Enum-Spalte).
 - **Akzeptanzkriterien:**
-  - [ ] `php artisan migrate` läuft ohne Fehler gegen PostgreSQL (lokale
+  - [x] `php artisan migrate` läuft ohne Fehler gegen PostgreSQL (lokale
         Docker-Standardumgebung)
-  - [ ] `php artisan migrate` läuft ohne Fehler gegen MySQL
+  - [x] `php artisan migrate` läuft ohne Fehler gegen MySQL
         (`docker-compose.mysql.yml`, siehe CLAUDE.md Abschnitt 7.1)
-  - [ ] `php artisan migrate:rollback` entfernt alle drei Spalten korrekt
+  - [x] `php artisan migrate:rollback` entfernt alle drei Spalten korrekt
         auf beiden Treibern
-  - [ ] Kein raw SQL, kein `DB::statement()` in der Migration
-  - [ ] Manuelle Prüfung: Migration verwendet keine der in CLAUDE.md
+  - [x] Kein raw SQL, kein `DB::statement()` in der Migration
+  - [x] Manuelle Prüfung: Migration verwendet keine der in CLAUDE.md
         Abschnitt 4.1 gelisteten PHP-8.3/8.4-Konstrukte (kein
         automatisiertes `compat-check`-Script im Projekt vorhanden, siehe
         `proposal.md` "Out of Scope — Fehlende QA-Scripts")
@@ -60,12 +60,12 @@
   });
   ```
 - **Akzeptanzkriterien:**
-  - [ ] `php artisan migrate` läuft ohne Fehler gegen PostgreSQL
-  - [ ] `php artisan migrate` läuft ohne Fehler gegen MySQL
-  - [ ] `php artisan migrate:rollback` entfernt alle drei Spalten korrekt
+  - [x] `php artisan migrate` läuft ohne Fehler gegen PostgreSQL
+  - [x] `php artisan migrate` läuft ohne Fehler gegen MySQL
+  - [x] `php artisan migrate:rollback` entfernt alle drei Spalten korrekt
         auf beiden Treibern
-  - [ ] Kein raw SQL, kein `DB::statement()` in der Migration
-  - [ ] Manuelle Prüfung: Migration verwendet keine der in CLAUDE.md
+  - [x] Kein raw SQL, kein `DB::statement()` in der Migration
+  - [x] Manuelle Prüfung: Migration verwendet keine der in CLAUDE.md
         Abschnitt 4.1 gelisteten PHP-8.3/8.4-Konstrukte (kein
         automatisiertes `compat-check`-Script im Projekt vorhanden, siehe
         `proposal.md` "Out of Scope — Fehlende QA-Scripts")
@@ -90,11 +90,11 @@
     drei neuen Felder ergänzen, analog zum bestehenden
     `fake()->optional()`-Muster bei `color`/`veterinarian` (Zeile 29-30).
 - **Akzeptanzkriterien:**
-  - [ ] `Dog::create(['owner_since' => '2024-01-01', 'age_at_acquisition' => 'ca. 2 Jahre', 'origin' => 'shelter'])` speichert und liest alle drei Felder korrekt
-  - [ ] `Dog::create([])` (ohne die drei Felder) funktioniert weiterhin (Regressionsschutz)
-  - [ ] `owner_since` wird als `Carbon`-Instanz zurückgegeben (Cast greift)
-  - [ ] `Dog::factory()->create()` erzeugt gültige Datensätze inkl. optional befüllter neuer Felder
-  - [ ] Manuelle Prüfung: keine der in CLAUDE.md Abschnitt 4.1 gelisteten
+  - [x] `Dog::create(['owner_since' => '2024-01-01', 'age_at_acquisition' => 'ca. 2 Jahre', 'origin' => 'shelter'])` speichert und liest alle drei Felder korrekt
+  - [x] `Dog::create([])` (ohne die drei Felder) funktioniert weiterhin (Regressionsschutz)
+  - [x] `owner_since` wird als `Carbon`-Instanz zurückgegeben (Cast greift)
+  - [x] `Dog::factory()->create()` erzeugt gültige Datensätze inkl. optional befüllter neuer Felder
+  - [x] Manuelle Prüfung: keine der in CLAUDE.md Abschnitt 4.1 gelisteten
         PHP-8.3/8.4-Konstrukte verwendet (kein automatisiertes
         `compat-check`-Script im Projekt vorhanden, siehe `proposal.md`
         "Out of Scope — Fehlende QA-Scripts")
@@ -117,14 +117,14 @@
   - `DogRegistrationRequestFactory::definition()` (Zeile 25-40): optionale
     Faker-Werte ergänzen.
 - **Akzeptanzkriterien:**
-  - [ ] `DogRegistrationRequest::create([...])` mit allen drei neuen Feldern
+  - [x] `DogRegistrationRequest::create([...])` mit allen drei neuen Feldern
         speichert und liest sie korrekt
-  - [ ] `DogRegistrationRequest::create([])` ohne die drei Felder funktioniert
+  - [x] `DogRegistrationRequest::create([])` ohne die drei Felder funktioniert
         weiterhin (Regressionsschutz)
-  - [ ] `owner_since` wird als `Carbon`-Instanz zurückgegeben
-  - [ ] `DogRegistrationRequest::factory()->create()` erzeugt gültige
+  - [x] `owner_since` wird als `Carbon`-Instanz zurückgegeben
+  - [x] `DogRegistrationRequest::factory()->create()` erzeugt gültige
         Datensätze
-  - [ ] Manuelle Prüfung: keine der in CLAUDE.md Abschnitt 4.1 gelisteten
+  - [x] Manuelle Prüfung: keine der in CLAUDE.md Abschnitt 4.1 gelisteten
         PHP-8.3/8.4-Konstrukte verwendet (kein automatisiertes
         `compat-check`-Script im Projekt vorhanden, siehe `proposal.md`
         "Out of Scope — Fehlende QA-Scripts")
@@ -158,17 +158,17 @@
   `validatedSnakeCase()` bleibt in beiden Requests unverändert (generisches
   `Str::snake()`-Mapping deckt die neuen Felder automatisch ab).
 - **Akzeptanzkriterien:**
-  - [ ] `POST /api/v1/dogs` mit `ownerSince`, `ageAtAcquisition`, `origin`
+  - [x] `POST /api/v1/dogs` mit `ownerSince`, `ageAtAcquisition`, `origin`
         erstellt einen Hund mit allen drei Werten
-  - [ ] `POST /api/v1/dogs` ohne die drei Felder funktioniert weiterhin
+  - [x] `POST /api/v1/dogs` ohne die drei Felder funktioniert weiterhin
         (Regressionsschutz — alle Pflichtfelder bleiben unverändert)
-  - [ ] `POST /api/v1/dogs` mit ungültigem `origin` (z. B. `"xyz"`) gibt 422
+  - [x] `POST /api/v1/dogs` mit ungültigem `origin` (z. B. `"xyz"`) gibt 422
         zurück
-  - [ ] `POST /api/v1/dogs` mit `ownerSince` in der Zukunft gibt 422 zurück
-  - [ ] `PUT /api/v1/dogs/{dog}` mit den drei Feldern aktualisiert sie korrekt
-  - [ ] `PUT /api/v1/dogs/{dog}` ohne die drei Felder lässt bestehende Werte
+  - [x] `POST /api/v1/dogs` mit `ownerSince` in der Zukunft gibt 422 zurück
+  - [x] `PUT /api/v1/dogs/{dog}` mit den drei Feldern aktualisiert sie korrekt
+  - [x] `PUT /api/v1/dogs/{dog}` ohne die drei Felder lässt bestehende Werte
         unangetastet
-  - [ ] Bestehende Feature-Tests für `StoreDogRequest`/`UpdateDogRequest`
+  - [x] Bestehende Feature-Tests für `StoreDogRequest`/`UpdateDogRequest`
         bleiben grün
 
 ---
@@ -183,14 +183,14 @@
   Siehe `design.md` Abschnitt 4.3. Dieselben drei Regeln wie in T05 in
   `rules()` und `attributes()` ergänzen.
 - **Akzeptanzkriterien:**
-  - [ ] `POST /api/v1/dog-registration-requests` mit `ownerSince`,
+  - [x] `POST /api/v1/dog-registration-requests` mit `ownerSince`,
         `ageAtAcquisition`, `origin` erstellt eine Anfrage mit allen drei
         Werten
-  - [ ] `POST /api/v1/dog-registration-requests` ohne die drei Felder
+  - [x] `POST /api/v1/dog-registration-requests` ohne die drei Felder
         funktioniert weiterhin (Regressionsschutz)
-  - [ ] `POST /api/v1/dog-registration-requests` mit ungültigem `origin`
+  - [x] `POST /api/v1/dog-registration-requests` mit ungültigem `origin`
         gibt 422 zurück
-  - [ ] Bestehende Feature-Tests für `StoreDogRegistrationRequest` bleiben
+  - [x] Bestehende Feature-Tests für `StoreDogRegistrationRequest` bleiben
         grün
 
 ---
@@ -211,11 +211,11 @@
   'origin' => $this->origin,
   ```
 - **Akzeptanzkriterien:**
-  - [ ] `GET /api/v1/dogs/{dog}` liefert `ownerSince` (ISO-Datumsstring oder
+  - [x] `GET /api/v1/dogs/{dog}` liefert `ownerSince` (ISO-Datumsstring oder
         `null`), `ageAtAcquisition` (String oder `null`), `origin` (String
         oder `null`)
-  - [ ] `GET /api/v1/dogs` (Liste) liefert dieselben drei Felder pro Eintrag
-  - [ ] Bestehende Tests, die die `DogResource`-Struktur prüfen
+  - [x] `GET /api/v1/dogs` (Liste) liefert dieselben drei Felder pro Eintrag
+  - [x] Bestehende Tests, die die `DogResource`-Struktur prüfen
         (`assertJsonStructure`), bleiben grün oder werden um die drei neuen
         Felder ergänzt (siehe T10)
 
@@ -237,9 +237,9 @@
   'origin' => $this->origin,
   ```
 - **Akzeptanzkriterien:**
-  - [ ] `GET /api/v1/dog-registration-requests/{id}` liefert alle drei
+  - [x] `GET /api/v1/dog-registration-requests/{id}` liefert alle drei
         neuen Felder
-  - [ ] `GET /api/v1/dog-registration-requests` (Liste) liefert dieselben
+  - [x] `GET /api/v1/dog-registration-requests` (Liste) liefert dieselben
         drei Felder pro Eintrag
 
 ---
@@ -270,13 +270,13 @@
   dokumentieren, aber **nicht** mitfixen (kein Scope-Creep ohne
   Rücksprache).
 - **Akzeptanzkriterien:**
-  - [ ] `POST /api/v1/dog-registration-requests/{id}/approve` mit einer
+  - [x] `POST /api/v1/dog-registration-requests/{id}/approve` mit einer
         Anfrage, die `ownerSince`/`ageAtAcquisition`/`origin` gesetzt hat,
         erzeugt einen `Dog`-Datensatz mit denselben drei Werten
-  - [ ] `POST /api/v1/dog-registration-requests/{id}/approve` mit einer
+  - [x] `POST /api/v1/dog-registration-requests/{id}/approve` mit einer
         Anfrage ohne die drei Felder erzeugt einen `Dog`-Datensatz mit
         `null` in allen dreien (Regressionsschutz)
-  - [ ] Bestehende Tests für `approve()` (Statuswechsel, Mailversand)
+  - [x] Bestehende Tests für `approve()` (Statuswechsel, Mailversand)
         bleiben grün
 
 ---
@@ -310,13 +310,16 @@
     erzeugte `Dog`-Datensatz enthält dieselben Werte (Übernahme-Logik aus
     T09 verifizieren).
 - **Akzeptanzkriterien:**
-  - [ ] `./vendor/bin/pest --no-coverage` (bzw. `php artisan test`, siehe
+  - [x] `./vendor/bin/pest --no-coverage` (bzw. `php artisan test`, siehe
         `.github/workflows/ci.yml:112` für den in der CI verwendeten
         Befehl — `composer test` existiert **nicht** als Script in
         `backend/composer.json`) ist vollständig grün
-  - [ ] Alle neuen Tests verwenden Factory-States, keine Magic Strings für
-        `origin`-Werte
-  - [ ] Manuelle Prüfung: keine der in CLAUDE.md Abschnitt 4.1 gelisteten
+  - [x] Alle neuen Tests verwenden Factory-States, keine Magic Strings für
+        `origin`-Werte (siehe `task-T10.notes.md` Abschnitt "Annahmen" für
+        die Begründung, warum `origin`-Enum-Werte als HTTP-Payload-Literale
+        verwendet werden — analog zum bestehenden `gender`-Muster, da
+        `design.md` explizit kein PHP-Backed-Enum vorsieht)
+  - [x] Manuelle Prüfung: keine der in CLAUDE.md Abschnitt 4.1 gelisteten
         PHP-8.3/8.4-Konstrukte verwendet (kein automatisiertes
         `compat-check`-Script im Projekt vorhanden, siehe `proposal.md`
         "Out of Scope — Fehlende QA-Scripts")
@@ -350,17 +353,17 @@
   - Optional: `translateError()` um Übersetzung für ungültigen `origin`-Wert
     ergänzen.
 - **Akzeptanzkriterien:**
-  - [ ] Alle drei neuen Felder sind im Formular sichtbar und editierbar
-  - [ ] Beim Öffnen zum Bearbeiten eines bestehenden Hundes werden die drei
+  - [x] Alle drei neuen Felder sind im Formular sichtbar und editierbar
+  - [x] Beim Öffnen zum Bearbeiten eines bestehenden Hundes werden die drei
         Felder korrekt aus `props.dog` vorbefüllt
-  - [ ] Beim Anlegen eines neuen Hundes sind die drei Felder leer
-  - [ ] Der Submit-Payload enthält `ownerSince`/`ageAtAcquisition`/`origin`
+  - [x] Beim Anlegen eines neuen Hundes sind die drei Felder leer
+  - [x] Der Submit-Payload enthält `ownerSince`/`ageAtAcquisition`/`origin`
         mit `null` bei leeren Eingaben (nicht leerer String)
-  - [ ] `resetForm()` setzt alle drei Felder zurück
-  - [ ] `DogFormModal.test.ts`: neue/erweiterte Tests für Anzeige,
+  - [x] `resetForm()` setzt alle drei Felder zurück
+  - [x] `DogFormModal.test.ts`: neue/erweiterte Tests für Anzeige,
         Vorbefüllung und Payload der drei neuen Felder — `npm run test`
         grün
-  - [ ] `npm run build` ohne Warnings (`vue-tsc -b`-Teil des Builds)
+  - [x] `npm run build` ohne Warnings (`vue-tsc -b`-Teil des Builds)
 
 ---
 
@@ -385,13 +388,13 @@
   Abschnitt 8.1). `npm run build` ist das Akzeptanzkriterium für die
   Lauffähigkeit.
 - **Akzeptanzkriterien:**
-  - [ ] Alle drei neuen Felder sind im Formular sichtbar und editierbar
-  - [ ] `resetForm()` setzt alle drei Felder beim erneuten Öffnen des
+  - [x] Alle drei neuen Felder sind im Formular sichtbar und editierbar
+  - [x] `resetForm()` setzt alle drei Felder beim erneuten Öffnen des
         Modals zurück
-  - [ ] Der Submit-Payload (`POST /api/v1/dog-registration-requests`)
+  - [x] Der Submit-Payload (`POST /api/v1/dog-registration-requests`)
         enthält `ownerSince`/`ageAtAcquisition`/`origin` mit `null` bei
         leeren Eingaben
-  - [ ] `npm run build` ohne Warnings (`vue-tsc -b`-Teil des Builds; ein
+  - [x] `npm run build` ohne Warnings (`vue-tsc -b`-Teil des Builds; ein
         `lint`-Script existiert **nicht** in `frontend/package.json` und
         ist daher kein Akzeptanzkriterium, siehe `proposal.md` "Out of
         Scope — Fehlende QA-Scripts")
