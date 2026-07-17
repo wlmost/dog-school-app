@@ -53,9 +53,6 @@ frontend/dist/
 # Keep production htaccess template
 !frontend/dist/.htaccess
 
-# Package locks (keep composer.lock, remove package-lock if using yarn)
-package-lock.json
-
 # HomoCanis Webseite
 HomoCanis
 

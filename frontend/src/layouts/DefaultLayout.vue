@@ -116,6 +116,7 @@ import {
   CalendarIcon,
   DocumentTextIcon,
   Cog6ToothIcon,
+  MegaphoneIcon,
   ArrowRightOnRectangleIcon,
   SunIcon,
   MoonIcon,
@@ -228,6 +229,12 @@ const navigation = computed(() => {
       name: 'Einstellungen',
       to: { name: 'Settings' },
       icon: Cog6ToothIcon,
+      roles: ['admin']
+    },
+    {
+      name: 'Ankündigungen',
+      to: { name: 'Announcements' },
+      icon: MegaphoneIcon,
       roles: ['admin']
     },
     {
