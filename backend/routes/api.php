@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\AnamnesisResponseController;
 use App\Http\Controllers\AnamnesisTemplateController;
+use App\Http\Controllers\Api\AnnouncementController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\ContactController;
@@ -54,6 +55,11 @@ Route::prefix('v1')->middleware('throttle:contact')->group(function () {
 // Public pricing route (no auth required)
 Route::prefix('v1')->group(function () {
     Route::get('/pricing-items', [PricingItemController::class, 'publicIndex']);
+});
+
+// Public announcements route (no auth required)
+Route::prefix('v1')->group(function () {
+    Route::get('/announcements', [AnnouncementController::class, 'publicIndex']);
 });
 
 // Public course detail route (no auth required, rate limited)
@@ -193,6 +199,14 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::middleware('can:admin')->group(function () {
         Route::get('/settings', [SettingsController::class, 'index']);
         Route::put('/settings', [SettingsController::class, 'update']);
+    });
+
+    // Announcement Management (Admin only)
+    Route::middleware('can:admin')->group(function () {
+        Route::get('/admin/announcements', [AnnouncementController::class, 'index']);
+        Route::post('/admin/announcements', [AnnouncementController::class, 'store']);
+        Route::put('/admin/announcements/{announcement}', [AnnouncementController::class, 'update']);
+        Route::delete('/admin/announcements/{announcement}', [AnnouncementController::class, 'destroy']);
     });
 });
 

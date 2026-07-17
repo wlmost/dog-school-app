@@ -25,6 +25,8 @@
       </div>
     </section>
 
+    <AnnouncementBanner />
+
     <!-- Features Section -->
     <section class="py-16 bg-white dark:bg-gray-800">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -202,6 +204,7 @@ import {
   CurrencyEuroIcon
 } from '@heroicons/vue/24/outline'
 import backgroundImage from '@/assets/pet-01-1280x664.jpg'
+import AnnouncementBanner from '@/components/AnnouncementBanner.vue'
 import PricingModal from '@/components/PricingModal.vue'
 import { usePricingItems } from '@/composables/usePricingItems'
 
