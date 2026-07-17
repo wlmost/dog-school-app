@@ -54,19 +54,7 @@ const ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'h2', 'h3', 'ul', 'ol', 'li', '
 function sanitizeHtml(html: string): string {
   if (!html) return ''
   const purify = createDOMPurify(window)
-  const result = purify.sanitize(html, { ALLOWED_TAGS, ALLOWED_ATTR: [] })
-  // TEMPORARY CI DIAGNOSTIC — remove before merge
-  // eslint-disable-next-line no-console
-  console.error('[DOMPURIFY-DEBUG]', JSON.stringify({
-    input: html,
-    output: result,
-    version: (purify as unknown as { version?: string }).version,
-    isSupported: (purify as unknown as { isSupported?: boolean }).isSupported,
-    hasWindow: typeof window !== 'undefined',
-    hasDocument: typeof document !== 'undefined',
-    windowIsGlobalThis: typeof window !== 'undefined' && (window as unknown) === (globalThis as unknown),
-  }))
-  return result
+  return purify.sanitize(html, { ALLOWED_TAGS, ALLOWED_ATTR: [] })
 }
 
 onMounted(() => loadPublic())
