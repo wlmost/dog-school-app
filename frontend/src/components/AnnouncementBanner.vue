@@ -29,7 +29,7 @@
 
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import DOMPurify from 'dompurify'
+import createDOMPurify from 'dompurify'
 import { useAnnouncements } from '@/composables/useAnnouncements'
 
 const { announcements, loadPublic } = useAnnouncements()
@@ -40,9 +40,21 @@ const { announcements, loadPublic } = useAnnouncements()
  */
 const ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'h2', 'h3', 'ul', 'ol', 'li', 'blockquote', 'code', 'pre']
 
+/**
+ * DOMPurify's default export is a singleton bound to the `window` object
+ * that existed when the module was first loaded (see `createDOMPurify()`
+ * call with no arguments in dompurify's own source). In test environments
+ * where each test file gets a fresh global `window` (e.g. Vitest with
+ * happy-dom, one `window` per file), that singleton can end up bound to a
+ * stale `window` from an earlier-loaded test file, causing non-deterministic
+ * sanitization. Explicitly instantiating DOMPurify against the current
+ * `window` avoids relying on that module-load-time singleton and matches
+ * DOMPurify's documented pattern for non-standard/test environments.
+ */
 function sanitizeHtml(html: string): string {
   if (!html) return ''
-  return DOMPurify.sanitize(html, { ALLOWED_TAGS, ALLOWED_ATTR: [] })
+  const purify = createDOMPurify(window)
+  return purify.sanitize(html, { ALLOWED_TAGS, ALLOWED_ATTR: [] })
 }
 
 onMounted(() => loadPublic())
