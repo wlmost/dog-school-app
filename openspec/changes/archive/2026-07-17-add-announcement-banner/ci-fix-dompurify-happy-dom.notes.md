@@ -1,108 +1,117 @@
-# CI-Fix: DOMPurify/happy-dom-Isolationsproblem in `AnnouncementBanner.test.ts`
+# CI-Fix: `AnnouncementBanner.test.ts` schlug in GitHub Actions fehl
 
 **Kontext:** Direkter Fix auf `feature/add-announcement-banner` (bereits
-gemergter Stand von PR #70), kein neuer openspec-Change. Auftrag und
-Root-Cause-Hypothese siehe
+gemergter Stand von PR #70), kein neuer openspec-Change. Ursprüngliche
+Root-Cause-Hypothese und Auftrag siehe
 `openspec/triage/20260717173845-fix-dompurify-vitest-isolation-ci-flake.md`.
 
-## Root Cause (verifiziert)
+## Chronologie
 
-- `frontend/node_modules/dompurify/dist/purify.cjs.js:1535`:
-  `var purify = createDOMPurify();` — der Default-Export von `dompurify`
-  ist ein **Modul-Singleton**, das genau einmal beim ersten Laden des
-  Moduls erzeugt wird.
-- `frontend/node_modules/dompurify/dist/purify.cjs.js:396-398`:
-  `function createDOMPurify(root = window) { ... const DOMPurify = root =>
-  createDOMPurify(root); ... }` — `root` (Default: das zum Ladezeitpunkt
-  globale `window`) wird beim Erzeugen des Singletons fest gebunden. Das
-  zurückgegebene `DOMPurify`-Objekt ist selbst aufrufbar
-  (`(root?: WindowLike) => DOMPurify`, siehe
-  `frontend/node_modules/dompurify/dist/purify.es.d.mts:217-224`) und kann
-  so erneut mit einem anderen `window` instanziiert werden — genau das
-  macht der Fix.
-- `frontend/vitest.config.ts:8`: `environment: 'happy-dom'`. Vitest erzeugt
-  pro Testdatei ein **neues** `happy-dom`-`window`-Objekt, das
-  `dompurify`-Modul selbst wird aber pro Worker-Prozess nur **einmal**
-  importiert (Node-/ESM-Modul-Cache). Teilen sich mehrere Testdateien einen
-  Worker (abhängig von CPU-Kernzahl/Scheduling des jeweiligen Runners),
-  bleibt der `dompurify`-Default-Export an das `window` der zuerst
-  geladenen Testdatei gebunden — in der beobachteten CI-Fehlschlag-Reihenfolge
-  war das `src/views/courses/CoursesView.test.ts` (nutzt dasselbe
-  Sanitizing-Pattern), während `AnnouncementBanner.test.ts` mit dem
-  bereits "verbrauchten"/fremden `window` sanitized hat, wodurch DOMPurifys
-  interne Node-Type-Checks (`instanceof` etc. gegen das *aktuelle*
-  Test-`window`) nicht mehr griffen und weder `<script>` noch nicht
-  erlaubte `<img>`-Tags/Attribute entfernt wurden.
-- Lokal (macOS) reproduzierte sich das nicht zuverlässig, da Worker-Anzahl/
-  Datei-Verteilung von der auf `ubuntu-latest`/Node 20 abweicht — reines
-  Testumgebungs-/Nichtdeterminismus-Problem, kein Produktivcode-Bug (im
-  echten Browser existiert immer nur ein `window`).
+1. **Erste Hypothese (widerlegt):** DOMPurifys Default-Export sei ein
+   Modul-Singleton, das beim ersten Import an ein "veraltetes" `window`
+   aus einer früher geladenen Testdatei gebunden bleibe
+   (`environment: 'happy-dom'`, ein `window` pro Testdatei, aber ein
+   ESM-Modul-Cache pro Worker). Fix-Versuch: `createDOMPurify(window)`
+   statt Default-Singleton in `frontend/src/components/AnnouncementBanner.vue`.
+   Lokal (auch via Docker mit Node 20, frischem `npm install`,
+   `--cpus=2`, `--no-file-parallelism`) **mehrfach verifiziert grün** —
+   aber **in CI weiterhin identisch fehlgeschlagen** nach dem Push. Das
+   widerlegt die Hypothese: Vitest isoliert Module korrekt pro Testdatei
+   (`isolate: true`, Standard), ein Singleton-Bleed über Dateigrenzen
+   findet so nicht statt.
+2. **Diagnose per temporärem Debug-Log** (`console.error` mit
+   `dompurify`-Version, Input/Output, `isSupported`, `hasWindow` in
+   `sanitizeHtml()`), committed, gepusht, CI-Log ausgelesen:
+   ```
+   [DOMPURIFY-DEBUG] {"input":"<p>Text</p><script>alert(1)</script>",
+   "output":"Text<script>alert(1)</script>","version":"3.4.12",
+   "isSupported":true,"hasWindow":true,"hasDocument":true,
+   "windowIsGlobalThis":true}
+   ```
+   **`version: "3.4.12"`** — lokal (und im Docker-Repro) war durchgehend
+   **`3.4.3`** installiert (per `npm ls dompurify` verifiziert, passend
+   zu `package-lock.json`). Unterschiedliche Paketversion zwischen CI und
+   lokal trotz identischem Commit.
+
+## Tatsächliche Root Cause (verifiziert)
+
+- `frontend/package-lock.json` war **nicht in Git getrackt** — Zeile 57
+  der Root-`.gitignore` enthielt `package-lock.json` (Kommentar: "keep
+  composer.lock, remove package-lock if using yarn"; das Projekt nutzt
+  aber npm, kein Yarn — es existiert kein `yarn.lock`). `git log --all
+  -- frontend/package-lock.json` lieferte keine Treffer; `git ls-files
+  frontend/package-lock.json` war leer.
+- Die CI-Workflow-Datei (`.github/workflows/ci.yml`, Job "Frontend
+  tests") führt `actions/checkout@v4` gefolgt von `npm install`
+  (working-directory `frontend`) aus. Ohne committtete
+  `package-lock.json` im Checkout resolved `npm install` bei **jedem**
+  CI-Lauf die jeweils neueste zum SemVer-Range (`^3.3.1`) passende
+  `dompurify`-Version neu aus der npm-Registry — das ergab `3.4.12` zum
+  Zeitpunkt der CI-Läufe dieses PRs, während die lokal (und in jedem
+  Docker-Repro, da dort das lokale, ungetrackte Lockfile ins Container
+  gemountet wurde) vorhandene `package-lock.json` durchgehend `3.4.3`
+  pinnte.
+- `dompurify@3.4.12` liefert mit identischer Konfiguration
+  (`{ ALLOWED_TAGS, ALLOWED_ATTR: [] }`) sichtbar fehlerhaftes Sanitizing
+  gegenüber `3.4.3` (siehe Debug-Log oben: `<script>` bleibt erhalten,
+  `<p>`-Wrapper wird trotz `ALLOWED_TAGS`-Mitgliedschaft entfernt) — ob
+  das ein Upstream-Regression-Bug in DOMPurify 3.4.4–3.4.12 ist, wurde
+  nicht weiter verfolgt (außerhalb Scope), ist für den Fix aber auch
+  irrelevant: **nicht-reproduzierbare Builds durch ein fehlendes Lockfile
+  sind der eigentliche, projektweite Fehler**, unabhängig davon, welche
+  konkrete Paketversion gerade betroffen ist.
+- `cache-dependency-path: frontend/package.json` (statt
+  `package-lock.json`) in `actions/setup-node@v4` war ein weiteres
+  Symptom derselben Lücke — der npm-Cache-Key hing nie am tatsächlichen
+  Lockfile.
 
 ## Fix
 
-`frontend/src/components/AnnouncementBanner.vue`:
-
-- Import geändert von `import DOMPurify from 'dompurify'` zu
-  `import createDOMPurify from 'dompurify'` (reine lokale Umbenennung des
-  Default-Imports — es gibt in `dompurify@3.4.3` **keinen** separaten
-  Named Export `createDOMPurify`; der Default-Export selbst ist die
-  Factory-Funktion, siehe `purify.es.d.mts:217-224`,
-  `interface DOMPurify { (root?: WindowLike): DOMPurify; ... }`).
-- In `sanitizeHtml()` wird pro Aufruf `const purify = createDOMPurify(window)`
-  gebildet und `purify.sanitize(...)` statt des globalen Singletons
-  verwendet. Damit ist die Instanz immer explizit an das zum Aufrufzeitpunkt
-  aktuelle `window` gebunden — unabhängig davon, welches `window` beim
-  ersten Modul-Import zufällig global war.
-- Dies ist das von DOMPurify offiziell dokumentierte Muster für
-  nicht-Standard-Umgebungen/Tests (JSDoc-Kommentar der Factory-Funktion:
-  "Creates a DOMPurify instance using the given window-like object.
-  Defaults to `window`.").
-- Keine Änderung an Test-Erwartungen in `AnnouncementBanner.test.ts`
-  nötig — die Assertions bleiben unverändert korrekt.
+1. **`.gitignore`**: Zeilen 56–57 (`# Package locks ...` /
+   `package-lock.json`) entfernt.
+2. **`frontend/package-lock.json`**: erstmals mit `git add -f`
+   committed. Enthält `dompurify@3.4.3`, lokal gegen die volle
+   Vitest-Suite (`191/191 grün`) und `vue-tsc -b`/`vite build`
+   verifiziert.
+3. **`.github/workflows/ci.yml`**: `cache-dependency-path` von
+   `frontend/package.json` auf `frontend/package-lock.json` korrigiert,
+   damit der npm-Cache-Key korrekt am Lockfile hängt.
+4. **`frontend/src/components/AnnouncementBanner.vue`**: die temporäre
+   Debug-Ausgabe wieder entfernt. Die zuvor eingeführte
+   `createDOMPurify(window)`-Bindung (statt Default-Singleton) **bleibt
+   bestehen** — sie ist zwar nicht die Ursache dieses konkreten Fehlers,
+   entspricht aber weiterhin dem offiziell dokumentierten DOMPurify-Muster
+   für Nicht-Standard-Umgebungen und schadet nicht.
 
 ## Bewusst NICHT angefasst (außerhalb Scope)
 
-`frontend/src/views/courses/CoursesView.vue:153,320,324` nutzt exakt
-dasselbe anfällige Muster (`import DOMPurify from 'dompurify'` +
-`DOMPurify.sanitize(...)` über den Modul-Singleton). Aktuell traten dort
-keine CI-Fehlschläge auf (vermutlich reine Lade-/Worker-Reihenfolge-Glück),
-das Risiko besteht aber grundsätzlich identisch. **Empfehlung für einen
-Folge-Fix:** denselben `createDOMPurify(window)`-Pattern dort übernehmen,
-idealerweise in einem gemeinsamen Composable/Util (z. B.
-`frontend/src/composables/useSanitizedHtml.ts`), um Duplikation zwischen
-`AnnouncementBanner.vue` und `CoursesView.vue` zu vermeiden — das war aber
-laut Auftrag explizit außerhalb des Scopes dieses Fixes.
-
-`frontend/vitest.config.ts` wurde ebenfalls nicht angefasst (siehe
-Scope-Vorgabe) — eine projektweite Isolationsänderung
-(`pool`/`isolate`-Optionen) würde das Problem strukturell für alle
-Komponenten mit modul-globalem State lösen, hat aber einen größeren
-Blast-Radius (CI-Laufzeit-Impact) und war explizit nicht Teil dieses Fixes.
+- `frontend/src/views/courses/CoursesView.vue` nutzt weiterhin den
+  DOMPurify-Default-Singleton ohne `createDOMPurify(window)`-Bindung.
+  Da die eigentliche Ursache (fehlendes Lockfile) jetzt behoben ist,
+  besteht hier kein akutes Risiko mehr; die defensive Umstellung auf
+  `createDOMPurify(window)` bliebe dennoch als optionaler
+  Konsistenz-Fix für einen späteren, eigenständigen Change offen.
+- Kein Audit der übrigen `package.json`-Abhängigkeiten auf weitere durch
+  das fehlende Lockfile verursachte Versionsabweichungen — dieser Fix
+  behebt die Lücke strukturell (zukünftige Installs sind deterministisch),
+  ein rückwirkender Vergleich aller bisher in CI tatsächlich installierten
+  Versionen wurde nicht durchgeführt.
+- `npm audit` meldete beim lokalen `npm install` 6 Schwachstellen
+  (1 low, 1 moderate, 4 high) in Dependencies — vorbestehender Zustand,
+  nicht Teil dieses Fixes, aber erwähnenswert für einen möglichen
+  Folge-Change.
 
 ## Verifikation
 
-- `npx vue-tsc -b` (via `npm run build`): keine TypeScript-Fehler. Der
-  umbenannte Default-Import (`createDOMPurify`) und der Aufruf
-  `createDOMPurify(window)` sind typkorrekt gegen
-  `frontend/node_modules/dompurify/dist/purify.es.d.mts` (Default-Export
-  hat Call-Signature `(root?: WindowLike): DOMPurify`).
-- `npm run build`: erfolgreich, `vue-tsc -b && vite build` ohne Fehler/
-  Warnings (Output u. a. `dist/assets/purify.es-*.js`, `dist/assets/index-*.js`).
-- `npx vitest run` (volle Suite, Standard-Worker-Verteilung): **4x
-  hintereinander ausgeführt** (1x initial + 3x explizit zur
-  Nichtdeterminismus-Prüfung) — jedes Mal `Test Files 17 passed (17)`,
-  `Tests 191 passed (191)`.
-- Zusätzlich `npx vitest run --no-file-parallelism` (erzwingt Ausführung
-  aller Testdateien in einem einzigen Prozess/Worker, damit garantiert
-  derselbe `dompurify`-Modul-Singleton über Dateigrenzen hinweg geteilt
-  wird — das Szenario, das den ursprünglichen CI-Fehler auslöste): Die
-  Dateireihenfolge in diesem Modus war u. a.
-  `src/views/courses/CoursesView.test.ts` **vor**
-  `src/components/AnnouncementBanner.test.ts` — exakt die in der Triage
-  beschriebene Problem-Reihenfolge. Ergebnis: weiterhin
-  `Test Files 17 passed (17)`, `Tests 191 passed (191)`. Das bestätigt,
-  dass der Fix das Problem unabhängig von Worker-/Datei-Reihenfolge löst.
+- `npm ls dompurify` (lokal, nach `npm install` mit committeter
+  Lockfile): `dompurify@3.4.3`.
+- `npx vitest run`: `Test Files 17 passed (17)`, `Tests 191 passed (191)`.
+- `npx vue-tsc -b`: keine TypeScript-Fehler.
+- CI-Lauf nach diesem Commit: siehe PR #70, Checks-Status.
 
 ## Betroffene Dateien
 
-- `frontend/src/components/AnnouncementBanner.vue` (einzige Code-Änderung)
+- `.gitignore`
+- `frontend/package-lock.json` (neu committed)
+- `.github/workflows/ci.yml`
+- `frontend/src/components/AnnouncementBanner.vue` (Debug-Log entfernt)
