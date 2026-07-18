@@ -1,12 +1,12 @@
 <template>
-  <div class="html-editor border border-gray-300 rounded-md overflow-hidden focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-primary-500">
+  <div class="html-editor border border-gray-300 dark:border-gray-600 rounded-md overflow-hidden bg-white dark:bg-gray-800 focus-within:ring-2 focus-within:ring-primary-500 focus-within:border-primary-500">
     <!-- Toolbar -->
-    <div class="flex flex-wrap items-center gap-1 px-2 py-1 bg-gray-50 border-b border-gray-300" role="toolbar" aria-label="Textformatierung">
+    <div class="flex flex-wrap items-center gap-1 px-2 py-1 bg-gray-50 dark:bg-gray-700 border-b border-gray-300 dark:border-gray-600" role="toolbar" aria-label="Textformatierung">
       <!-- Bold -->
       <button
         type="button"
         title="Fett (Strg+B)"
-        :class="['p-1.5 rounded hover:bg-gray-200 transition-colors', editor?.isActive('bold') ? 'bg-gray-200 text-primary-700' : 'text-gray-700']"
+        :class="['p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors', editor?.isActive('bold') ? 'bg-gray-200 dark:bg-gray-600 text-primary-700 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300']"
         @click="editor?.chain().focus().toggleBold().run()"
       >
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -18,7 +18,7 @@
       <button
         type="button"
         title="Kursiv (Strg+I)"
-        :class="['p-1.5 rounded hover:bg-gray-200 transition-colors', editor?.isActive('italic') ? 'bg-gray-200 text-primary-700' : 'text-gray-700']"
+        :class="['p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors', editor?.isActive('italic') ? 'bg-gray-200 dark:bg-gray-600 text-primary-700 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300']"
         @click="editor?.chain().focus().toggleItalic().run()"
       >
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -30,7 +30,7 @@
       <button
         type="button"
         title="Überschrift"
-        :class="['p-1.5 rounded hover:bg-gray-200 transition-colors', editor?.isActive('heading', { level: 2 }) ? 'bg-gray-200 text-primary-700' : 'text-gray-700']"
+        :class="['p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors', editor?.isActive('heading', { level: 2 }) ? 'bg-gray-200 dark:bg-gray-600 text-primary-700 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300']"
         @click="editor?.chain().focus().toggleHeading({ level: 2 }).run()"
       >
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -42,7 +42,7 @@
       <button
         type="button"
         title="Aufzählung"
-        :class="['p-1.5 rounded hover:bg-gray-200 transition-colors', editor?.isActive('bulletList') ? 'bg-gray-200 text-primary-700' : 'text-gray-700']"
+        :class="['p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors', editor?.isActive('bulletList') ? 'bg-gray-200 dark:bg-gray-600 text-primary-700 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300']"
         @click="editor?.chain().focus().toggleBulletList().run()"
       >
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -54,7 +54,7 @@
       <button
         type="button"
         title="Nummerierte Liste"
-        :class="['p-1.5 rounded hover:bg-gray-200 transition-colors', editor?.isActive('orderedList') ? 'bg-gray-200 text-primary-700' : 'text-gray-700']"
+        :class="['p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors', editor?.isActive('orderedList') ? 'bg-gray-200 dark:bg-gray-600 text-primary-700 dark:text-primary-400' : 'text-gray-700 dark:text-gray-300']"
         @click="editor?.chain().focus().toggleOrderedList().run()"
       >
         <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -66,7 +66,7 @@
     <!-- Editor content -->
     <EditorContent
       :editor="editor"
-      class="px-3 py-2 min-h-[80px] focus:outline-none"
+      class="px-3 py-2 min-h-[80px] text-gray-900 dark:text-gray-100 focus:outline-none"
     />
   </div>
 </template>

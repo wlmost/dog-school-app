@@ -23,22 +23,22 @@
     <!-- Bookings Table -->
     <div class="card">
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead class="bg-gray-50 dark:bg-gray-700">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Buchungsnr.</th>
-              <th v-if="!isCustomer" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kunde</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hund</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kurs</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum</th>
-              <th v-if="isCustomer" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stornierungsfrist</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Buchungsnr.</th>
+              <th v-if="!isCustomer" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kunde</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Hund</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kurs</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Datum</th>
+              <th v-if="isCustomer" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Stornierungsfrist</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aktionen</th>
             </tr>
           </thead>
           <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             <tr v-if="loading">
-              <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="7" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                 <svg class="animate-spin h-8 w-8 text-primary-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -47,35 +47,35 @@
               </td>
             </tr>
             <tr v-else-if="!bookings.length">
-              <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="7" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                 Keine Buchungen gefunden
               </td>
             </tr>
-            <tr v-else v-for="booking in bookings" :key="booking.id" class="hover:bg-gray-50">
+            <tr v-else v-for="booking in bookings" :key="booking.id" class="hover:bg-gray-50 dark:hover:bg-gray-700">
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">#{{ booking.id }}</div>
+                <div class="text-sm font-medium text-gray-900 dark:text-gray-100">#{{ booking.id }}</div>
               </td>
               <td v-if="!isCustomer" class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ booking.dog?.customer?.user?.fullName || '-' }}</div>
+                <div class="text-sm text-gray-900 dark:text-gray-100">{{ booking.dog?.customer?.user?.fullName || '-' }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ booking.dog?.name || '-' }}</div>
+                <div class="text-sm text-gray-900 dark:text-gray-100">{{ booking.dog?.name || '-' }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-900">{{ booking.trainingSession?.course?.name || '-' }}</div>
+                <div class="text-sm text-gray-900 dark:text-gray-100">{{ booking.trainingSession?.course?.name || '-' }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-600">{{ formatDate(booking.bookingDate) }}</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">{{ formatDate(booking.bookingDate) }}</div>
               </td>
               <!-- Cancellation deadline column (customers only) -->
               <td v-if="isCustomer" class="px-6 py-4 whitespace-nowrap">
                 <template v-if="booking.cancellationDeadline && booking.status !== 'cancelled' && booking.status !== 'cancellation_requested'">
-                  <div class="text-sm" :class="booking.isCancellationAllowed ? 'text-gray-600' : 'text-red-600 font-medium'">
+                  <div class="text-sm" :class="booking.isCancellationAllowed ? 'text-gray-600 dark:text-gray-400' : 'text-red-600 dark:text-red-400 font-medium'">
                     {{ formatDate(booking.cancellationDeadline) }}
                     <span class="block text-xs">{{ formatTime(booking.cancellationDeadline) }} Uhr</span>
                   </div>
                 </template>
-                <span v-else class="text-sm text-gray-400">-</span>
+                <span v-else class="text-sm text-gray-400 dark:text-gray-500">-</span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span :class="bookingStatusClass(booking.status)" class="px-2 py-1 text-xs font-medium rounded-full">
@@ -85,34 +85,34 @@
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                 <!-- Admin / trainer actions -->
                 <template v-if="isTrainer">
-                  <button @click="editBooking(booking)" class="text-primary-600 hover:text-primary-900">Bearbeiten</button>
-                  <button v-if="booking.status === 'pending'" @click="confirmBooking(booking)" class="text-green-600 hover:text-green-900">Bestätigen</button>
+                  <button @click="editBooking(booking)" class="text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-300">Bearbeiten</button>
+                  <button v-if="booking.status === 'pending'" @click="confirmBooking(booking)" class="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300">Bestätigen</button>
                   <button
                     v-if="booking.status === 'cancellation_requested'"
                     @click="approveCancellation(booking)"
-                    class="text-orange-600 hover:text-orange-900"
+                    class="text-orange-600 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-300"
                   >
                     Stornierung genehmigen
                   </button>
-                  <button v-if="booking.status !== 'cancelled' && booking.status !== 'cancellation_requested'" @click="cancelBooking(booking)" class="text-red-600 hover:text-red-900">Stornieren</button>
+                  <button v-if="booking.status !== 'cancelled' && booking.status !== 'cancellation_requested'" @click="cancelBooking(booking)" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">Stornieren</button>
                 </template>
 
                 <!-- Customer actions -->
                 <template v-else-if="isCustomer">
                   <!-- Already cancelled or cancellation in progress -->
-                  <span v-if="booking.status === 'cancelled'" class="text-gray-400 text-sm">Storniert</span>
-                  <span v-else-if="booking.status === 'cancellation_requested'" class="text-orange-500 text-sm">Stornierung beantragt</span>
+                  <span v-if="booking.status === 'cancelled'" class="text-gray-400 dark:text-gray-500 text-sm">Storniert</span>
+                  <span v-else-if="booking.status === 'cancellation_requested'" class="text-orange-500 dark:text-orange-400 text-sm">Stornierung beantragt</span>
 
                   <!-- Active booking: show cancellation option -->
                   <template v-else-if="booking.status !== 'attended'">
                     <button
                       v-if="booking.isCancellationAllowed"
                       @click="requestCancellation(booking)"
-                      class="text-red-600 hover:text-red-900"
+                      class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300"
                     >
                       Stornieren
                     </button>
-                    <span v-else class="text-gray-400 text-xs" :title="'Stornierungsfrist abgelaufen'">
+                    <span v-else class="text-gray-400 dark:text-gray-500 text-xs" :title="'Stornierungsfrist abgelaufen'">
                       Stornierung nicht möglich
                     </span>
                   </template>
@@ -120,7 +120,7 @@
 
                 <!-- Admin: read-only, no booking actions -->
                 <template v-else>
-                  <span class="text-gray-400 text-xs">Leserecht</span>
+                  <span class="text-gray-400 dark:text-gray-500 text-xs">Leserecht</span>
                 </template>
               </td>
             </tr>
@@ -151,8 +151,8 @@
     <div v-if="showDeadlineModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4 p-6">
         <div class="flex items-center mb-4">
-          <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-3 shrink-0">
-            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div class="w-10 h-10 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mr-3 shrink-0">
+            <svg class="w-6 h-6 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
             </svg>
           </div>
@@ -318,11 +318,11 @@ function formatTime(date: string) {
 
 function bookingStatusClass(status: string) {
   const classes: Record<string, string> = {
-    confirmed: 'bg-green-100 text-green-800',
-    pending: 'bg-yellow-100 text-yellow-800',
-    cancelled: 'bg-red-100 text-red-800',
-    attended: 'bg-blue-100 text-blue-800',
-    cancellation_requested: 'bg-orange-100 text-orange-800',
+    confirmed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+    cancelled: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    attended: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    cancellation_requested: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
   }
   return classes[status] || classes.pending
 }

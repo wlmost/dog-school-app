@@ -257,28 +257,28 @@ function formatRunLabel(run: CourseRun): string {
             leave-to="opacity-0 scale-95"
           >
             <DialogPanel
-              class="w-full max-w-lg transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all"
+              class="w-full max-w-lg transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all"
             >
               <DialogTitle
                 as="h3"
-                class="text-lg font-medium leading-6 text-gray-900 mb-4"
+                class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4"
               >
                 Kurs buchen — {{ props.courseName }}
               </DialogTitle>
 
               <!-- Loading -->
-              <div v-if="loading" class="py-8 text-center text-gray-500">
+              <div v-if="loading" class="py-8 text-center text-gray-500 dark:text-gray-400">
                 Lade Daten...
               </div>
 
               <!-- Fehler beim Laden -->
               <div v-else-if="loadError" class="py-4">
-                <p class="text-red-600 text-sm mb-4">{{ loadError }}</p>
+                <p class="text-red-600 dark:text-red-400 text-sm mb-4">{{ loadError }}</p>
                 <div class="flex justify-end">
                   <button
                     type="button"
                     @click="emit('close')"
-                    class="btn bg-gray-100 hover:bg-gray-200 text-gray-700"
+                    class="btn bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300"
                   >
                     Abbrechen
                   </button>
@@ -287,14 +287,14 @@ function formatRunLabel(run: CourseRun): string {
 
               <!-- Keine buchbaren Termine (nur im Legacy-Pfad ohne Runs) -->
               <div v-else-if="runs.length === 0 && sessions.length === 0" class="py-4">
-                <p class="text-gray-500 text-sm mb-4">
+                <p class="text-gray-500 dark:text-gray-400 text-sm mb-4">
                   Keine buchbaren Termine verfügbar.
                 </p>
                 <div class="flex justify-end">
                   <button
                     type="button"
                     @click="emit('close')"
-                    class="btn bg-gray-100 hover:bg-gray-200 text-gray-700"
+                    class="btn bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300"
                   >
                     Abbrechen
                   </button>
@@ -308,7 +308,7 @@ function formatRunLabel(run: CourseRun): string {
 
                 <!-- Kursdurchlauf-Auswahl (nur wenn Runs vorhanden) -->
                 <div v-if="runs.length > 0">
-                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     Kursdurchlauf *
                   </label>
                   <select v-model="selectedRunId" required class="input">
@@ -321,23 +321,23 @@ function formatRunLabel(run: CourseRun): string {
 
                 <!-- Enthaltene Termine des gewählten Durchlaufs (read-only) -->
                 <div v-if="runs.length > 0 && selectedRunId !== null">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Enthaltene Termine
                   </label>
-                  <ul class="space-y-1 rounded-lg border border-gray-200 p-3 bg-gray-50">
-                    <li v-if="displaySessions.length === 0" class="text-sm text-gray-500">
+                  <ul class="space-y-1 rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-gray-50 dark:bg-gray-700">
+                    <li v-if="displaySessions.length === 0" class="text-sm text-gray-500 dark:text-gray-400">
                       Keine Termine in diesem Durchlauf.
                     </li>
                     <li
                       v-for="session in displaySessions"
                       :key="session.id"
-                      class="text-sm text-gray-800"
+                      class="text-sm text-gray-800 dark:text-gray-200"
                     >
                       {{ formatSessionDate(session.sessionDate) }}
                       <span v-if="session.startTime">
                         {{ formatTime(session.startTime) }} – {{ formatTime(session.endTime) }}
                       </span>
-                      <span v-if="session.location" class="text-gray-500">
+                      <span v-if="session.location" class="text-gray-500 dark:text-gray-400">
                         · {{ session.location }}
                       </span>
                     </li>
@@ -348,21 +348,21 @@ function formatRunLabel(run: CourseRun): string {
 
                 <!-- Session-Auswahl -->
                 <div v-if="runs.length === 0">
-                  <label class="block text-sm font-medium text-gray-700 mb-2">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Termine
                   </label>
 
                   <!-- Einzeltermin: nur Anzeige -->
                   <div
                     v-if="sessions.length === 1"
-                    class="text-sm text-gray-800 rounded-lg border border-gray-200 p-3 bg-gray-50"
+                    class="text-sm text-gray-800 dark:text-gray-200 rounded-lg border border-gray-200 dark:border-gray-700 p-3 bg-gray-50 dark:bg-gray-700"
                   >
                     {{ sessions[0]?.sessionDate ? formatSessionDate(sessions[0].sessionDate) : '' }}
                     <span v-if="sessions[0]?.startTime">
                       {{ formatTime(sessions[0]?.startTime ?? null) }} –
                       {{ formatTime(sessions[0]?.endTime ?? null) }}
                     </span>
-                    <span v-if="sessions[0]?.location" class="text-gray-500">
+                    <span v-if="sessions[0]?.location" class="text-gray-500 dark:text-gray-400">
                       · {{ sessions[0]?.location }}
                     </span>
                   </div>
@@ -372,21 +372,21 @@ function formatRunLabel(run: CourseRun): string {
                     <label
                       v-for="session in sessions"
                       :key="session.id"
-                      class="flex items-center gap-2 rounded-lg border border-gray-200 p-3 cursor-pointer hover:bg-gray-50"
+                      class="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-700 p-3 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                       <input
                         type="checkbox"
                         :checked="selectedSessionIds.has(session.id)"
                         @change="toggleSession(session.id)"
-                        class="rounded border-gray-300"
+                        class="rounded border-gray-300 dark:border-gray-600"
                       />
-                      <span class="text-sm text-gray-800">
+                      <span class="text-sm text-gray-800 dark:text-gray-200">
                         {{ formatSessionDate(session.sessionDate) }}
                         <span v-if="session.startTime">
                           {{ formatTime(session.startTime) }} –
                           {{ formatTime(session.endTime) }}
                         </span>
-                        <span v-if="session.location" class="text-gray-500">
+                        <span v-if="session.location" class="text-gray-500 dark:text-gray-400">
                           · {{ session.location }}
                         </span>
                       </span>
@@ -398,11 +398,11 @@ function formatRunLabel(run: CourseRun): string {
                 <div>
                   <label
                     for="dog-select"
-                    class="block text-sm font-medium text-gray-700 mb-1"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                   >
                     Hund *
                   </label>
-                  <div v-if="dogs.length === 0" class="text-sm text-gray-500">
+                  <div v-if="dogs.length === 0" class="text-sm text-gray-500 dark:text-gray-400">
                     Bitte zuerst einen Hund anlegen.
                   </div>
                   <select
@@ -423,10 +423,10 @@ function formatRunLabel(run: CourseRun): string {
                 <div>
                   <label
                     for="booking-notes"
-                    class="block text-sm font-medium text-gray-700 mb-1"
+                    class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
                   >
                     Anmerkungen
-                    <span class="text-gray-400">(optional)</span>
+                    <span class="text-gray-400 dark:text-gray-500">(optional)</span>
                   </label>
                   <textarea
                     id="booking-notes"
@@ -443,7 +443,7 @@ function formatRunLabel(run: CourseRun): string {
                   <button
                     type="button"
                     @click="emit('close')"
-                    class="btn bg-gray-100 hover:bg-gray-200 text-gray-700"
+                    class="btn bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300"
                   >
                     Abbrechen
                   </button>

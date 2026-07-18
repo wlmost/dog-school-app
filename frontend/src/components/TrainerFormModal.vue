@@ -24,8 +24,8 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-              <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 mb-4">
+            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
+              <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
                 {{ trainer ? 'Trainer bearbeiten' : 'Neuer Trainer' }}
               </DialogTitle>
 
@@ -33,22 +33,22 @@
                 <!-- Personal Info -->
                 <div class="grid grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Vorname *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vorname *</label>
                     <input v-model="form.first_name" type="text" required class="input" />
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nachname *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nachname *</label>
                     <input v-model="form.last_name" type="text" required class="input" />
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-Mail *</label>
                     <input v-model="form.email" type="email" required class="input" />
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Telefon</label>
                     <input v-model="form.phone" type="tel" class="input" />
                   </div>
                 </div>
@@ -56,81 +56,81 @@
                 <!-- Password (only for new trainers) -->
                 <div v-if="!trainer" class="grid grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Passwort *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Passwort *</label>
                     <input v-model="form.password" type="password" required class="input" :class="{'border-red-500': passwordError}" />
-                    <p class="mt-1 text-xs text-gray-500">
+                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                       Mind. 8 Zeichen, 1 Groß-, 1 Kleinbuchstabe, 1 Ziffer, 1 Sonderzeichen
                     </p>
-                    <p v-if="passwordError" class="mt-1 text-xs text-red-600">{{ passwordError }}</p>
+                    <p v-if="passwordError" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ passwordError }}</p>
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Passwort wiederholen *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Passwort wiederholen *</label>
                     <input v-model="form.password_confirmation" type="password" required class="input" :class="{'border-red-500': passwordError}" />
                   </div>
                 </div>
 
                 <!-- Password change for existing trainers -->
-                <div v-else class="pt-4 border-t border-gray-200">
-                  <h4 class="text-sm font-medium text-gray-900 mb-3">Passwort ändern (optional)</h4>
+                <div v-else class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Passwort ändern (optional)</h4>
                   <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Neues Passwort</label>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Neues Passwort</label>
                       <input v-model="form.password" type="password" class="input" :class="{'border-red-500': passwordError}" />
-                      <p class="mt-1 text-xs text-gray-500">
+                      <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
                         Mind. 8 Zeichen, 1 Groß-, 1 Kleinbuchstabe, 1 Ziffer, 1 Sonderzeichen
                       </p>
-                      <p v-if="passwordError" class="mt-1 text-xs text-red-600">{{ passwordError }}</p>
+                      <p v-if="passwordError" class="mt-1 text-xs text-red-600 dark:text-red-400">{{ passwordError }}</p>
                     </div>
 
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Passwort wiederholen</label>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Passwort wiederholen</label>
                       <input v-model="form.password_confirmation" type="password" class="input" :class="{'border-red-500': passwordError}" />
                     </div>
                   </div>
                 </div>
 
                 <!-- Address -->
-                <div class="pt-4 border-t border-gray-200">
-                  <h4 class="text-sm font-medium text-gray-900 mb-3">Adresse</h4>
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Adresse</h4>
                   <div class="grid grid-cols-2 gap-4">
                     <div class="col-span-2">
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Straße</label>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Straße</label>
                       <input v-model="form.street" type="text" class="input" />
                     </div>
 
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">PLZ</label>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">PLZ</label>
                       <input v-model="form.postal_code" type="text" class="input" />
                     </div>
 
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Stadt</label>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stadt</label>
                       <input v-model="form.city" type="text" class="input" />
                     </div>
 
                     <div class="col-span-2">
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Land</label>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Land</label>
                       <input v-model="form.country" type="text" class="input" />
                     </div>
                   </div>
                 </div>
 
                 <!-- Qualifications -->
-                <div class="pt-4 border-t border-gray-200">
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Qualifikationen</label>
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Qualifikationen</label>
                   <textarea v-model="form.qualifications" rows="3" class="input" placeholder="Z.B. Hundetrainer IHK, Verhaltensberater, etc."></textarea>
                 </div>
 
                 <!-- Specializations -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Spezialisierungen</label>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Spezialisierungen</label>
                   <textarea v-model="form.specializations" rows="2" class="input" placeholder="Z.B. Welpentraining, Verhaltenstherapie, Agility"></textarea>
                 </div>
 
                 <!-- Buttons -->
                 <div class="flex justify-end space-x-3 pt-4">
-                  <button type="button" @click="closeModal" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700">
+                  <button type="button" @click="closeModal" class="btn bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300">
                     Abbrechen
                   </button>
                   <button type="submit" :disabled="loading" class="btn btn-primary disabled:opacity-50">

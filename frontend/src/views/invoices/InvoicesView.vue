@@ -23,21 +23,21 @@
     <!-- Invoices Table -->
     <div class="card">
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead class="bg-gray-50 dark:bg-gray-700">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rechnungsnr.</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Kunde</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Datum</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fällig am</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Betrag</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Rechnungsnr.</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kunde</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Datum</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Fällig am</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Betrag</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aktionen</th>
             </tr>
           </thead>
           <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             <tr v-if="loading">
-              <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="7" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                 <svg class="animate-spin h-8 w-8 text-primary-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -46,25 +46,25 @@
               </td>
             </tr>
             <tr v-else-if="!invoices.length">
-              <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="7" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                 Keine Rechnungen gefunden
               </td>
             </tr>
-            <tr v-else v-for="invoice in invoices" :key="invoice.id" class="hover:bg-gray-50 cursor-pointer" @click="viewInvoice(invoice)">
+            <tr v-else v-for="invoice in invoices" :key="invoice.id" class="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer" @click="viewInvoice(invoice)">
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-mono font-medium text-gray-900">{{ invoice.invoiceNumber }}</div>
+                <div class="text-sm font-mono font-medium text-gray-900 dark:text-gray-100">{{ invoice.invoiceNumber }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-600">{{ invoice.customer?.user?.fullName || '-' }}</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">{{ invoice.customer?.user?.fullName || '-' }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-600">{{ formatDate(invoice.invoiceDate) }}</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">{{ formatDate(invoice.invoiceDate) }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-600">{{ formatDate(invoice.dueDate) }}</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">{{ formatDate(invoice.dueDate) }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm font-medium text-gray-900">{{ formatCurrency(invoice.totalAmount) }}</div>
+                <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ formatCurrency(invoice.totalAmount) }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span :class="invoiceStatusClass(invoice.status)" class="px-2 py-1 text-xs font-medium rounded-full">
@@ -72,9 +72,9 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2" @click.stop>
-                <button @click="downloadPDF(invoice)" class="text-primary-600 hover:text-primary-900">PDF</button>
-                <button v-if="!authStore.isCustomer && invoice.status === 'draft'" @click="editInvoice(invoice)" class="text-yellow-600 hover:text-yellow-900">Bearbeiten</button>
-                <button v-if="!authStore.isCustomer && (invoice.status === 'draft' || invoice.status === 'sent')" @click="markAsPaid(invoice)" class="text-green-600 hover:text-green-900">Bezahlt</button>
+                <button @click="downloadPDF(invoice)" class="text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-300">PDF</button>
+                <button v-if="!authStore.isCustomer && invoice.status === 'draft'" @click="editInvoice(invoice)" class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-900 dark:hover:text-yellow-300">Bearbeiten</button>
+                <button v-if="!authStore.isCustomer && (invoice.status === 'draft' || invoice.status === 'sent')" @click="markAsPaid(invoice)" class="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300">Bezahlt</button>
               </td>
             </tr>
           </tbody>
@@ -251,11 +251,11 @@ function formatCurrency(amount: number) {
 
 function invoiceStatusClass(status: string) {
   const classes = {
-    draft: 'bg-gray-100 text-gray-800',
-    sent: 'bg-blue-100 text-blue-800',
-    paid: 'bg-green-100 text-green-800',
-    overdue: 'bg-red-100 text-red-800',
-    cancelled: 'bg-gray-100 text-gray-800'
+    draft: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+    sent: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    paid: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    overdue: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    cancelled: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
   }
   return classes[status as keyof typeof classes] || classes.draft
 }

@@ -24,10 +24,10 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-              <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 mb-4 flex justify-between items-center">
+            <DialogPanel class="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
+              <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4 flex justify-between items-center">
                 <span>Rechnungsdetails</span>
-                <button @click="$emit('close')" class="text-gray-400 hover:text-gray-600">
+                <button @click="$emit('close')" class="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -38,22 +38,22 @@
                 <!-- Header Info -->
                 <div class="grid grid-cols-2 gap-6">
                   <div>
-                    <h4 class="text-sm font-medium text-gray-500 mb-2">Rechnungsinformationen</h4>
+                    <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Rechnungsinformationen</h4>
                     <div class="space-y-2">
                       <div>
-                        <span class="text-sm text-gray-600">Rechnungsnummer:</span>
-                        <p class="text-base font-mono font-medium">{{ invoice.invoiceNumber }}</p>
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Rechnungsnummer:</span>
+                        <p class="text-base font-mono font-medium text-gray-900 dark:text-gray-100">{{ invoice.invoiceNumber }}</p>
                       </div>
                       <div>
-                        <span class="text-sm text-gray-600">Rechnungsdatum:</span>
-                        <p class="text-base">{{ formatDate(invoice.invoiceDate) }}</p>
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Rechnungsdatum:</span>
+                        <p class="text-base text-gray-900 dark:text-gray-100">{{ formatDate(invoice.invoiceDate) }}</p>
                       </div>
                       <div>
-                        <span class="text-sm text-gray-600">Fälligkeitsdatum:</span>
-                        <p class="text-base">{{ formatDate(invoice.dueDate) }}</p>
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Fälligkeitsdatum:</span>
+                        <p class="text-base text-gray-900 dark:text-gray-100">{{ formatDate(invoice.dueDate) }}</p>
                       </div>
                       <div>
-                        <span class="text-sm text-gray-600">Status:</span>
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Status:</span>
                         <p>
                           <span :class="getStatusClass(invoice.status)" class="inline-block mt-1 px-2 py-1 text-xs font-medium rounded-full">
                             {{ getStatusLabel(invoice.status) }}
@@ -64,95 +64,95 @@
                   </div>
 
                   <div>
-                    <h4 class="text-sm font-medium text-gray-500 mb-2">Kunde</h4>
+                    <h4 class="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Kunde</h4>
                     <div class="space-y-2">
                       <div>
-                        <p class="text-base font-medium">{{ invoice.customer?.user?.fullName || '-' }}</p>
+                        <p class="text-base font-medium text-gray-900 dark:text-gray-100">{{ invoice.customer?.user?.fullName || '-' }}</p>
                       </div>
                       <div v-if="invoice.customer?.street">
-                        <p class="text-sm text-gray-600">{{ invoice.customer.street }}</p>
-                        <p class="text-sm text-gray-600">{{ invoice.customer.postalCode }} {{ invoice.customer.city }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ invoice.customer.street }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ invoice.customer.postalCode }} {{ invoice.customer.city }}</p>
                       </div>
                       <div>
-                        <p class="text-sm text-gray-600">{{ invoice.customer?.user?.email }}</p>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">{{ invoice.customer?.user?.email }}</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <!-- Invoice Items -->
-                <div class="border-t border-gray-200 pt-4">
-                  <h4 class="text-sm font-medium text-gray-900 mb-3">Rechnungspositionen</h4>
+                <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Rechnungspositionen</h4>
                   <table class="min-w-full">
-                    <thead class="bg-gray-50">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
                       <tr>
-                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500">Beschreibung</th>
-                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500">Menge</th>
-                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500">Einzelpreis</th>
-                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500">Gesamt</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">Beschreibung</th>
+                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">Menge</th>
+                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">Einzelpreis</th>
+                        <th class="px-4 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-400">Gesamt</th>
                       </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200">
+                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
                       <tr v-for="item in invoice.items" :key="item.id">
-                        <td class="px-4 py-2 text-sm">{{ item.description }}</td>
-                        <td class="px-4 py-2 text-sm text-right">{{ item.quantity }}</td>
-                        <td class="px-4 py-2 text-sm text-right">{{ formatCurrency(item.unitPrice) }}</td>
-                        <td class="px-4 py-2 text-sm text-right font-medium">{{ formatCurrency(item.quantity * item.unitPrice) }}</td>
+                        <td class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100">{{ item.description }}</td>
+                        <td class="px-4 py-2 text-sm text-right text-gray-900 dark:text-gray-100">{{ item.quantity }}</td>
+                        <td class="px-4 py-2 text-sm text-right text-gray-900 dark:text-gray-100">{{ formatCurrency(item.unitPrice) }}</td>
+                        <td class="px-4 py-2 text-sm text-right font-medium text-gray-900 dark:text-gray-100">{{ formatCurrency(item.quantity * item.unitPrice) }}</td>
                       </tr>
                     </tbody>
-                    <tfoot class="bg-gray-50">
+                    <tfoot class="bg-gray-50 dark:bg-gray-700">
                       <tr>
-                        <td colspan="3" class="px-4 py-2 text-sm text-right font-medium">{{ isSmallBusiness ? 'Gesamt (netto)' : 'Zwischensumme' }}:</td>
-                        <td class="px-4 py-2 text-sm text-right font-medium">{{ formatCurrency(invoice.subtotalAmount) }}</td>
+                        <td colspan="3" class="px-4 py-2 text-sm text-right font-medium text-gray-900 dark:text-gray-100">{{ isSmallBusiness ? 'Gesamt (netto)' : 'Zwischensumme' }}:</td>
+                        <td class="px-4 py-2 text-sm text-right font-medium text-gray-900 dark:text-gray-100">{{ formatCurrency(invoice.subtotalAmount) }}</td>
                       </tr>
                       <tr v-if="!isSmallBusiness">
-                        <td colspan="3" class="px-4 py-2 text-sm text-right">MwSt (19%):</td>
-                        <td class="px-4 py-2 text-sm text-right">{{ formatCurrency(invoice.taxAmount) }}</td>
+                        <td colspan="3" class="px-4 py-2 text-sm text-right text-gray-900 dark:text-gray-100">MwSt (19%):</td>
+                        <td class="px-4 py-2 text-sm text-right text-gray-900 dark:text-gray-100">{{ formatCurrency(invoice.taxAmount) }}</td>
                       </tr>
                       <tr v-if="isSmallBusiness">
-                        <td colspan="4" class="px-4 py-2 text-xs text-gray-500 text-right italic">
+                        <td colspan="4" class="px-4 py-2 text-xs text-gray-500 dark:text-gray-400 text-right italic">
                           Gemäß §19 UStG wird keine Umsatzsteuer berechnet
                         </td>
                       </tr>
-                      <tr class="border-t-2 border-gray-300">
-                        <td colspan="3" class="px-4 py-3 text-base text-right font-bold">Gesamtbetrag:</td>
-                        <td class="px-4 py-3 text-base text-right font-bold">{{ formatCurrency(invoice.totalAmount) }}</td>
+                      <tr class="border-t-2 border-gray-300 dark:border-gray-600">
+                        <td colspan="3" class="px-4 py-3 text-base text-right font-bold text-gray-900 dark:text-white">Gesamtbetrag:</td>
+                        <td class="px-4 py-3 text-base text-right font-bold text-gray-900 dark:text-white">{{ formatCurrency(invoice.totalAmount) }}</td>
                       </tr>
                     </tfoot>
                   </table>
                 </div>
 
                 <!-- Payments -->
-                <div v-if="invoice.payments && invoice.payments.length > 0" class="border-t border-gray-200 pt-4">
-                  <h4 class="text-sm font-medium text-gray-900 mb-3">Zahlungen</h4>
+                <div v-if="invoice.payments && invoice.payments.length > 0" class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Zahlungen</h4>
                   <div class="space-y-2">
-                    <div v-for="payment in invoice.payments" :key="payment.id" class="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                    <div v-for="payment in invoice.payments" :key="payment.id" class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div>
-                        <p class="text-sm font-medium">{{ formatCurrency(payment.amount) }}</p>
-                        <p class="text-xs text-gray-600">{{ formatDate(payment.payment_date) }} - {{ payment.payment_method }}</p>
+                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ formatCurrency(payment.amount) }}</p>
+                        <p class="text-xs text-gray-600 dark:text-gray-400">{{ formatDate(payment.payment_date) }} - {{ payment.payment_method }}</p>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <!-- Notes -->
-                <div v-if="invoice.notes" class="border-t border-gray-200 pt-4">
-                  <h4 class="text-sm font-medium text-gray-900 mb-2">Notizen</h4>
-                  <p class="text-sm text-gray-600">{{ invoice.notes }}</p>
+                <div v-if="invoice.notes" class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Notizen</h4>
+                  <p class="text-sm text-gray-600 dark:text-gray-400">{{ invoice.notes }}</p>
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                  <button @click="$emit('close')" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700">
+                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <button @click="$emit('close')" class="btn bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200">
                     Schließen
                   </button>
-                  <button @click="$emit('download', invoice)" class="btn bg-blue-600 hover:bg-blue-700 text-white">
+                  <button @click="$emit('download', invoice)" class="btn bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white">
                     PDF herunterladen
                   </button>
-                  <button v-if="!authStore.isCustomer && invoice.status === 'draft'" @click="$emit('edit', invoice)" class="btn bg-yellow-500 hover:bg-yellow-600 text-white">
+                  <button v-if="!authStore.isCustomer && invoice.status === 'draft'" @click="$emit('edit', invoice)" class="btn bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-500 text-white">
                     Bearbeiten
                   </button>
-                  <button v-if="!authStore.isCustomer && (invoice.status === 'draft' || invoice.status === 'sent')" @click="$emit('mark-paid', invoice)" class="btn bg-green-600 hover:bg-green-700 text-white">
+                  <button v-if="!authStore.isCustomer && (invoice.status === 'draft' || invoice.status === 'sent')" @click="$emit('mark-paid', invoice)" class="btn bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white">
                     Als bezahlt markieren
                   </button>
                 </div>
@@ -226,13 +226,13 @@ function formatCurrency(amount: number) {
 
 function getStatusClass(status: string) {
   const classes: Record<string, string> = {
-    'draft': 'bg-gray-100 text-gray-800',
-    'sent': 'bg-blue-100 text-blue-800',
-    'paid': 'bg-green-100 text-green-800',
-    'overdue': 'bg-red-100 text-red-800',
-    'cancelled': 'bg-gray-100 text-gray-800'
+    'draft': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+    'sent': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    'paid': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    'overdue': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    'cancelled': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
   }
-  return classes[status] || 'bg-gray-100 text-gray-800'
+  return classes[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
 }
 
 function getStatusLabel(status: string) {

@@ -31,20 +31,20 @@
     <!-- Anamnesis Responses Table -->
     <div class="card">
       <div class="overflow-x-auto">
-        <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-50">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+          <thead class="bg-gray-50 dark:bg-gray-700">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hund</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Besitzer</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vorlage</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Erstellt am</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aktionen</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Hund</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Besitzer</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Vorlage</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Erstellt am</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Status</th>
+              <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Aktionen</th>
             </tr>
           </thead>
           <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             <tr v-if="loadingResponses">
-              <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                 <svg class="animate-spin h-8 w-8 text-primary-600 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -53,7 +53,7 @@
               </td>
             </tr>
             <tr v-else-if="!responses.length">
-              <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+              <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                 Keine Anamnese-Bögen gefunden
               </td>
             </tr>
@@ -62,13 +62,13 @@
                 <div class="text-sm font-medium text-gray-900 dark:text-white">{{ response.dogName }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-600">{{ response.customerName }}</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">{{ response.customerName }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-gray-900 dark:text-white">{{ response.templateName }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-gray-600">{{ formatDate(response.createdAt) }}</div>
+                <div class="text-sm text-gray-600 dark:text-gray-400">{{ formatDate(response.createdAt) }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <span :class="statusClass(response.completedAt)" class="px-2 py-1 text-xs font-medium rounded-full">
@@ -76,11 +76,11 @@
                 </span>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                <button @click="viewResponse(response)" class="text-primary-600 hover:text-primary-900">Anzeigen</button>
-                <button @click="downloadPdf(response.id)" class="text-blue-600 hover:text-blue-900">PDF</button>
-                <button v-if="!response.completedAt" @click="editResponse(response)" class="text-green-600 hover:text-green-900">Bearbeiten</button>
-                <button v-if="!response.completedAt" @click="completeResponse(response.id)" class="text-purple-600 hover:text-purple-900">Abschließen</button>
-                <button @click="deleteResponse(response.id)" class="text-red-600 hover:text-red-900">Löschen</button>
+                <button @click="viewResponse(response)" class="text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-300">Anzeigen</button>
+                <button @click="downloadPdf(response.id)" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">PDF</button>
+                <button v-if="!response.completedAt" @click="editResponse(response)" class="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300">Bearbeiten</button>
+                <button v-if="!response.completedAt" @click="completeResponse(response.id)" class="text-purple-600 dark:text-purple-400 hover:text-purple-900 dark:hover:text-purple-300">Abschließen</button>
+                <button @click="deleteResponse(response.id)" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">Löschen</button>
               </td>
             </tr>
           </tbody>
@@ -91,7 +91,7 @@
     <!-- Templates Section -->
     <div class="card">
       <div class="flex items-center justify-between mb-4">
-        <h3 class="text-lg font-semibold text-gray-900">Anamnese-Vorlagen</h3>
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Anamnese-Vorlagen</h3>
         <button @click="openTemplateModal()" class="btn btn-primary">
           <svg class="w-5 h-5 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -101,15 +101,15 @@
       </div>
 
       <!-- Template Tabs -->
-      <div class="mb-4 border-b border-gray-200">
+      <div class="mb-4 border-b border-gray-200 dark:border-gray-700">
         <nav class="-mb-px flex space-x-8">
           <button
             @click="templateTab = 'custom'"
             :class="[
               'py-2 px-1 border-b-2 font-medium text-sm',
               templateTab === 'custom'
-                ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
             ]"
           >
             Eigene Vorlagen
@@ -119,8 +119,8 @@
             :class="[
               'py-2 px-1 border-b-2 font-medium text-sm',
               templateTab === 'default'
-                ? 'border-primary-500 text-primary-600'
-                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-primary-500 text-primary-600 dark:text-primary-400'
+                : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
             ]"
           >
             Standard-Vorlagen
@@ -134,21 +134,21 @@
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
-          <p class="mt-2 text-gray-500">Lade Vorlagen...</p>
+          <p class="mt-2 text-gray-500 dark:text-gray-400">Lade Vorlagen...</p>
         </div>
         <div v-else-if="filteredTemplates.length === 0" class="col-span-full text-center py-12">
-          <p class="text-gray-500">Keine Vorlagen gefunden</p>
+          <p class="text-gray-500 dark:text-gray-400">Keine Vorlagen gefunden</p>
           <button v-if="templateTab === 'custom'" @click="openTemplateModal()" class="mt-4 btn btn-primary">
             Erste Vorlage erstellen
           </button>
         </div>
-        <div v-else v-for="template in filteredTemplates" :key="template.id" class="p-4 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-md transition-all">
+        <div v-else v-for="template in filteredTemplates" :key="template.id" class="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-primary-300 dark:hover:border-primary-600 hover:shadow-md transition-all">
           <div class="flex items-start justify-between mb-2">
-            <h4 class="font-semibold text-gray-900">{{ template.name }}</h4>
-            <span v-if="template.isDefault" class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Standard</span>
+            <h4 class="font-semibold text-gray-900 dark:text-white">{{ template.name }}</h4>
+            <span v-if="template.isDefault" class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">Standard</span>
           </div>
-          <p class="text-sm text-gray-600 mb-3">{{ template.description }}</p>
-          <div class="text-xs text-gray-500 mb-3">
+          <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">{{ template.description }}</p>
+          <div class="text-xs text-gray-500 dark:text-gray-400 mb-3">
             {{ template.questionsCount || 0 }} Fragen
           </div>
           <div class="flex flex-wrap gap-2">
@@ -391,8 +391,8 @@ function formatDate(dateString: string) {
 
 function statusClass(completedAt: string | null) {
   return completedAt
-    ? 'bg-green-100 text-green-800'
-    : 'bg-yellow-100 text-yellow-800'
+    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
 }
 
 function statusLabel(completedAt: string | null) {

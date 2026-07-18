@@ -24,8 +24,8 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-              <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 mb-4">
+            <DialogPanel class="w-full max-w-3xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
+              <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
                 {{ course ? 'Kurs bearbeiten' : 'Neuer Kurs' }}
               </DialogTitle>
 
@@ -33,12 +33,12 @@
                 <!-- Basic Info -->
                 <div class="grid grid-cols-2 gap-4">
                   <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Kursname *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kursname *</label>
                     <input v-model="form.name" type="text" required class="input" />
                   </div>
 
                   <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Trainer *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Trainer *</label>
                     <select v-model="form.trainer_id" required class="input">
                       <option value="">Trainer auswählen...</option>
                       <option v-for="trainer in trainers" :key="trainer.id" :value="trainer.id">
@@ -48,12 +48,12 @@
                   </div>
 
                   <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Beschreibung</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Beschreibung</label>
                     <HtmlEditor v-model="form.description" />
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Kurstyp *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kurstyp *</label>
                     <select v-model="form.course_type" required class="input">
                       <option value="">Typ auswählen...</option>
                       <option value="individual">Einzeltraining</option>
@@ -64,40 +64,40 @@
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Maximale Teilnehmer *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Maximale Teilnehmer *</label>
                     <input v-model.number="form.max_participants" type="number" min="1" required class="input" />
                   </div>
                 </div>
 
                 <!-- Dates and Times -->
-                <div class="pt-4 border-t border-gray-200 grid grid-cols-2 gap-4">
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Startdatum</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Startdatum</label>
                     <input v-model="form.start_date" type="date" class="input" />
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Enddatum</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Enddatum</label>
                     <input v-model="form.end_date" type="date" class="input" />
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Startzeit</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Startzeit</label>
                     <input v-model="form.start_time" type="time" class="input" />
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Endzeit</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Endzeit</label>
                     <input v-model="form.end_time" type="time" class="input" />
                   </div>
                 </div>
 
                 <!-- Course Sessions (Kurs-Einheiten) -->
-                <div class="pt-4 border-t border-gray-200">
-                  <h4 class="text-sm font-medium text-gray-700 mb-3">Kurs-Einheiten</h4>
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <h4 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Kurs-Einheiten</h4>
 
                   <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Einheitenplanung</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Einheitenplanung</label>
                     <select v-model="form.sessionsMode" class="input">
                       <option value="">Keine Einheiten jetzt festlegen</option>
                       <option value="manual">Einzeltermine manuell eintragen</option>
@@ -120,7 +120,7 @@
                         <button
                           type="button"
                           @click="form.sessions.splice(index, 1)"
-                          class="flex-shrink-0 text-red-500 hover:text-red-700 font-bold text-lg leading-none"
+                          class="flex-shrink-0 text-red-500 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 font-bold text-lg leading-none"
                           aria-label="Termin entfernen"
                         >&times;</button>
                       </div>
@@ -128,7 +128,7 @@
                     <button
                       type="button"
                       @click="addSession"
-                      class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm mt-2"
+                      class="btn bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm mt-2"
                     >
                       + Termin hinzufügen
                     </button>
@@ -142,28 +142,28 @@
                 </div>
 
                 <!-- Pricing -->
-                <div class="pt-4 border-t border-gray-200 grid grid-cols-3 gap-4">
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700 grid grid-cols-3 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Dauer (Minuten)</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Dauer (Minuten)</label>
                     <input v-model.number="form.duration_minutes" type="number" min="15" step="15" class="input" />
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Preis pro Einheit (€)</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Preis pro Einheit (€)</label>
                     <input v-model.number="form.price_per_session" type="number" step="0.01" min="0" class="input" />
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Anzahl Einheiten</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Anzahl Einheiten</label>
                     <input v-model.number="form.total_sessions" type="number" min="1" class="input" />
                   </div>
                 </div>
 
                 <!-- Additional Info -->
-                <div class="pt-4 border-t border-gray-200">
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
                   <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Stornierungsfrist (Stunden)</label>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stornierungsfrist (Stunden)</label>
                       <input
                         v-model.number="form.cancellation_deadline_hours"
                         type="number"
@@ -172,10 +172,10 @@
                         class="input"
                         placeholder="z.B. 24"
                       />
-                      <p class="text-xs text-gray-500 mt-1">Bis wie viele Stunden vor Kursbeginn kann storniert werden? (Standard: 24h)</p>
+                      <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Bis wie viele Stunden vor Kursbeginn kann storniert werden? (Standard: 24h)</p>
                     </div>
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notizen</label>
                       <textarea v-model="form.notes" rows="2" class="input"></textarea>
                     </div>
                   </div>
@@ -183,10 +183,10 @@
 
                 <!-- Buttons -->
                 <div class="flex justify-end space-x-3 pt-4">
-                  <button type="button" @click="closeModal" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700">
+                  <button type="button" @click="closeModal" class="btn bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300">
                     Abbrechen
                   </button>
-                  <button type="button" @click="resetForm" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700">
+                  <button type="button" @click="resetForm" class="btn bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300">
                     Zurücksetzen
                   </button>
                   <button type="submit" :disabled="loading" class="btn btn-primary disabled:opacity-50">
