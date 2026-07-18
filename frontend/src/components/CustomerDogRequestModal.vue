@@ -24,14 +24,14 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
 
               <!-- Success State -->
               <template v-if="submitted">
-                <DialogTitle as="h3" class="text-lg font-medium leading-6 text-green-700 mb-4">
+                <DialogTitle as="h3" class="text-lg font-medium leading-6 text-green-700 dark:text-green-400 mb-4">
                   Anfrage gesendet! ✓
                 </DialogTitle>
-                <p class="text-sm text-gray-600 mb-6">
+                <p class="text-sm text-gray-600 dark:text-gray-300 mb-6">
                   Ihre Anfrage zur Registrierung von <strong>{{ submittedDogName }}</strong> wurde erfolgreich
                   an den Administrator gesendet und wird zeitnah bearbeitet. Sie erhalten eine
                   Benachrichtigung, sobald Ihr Hund angelegt wurde.
@@ -49,14 +49,14 @@
 
               <!-- Form State -->
               <template v-else>
-                <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 mb-4">
+                <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
                   Hund anmelden
                 </DialogTitle>
 
                 <form @submit.prevent="handleSubmit" class="space-y-4">
                   <!-- Name -->
                   <div>
-                    <label for="dog-name" class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                    <label for="dog-name" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</label>
                     <input
                       id="dog-name"
                       v-model="form.name"
@@ -70,7 +70,7 @@
                   <!-- Breed & Gender -->
                   <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <label for="dog-breed" class="block text-sm font-medium text-gray-700 mb-1">Rasse</label>
+                      <label for="dog-breed" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rasse</label>
                       <input
                         id="dog-breed"
                         v-model="form.breed"
@@ -81,7 +81,7 @@
                     </div>
 
                     <div>
-                      <label for="dog-gender" class="block text-sm font-medium text-gray-700 mb-1">Geschlecht</label>
+                      <label for="dog-gender" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Geschlecht</label>
                       <select id="dog-gender" v-model="form.gender" class="input">
                         <option value="">Nicht angegeben</option>
                         <option value="male">Rüde</option>
@@ -93,7 +93,7 @@
                   <!-- Date of Birth & Neutered -->
                   <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <label for="dog-dob" class="block text-sm font-medium text-gray-700 mb-1">
+                      <label for="dog-dob" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Geburtsdatum (oder ungefähres Alter)
                       </label>
                       <input
@@ -110,16 +110,16 @@
                         <input
                           v-model="form.neutered"
                           type="checkbox"
-                          class="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                          class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500"
                         />
-                        <span class="ml-2 text-sm text-gray-700">Kastriert/Sterilisiert</span>
+                        <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Kastriert/Sterilisiert</span>
                       </label>
                     </div>
                   </div>
 
                   <!-- Chip Number -->
                   <div>
-                    <label for="dog-chip" class="block text-sm font-medium text-gray-700 mb-1">Chipnummer</label>
+                    <label for="dog-chip" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Chipnummer</label>
                     <input
                       id="dog-chip"
                       v-model="form.chipNumber"
@@ -132,7 +132,7 @@
                   <!-- Owner Since & Origin -->
                   <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <label for="dog-owner-since" class="block text-sm font-medium text-gray-700 mb-1">
+                      <label for="dog-owner-since" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Beim Halter seit
                       </label>
                       <input
@@ -145,7 +145,7 @@
                     </div>
 
                     <div>
-                      <label for="dog-origin" class="block text-sm font-medium text-gray-700 mb-1">Herkunft</label>
+                      <label for="dog-origin" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Herkunft</label>
                       <select id="dog-origin" v-model="form.origin" class="input">
                         <option value="">Nicht angegeben</option>
                         <option value="breeder">Züchter</option>
@@ -158,7 +158,7 @@
 
                   <!-- Age at Acquisition -->
                   <div>
-                    <label for="dog-age-at-acquisition" class="block text-sm font-medium text-gray-700 mb-1">
+                    <label for="dog-age-at-acquisition" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                       Alter bei Einzug
                     </label>
                     <input
@@ -172,7 +172,7 @@
 
                   <!-- Notes -->
                   <div>
-                    <label for="dog-notes" class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
+                    <label for="dog-notes" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notizen</label>
                     <textarea
                       id="dog-notes"
                       v-model="form.notes"
@@ -183,8 +183,8 @@
                   </div>
 
                   <!-- Error Message -->
-                  <div v-if="error" class="rounded-md bg-red-50 p-4">
-                    <p class="text-sm text-red-800">{{ error }}</p>
+                  <div v-if="error" class="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
+                    <p class="text-sm text-red-800 dark:text-red-200">{{ error }}</p>
                   </div>
 
                   <!-- Buttons -->
@@ -192,7 +192,7 @@
                     <button
                       type="button"
                       @click="handleClose"
-                      class="btn bg-gray-100 hover:bg-gray-200 text-gray-700"
+                      class="btn bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300"
                     >
                       Abbrechen
                     </button>

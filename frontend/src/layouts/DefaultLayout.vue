@@ -166,12 +166,18 @@ const roleLabel = computed(() => {
   return user.value ? roles[user.value.role] : ''
 })
 
-const backgroundStyle = computed(() => ({
-  background: `linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.8)), url(${backgroundImage})`,
-  backgroundSize: 'cover',
-  backgroundPosition: 'center',
-  backgroundAttachment: 'fixed'
-}))
+const backgroundStyle = computed(() => {
+  const overlay = themeStore.isDark
+    ? 'linear-gradient(rgba(17, 24, 39, 0.75), rgba(17, 24, 39, 0.85))'
+    : 'linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.8))'
+
+  return {
+    background: `${overlay}, url(${backgroundImage})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    backgroundAttachment: 'fixed'
+  }
+})
 
 const pageTitle = computed(() => route.meta.title as string || 'Dashboard')
 

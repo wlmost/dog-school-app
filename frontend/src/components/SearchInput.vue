@@ -2,7 +2,7 @@
   <div class="relative">
     <!-- Search icon -->
     <svg
-      class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none"
+      class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500 pointer-events-none"
       fill="none"
       stroke="currentColor"
       viewBox="0 0 24 24"
@@ -27,7 +27,7 @@
     <button
       v-if="modelValue"
       type="button"
-      class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
+      class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
       :aria-label="clearLabel"
       @click="clearSearch"
     >

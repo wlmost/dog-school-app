@@ -5,14 +5,14 @@
         <div class="flex min-h-screen items-center justify-center p-4">
           <div class="fixed inset-0 bg-black/50 transition-opacity"></div>
           
-          <div class="relative w-full max-w-4xl bg-white rounded-xl shadow-2xl" @click.stop>
+          <div class="relative w-full max-w-4xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl" @click.stop>
             <!-- Header -->
-            <div class="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 rounded-t-xl">
+            <div class="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 rounded-t-xl">
               <div class="flex items-center justify-between">
-                <h3 class="text-xl font-semibold text-gray-900">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
                   Anamnese Details
                 </h3>
-                <button @click="close" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <button @click="close" class="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors">
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -27,58 +27,58 @@
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <p class="mt-4 text-gray-500">Lade Details...</p>
+                <p class="mt-4 text-gray-500 dark:text-gray-400">Lade Details...</p>
               </div>
 
               <div v-else-if="details" class="space-y-6">
                 <!-- Info Section -->
-                <div class="bg-gray-50 p-4 rounded-lg">
+                <div class="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                   <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <dt class="text-sm font-medium text-gray-500">Hund</dt>
-                      <dd class="mt-1 text-sm text-gray-900">{{ details.dogName }}</dd>
+                      <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Hund</dt>
+                      <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ details.dogName }}</dd>
                     </div>
                     <div>
-                      <dt class="text-sm font-medium text-gray-500">Besitzer</dt>
-                      <dd class="mt-1 text-sm text-gray-900">{{ details.customerName }}</dd>
+                      <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Besitzer</dt>
+                      <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ details.customerName }}</dd>
                     </div>
                     <div>
-                      <dt class="text-sm font-medium text-gray-500">Vorlage</dt>
-                      <dd class="mt-1 text-sm text-gray-900">{{ details.templateName }}</dd>
+                      <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Vorlage</dt>
+                      <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ details.templateName }}</dd>
                     </div>
                     <div>
-                      <dt class="text-sm font-medium text-gray-500">Status</dt>
+                      <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</dt>
                       <dd class="mt-1">
-                        <span :class="details.completedAt ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'" 
+                        <span :class="details.completedAt ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'"
                               class="px-2 py-1 text-xs font-medium rounded-full">
                           {{ details.completedAt ? 'Abgeschlossen' : 'Ausstehend' }}
                         </span>
                       </dd>
                     </div>
                     <div>
-                      <dt class="text-sm font-medium text-gray-500">Erstellt am</dt>
-                      <dd class="mt-1 text-sm text-gray-900">{{ formatDate(details.createdAt) }}</dd>
+                      <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Erstellt am</dt>
+                      <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ formatDate(details.createdAt) }}</dd>
                     </div>
                     <div v-if="details.completedAt">
-                      <dt class="text-sm font-medium text-gray-500">Abgeschlossen am</dt>
-                      <dd class="mt-1 text-sm text-gray-900">{{ formatDate(details.completedAt) }}</dd>
+                      <dt class="text-sm font-medium text-gray-500 dark:text-gray-400">Abgeschlossen am</dt>
+                      <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ formatDate(details.completedAt) }}</dd>
                     </div>
                   </div>
                 </div>
 
                 <!-- Answers Section -->
                 <div class="space-y-4">
-                  <h4 class="text-lg font-semibold text-gray-900 border-b pb-2">Antworten</h4>
-                  
-                  <div v-if="!details.answers || details.answers.length === 0" class="text-center py-8 text-gray-500">
+                  <h4 class="text-lg font-semibold text-gray-900 dark:text-white border-b border-gray-200 dark:border-gray-700 pb-2">Antworten</h4>
+
+                  <div v-if="!details.answers || details.answers.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
                     Noch keine Antworten vorhanden
                   </div>
 
-                  <div v-else v-for="(answer, index) in details.answers" :key="answer.id" class="border-b border-gray-200 pb-4 last:border-0">
-                    <dt class="text-sm font-medium text-gray-700 mb-2">
+                  <div v-else v-for="(answer, index) in details.answers" :key="answer.id" class="border-b border-gray-200 dark:border-gray-700 pb-4 last:border-0">
+                    <dt class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       {{ index + 1 }}. {{ answer.questionText }}
                     </dt>
-                    <dd class="text-sm text-gray-900 whitespace-pre-wrap pl-4">
+                    <dd class="text-sm text-gray-900 dark:text-gray-100 whitespace-pre-wrap pl-4">
                       {{ formatAnswer(answer.answerValue) }}
                     </dd>
                   </div>
@@ -87,7 +87,7 @@
             </div>
 
             <!-- Footer -->
-            <div class="sticky bottom-0 bg-gray-50 px-6 py-4 rounded-b-xl border-t border-gray-200">
+            <div class="sticky bottom-0 bg-gray-50 dark:bg-gray-700 px-6 py-4 rounded-b-xl border-t border-gray-200 dark:border-gray-700">
               <div class="flex justify-end">
                 <button type="button" @click="close" class="btn btn-primary">
                   Schließen

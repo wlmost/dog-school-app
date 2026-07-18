@@ -1,12 +1,12 @@
 <template>
   <div>
     <!-- Loading state -->
-    <div v-if="loading" class="text-center py-4 text-gray-500 text-sm">
+    <div v-if="loading" class="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">
       Lade Termine...
     </div>
 
     <!-- Error state -->
-    <div v-else-if="loadError" class="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+    <div v-else-if="loadError" class="rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
       Termine konnten nicht geladen werden.
     </div>
 
@@ -14,7 +14,7 @@
       <!-- Session table -->
       <table v-if="sessions.length > 0" class="w-full text-sm">
         <thead>
-          <tr class="border-b border-gray-200 text-left text-gray-600">
+          <tr class="border-b border-gray-200 dark:border-gray-700 text-left text-gray-600 dark:text-gray-400">
             <th class="py-2 pr-4 font-medium">Datum</th>
             <th class="py-2 pr-4 font-medium">Uhrzeit</th>
             <th class="py-2 pr-4 font-medium">Ort</th>
@@ -26,7 +26,7 @@
         <tbody>
           <template v-for="session in sessions" :key="session.id">
             <!-- Inline edit form row -->
-            <tr v-if="editable && editingId === session.id" class="border-b border-gray-100">
+            <tr v-if="editable && editingId === session.id" class="border-b border-gray-100 dark:border-gray-700/50">
               <td :colspan="editable ? 6 : 5" class="py-3">
                 <div class="grid grid-cols-4 gap-2 items-center">
                   <input v-model="editForm.sessionDate" type="date" class="input" />
@@ -38,14 +38,14 @@
                   <button
                     type="button"
                     @click="cancelEdit"
-                    class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm"
+                    class="btn bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm"
                   >
                     Abbrechen
                   </button>
                   <button
                     type="button"
                     @click="resetEdit(session)"
-                    class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm"
+                    class="btn bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm"
                   >
                     Zurücksetzen
                   </button>
@@ -63,7 +63,7 @@
             </tr>
 
             <!-- Normal display row -->
-            <tr v-else class="border-b border-gray-100 hover:bg-gray-50">
+            <tr v-else class="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700">
               <td class="py-2 pr-4">{{ formatDate(session.sessionDate) }}</td>
               <td class="py-2 pr-4">{{ formatTime(session.startTime, session.endTime) }}</td>
               <td class="py-2 pr-4">{{ session.location || '–' }}</td>
@@ -74,7 +74,7 @@
                   <button
                     type="button"
                     @click="startEdit(session)"
-                    class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs"
+                    class="btn bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-xs"
                   >
                     Bearbeiten
                   </button>
@@ -82,7 +82,7 @@
                     type="button"
                     :disabled="deletingId === session.id"
                     @click="deleteSession(session)"
-                    class="btn bg-red-100 hover:bg-red-200 text-red-700 text-xs disabled:opacity-50"
+                    class="btn bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300 text-xs disabled:opacity-50"
                   >
                     <span v-if="deletingId === session.id">Löscht...</span>
                     <span v-else>Löschen</span>
@@ -94,10 +94,10 @@
         </tbody>
       </table>
 
-      <p v-else class="text-gray-500 text-sm py-2">Keine Termine vorhanden.</p>
+      <p v-else class="text-gray-500 dark:text-gray-400 text-sm py-2">Keine Termine vorhanden.</p>
 
       <!-- Add inline form -->
-      <div v-if="editable && isAdding" class="mt-4 border-t border-gray-200 pt-4">
+      <div v-if="editable && isAdding" class="mt-4 border-t border-gray-200 dark:border-gray-700 pt-4">
         <div class="grid grid-cols-4 gap-2 items-center">
           <input v-model="addForm.sessionDate" type="date" class="input" />
           <input v-model="addForm.startTime" type="time" class="input" />
@@ -108,14 +108,14 @@
           <button
             type="button"
             @click="isAdding = false"
-            class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm"
+            class="btn bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm"
           >
             Abbrechen
           </button>
           <button
             type="button"
             @click="resetAddForm"
-            class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm"
+            class="btn bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm"
           >
             Zurücksetzen
           </button>
@@ -136,7 +136,7 @@
         v-if="editable && !isAdding"
         type="button"
         @click="isAdding = true"
-        class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm mt-4"
+        class="btn bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm mt-4"
       >
         + Termin hinzufügen
       </button>

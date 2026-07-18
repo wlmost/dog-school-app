@@ -1,11 +1,11 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+  <div class="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 px-4">
     <div class="text-center">
-      <h1 class="text-9xl font-bold text-gray-300">404</h1>
-      <h2 class="text-3xl font-semibold text-gray-900 mt-4 mb-2">
+      <h1 class="text-9xl font-bold text-gray-300 dark:text-gray-700">404</h1>
+      <h2 class="text-3xl font-semibold text-gray-900 dark:text-white mt-4 mb-2">
         Seite nicht gefunden
       </h2>
-      <p class="text-gray-600 mb-8">
+      <p class="text-gray-600 dark:text-gray-400 mb-8">
         Die von Ihnen gesuchte Seite existiert nicht oder wurde verschoben.
       </p>
       <RouterLink

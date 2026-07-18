@@ -122,7 +122,7 @@ const previewText = computed<string>(() => {
   <div class="space-y-4">
     <!-- Typ-Auswahl -->
     <div>
-      <label for="rr-type" class="block text-sm font-medium text-gray-700 mb-1">
+      <label for="rr-type" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         Wiederholungstyp
       </label>
       <select id="rr-type" v-model="state.type" class="input">
@@ -133,7 +133,7 @@ const previewText = computed<string>(() => {
 
     <!-- Wochentag-Auswahl (nur bei weekly) -->
     <div v-if="state.type === 'weekly'">
-      <label for="rr-weekday" class="block text-sm font-medium text-gray-700 mb-1">
+      <label for="rr-weekday" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         Wochentag
       </label>
       <select id="rr-weekday" v-model.number="state.weekday" class="input">
@@ -145,7 +145,7 @@ const previewText = computed<string>(() => {
 
     <!-- Tag des Monats (nur bei monthly) -->
     <div v-if="state.type === 'monthly'">
-      <label for="rr-day-of-month" class="block text-sm font-medium text-gray-700 mb-1">
+      <label for="rr-day-of-month" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         Tag des Monats
       </label>
       <input
@@ -161,21 +161,21 @@ const previewText = computed<string>(() => {
     <!-- Startdatum / Zeiten in einem Grid -->
     <div class="grid grid-cols-2 gap-4">
       <div class="col-span-2">
-        <label for="rr-start-date" class="block text-sm font-medium text-gray-700 mb-1">
+        <label for="rr-start-date" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Startdatum
         </label>
         <input id="rr-start-date" v-model="state.startDate" type="date" class="input" />
       </div>
 
       <div>
-        <label for="rr-start-time" class="block text-sm font-medium text-gray-700 mb-1">
+        <label for="rr-start-time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Startzeit
         </label>
         <input id="rr-start-time" v-model="state.startTime" type="time" class="input" />
       </div>
 
       <div>
-        <label for="rr-end-time" class="block text-sm font-medium text-gray-700 mb-1">
+        <label for="rr-end-time" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           Endzeit
         </label>
         <input id="rr-end-time" v-model="state.endTime" type="time" class="input" />
@@ -184,7 +184,7 @@ const previewText = computed<string>(() => {
 
     <!-- Anzahl Einheiten -->
     <div>
-      <label for="rr-count" class="block text-sm font-medium text-gray-700 mb-1">
+      <label for="rr-count" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
         Anzahl Einheiten
       </label>
       <input
@@ -200,8 +200,8 @@ const previewText = computed<string>(() => {
     <!-- Optionale Felder -->
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <label for="rr-location" class="block text-sm font-medium text-gray-700 mb-1">
-          Ort <span class="text-gray-400 font-normal">(optional)</span>
+        <label for="rr-location" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Ort <span class="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
         </label>
         <input
           id="rr-location"
@@ -213,8 +213,8 @@ const previewText = computed<string>(() => {
       </div>
 
       <div>
-        <label for="rr-max-participants" class="block text-sm font-medium text-gray-700 mb-1">
-          Max. Teilnehmer <span class="text-gray-400 font-normal">(optional)</span>
+        <label for="rr-max-participants" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+          Max. Teilnehmer <span class="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
         </label>
         <input
           id="rr-max-participants"
@@ -231,7 +231,7 @@ const previewText = computed<string>(() => {
     <!-- Vorschau -->
     <div
       v-if="previewText"
-      class="rounded-lg bg-blue-50 border border-blue-200 px-4 py-3 text-sm text-blue-800"
+      class="rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 px-4 py-3 text-sm text-blue-800 dark:text-blue-200"
     >
       <span class="font-medium">Vorschau:</span> {{ previewText }}
     </div>

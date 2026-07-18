@@ -24,15 +24,15 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-              <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 mb-4">
+            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
+              <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
                 {{ booking ? 'Buchung bearbeiten' : 'Neue Buchung' }}
               </DialogTitle>
 
               <form @submit.prevent="handleSubmit" class="space-y-4">
                 <!-- Dog Selection -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Hund *</label>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Hund *</label>
                   <select v-model="form.dog_id" @change="onDogChange" required class="input">
                     <option value="">Hund auswählen...</option>
                     <option v-for="dog in dogs" :key="dog.id" :value="dog.id">
@@ -43,7 +43,7 @@
 
                 <!-- Course Selection -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Kurs *</label>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Kurs *</label>
                   <select v-model="form.course_id" @change="onCourseChange" required class="input">
                     <option value="">Kurs auswählen...</option>
                     <option v-for="course in uniqueCourses" :key="course.id" :value="course.id">
@@ -54,7 +54,7 @@
 
                 <!-- Training Session Selection -->
                 <div v-if="form.course_id">
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Trainingstermin *</label>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Trainingstermin *</label>
                   <select v-model="form.training_session_id" required class="input">
                     <option value="">Termin auswählen...</option>
                     <option v-for="session in availableSessions" :key="session.id" :value="session.id">
@@ -66,12 +66,12 @@
                 <!-- Booking Details -->
                 <div class="grid grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Buchungsdatum *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Buchungsdatum *</label>
                     <input v-model="form.booking_date" type="date" required class="input" />
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
                     <select v-model="form.status" class="input">
                       <option value="pending">Ausstehend</option>
                       <option value="confirmed">Bestätigt</option>
@@ -83,13 +83,13 @@
 
                 <!-- Notes -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notizen</label>
                   <textarea v-model="form.notes" rows="3" class="input"></textarea>
                 </div>
 
                 <!-- Buttons -->
                 <div class="flex justify-end space-x-3 pt-4">
-                  <button type="button" @click="closeModal" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700">
+                  <button type="button" @click="closeModal" class="btn bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300">
                     Abbrechen
                   </button>
                   <button type="submit" :disabled="loading" class="btn btn-primary disabled:opacity-50">

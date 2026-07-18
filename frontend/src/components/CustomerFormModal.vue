@@ -24,8 +24,8 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-              <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 mb-4">
+            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
+              <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
                 {{ customer ? 'Kunde bearbeiten' : 'Neuer Kunde' }}
               </DialogTitle>
 
@@ -33,40 +33,40 @@
                 <!-- Benutzer-Informationen -->
                 <div class="grid grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Vorname *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Vorname *</label>
                     <input v-model="form.first_name" type="text" required class="input" />
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Nachname *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nachname *</label>
                     <input v-model="form.last_name" type="text" required class="input" />
                   </div>
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">E-Mail *</label>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">E-Mail *</label>
                   <input v-model="form.email" type="email" required class="input" />
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Telefon</label>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Telefon</label>
                   <input v-model="form.phone" type="tel" class="input" />
                 </div>
 
                 <div v-if="!customer" class="space-y-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Initiales Passwort</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Initiales Passwort</label>
                     <div class="flex items-center gap-2">
                       <input
                         :value="generatedPassword"
                         type="text"
                         readonly
-                        class="input flex-1 bg-gray-50 font-mono text-sm"
+                        class="input flex-1 bg-gray-50 dark:bg-gray-700 font-mono text-sm"
                       />
                       <button
                         type="button"
                         @click="copyPassword"
-                        class="btn bg-white hover:bg-gray-50 border border-gray-300 flex items-center gap-1 whitespace-nowrap"
-                        :class="passwordCopied ? 'text-green-600' : 'text-gray-700'"
+                        class="btn bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600 flex items-center gap-1 whitespace-nowrap"
+                        :class="passwordCopied ? 'text-green-600 dark:text-green-400' : 'text-gray-700 dark:text-gray-300'"
                       >
                         <svg v-if="!passwordCopied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
@@ -79,7 +79,7 @@
                       <button
                         type="button"
                         @click="refreshPassword"
-                        class="btn bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 flex items-center gap-1 whitespace-nowrap"
+                        class="btn bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 flex items-center gap-1 whitespace-nowrap"
                         title="Neues Passwort generieren"
                       >
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -88,7 +88,7 @@
                         Neu
                       </button>
                     </div>
-                    <p class="mt-2 text-xs text-amber-600 flex items-start gap-1">
+                    <p class="mt-2 text-xs text-amber-600 dark:text-amber-400 flex items-start gap-1">
                       <svg class="w-3.5 h-3.5 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                       </svg>
@@ -99,7 +99,7 @@
 
                 <!-- Trainer Assignment -->
                 <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Zugewiesener Trainer</label>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Zugewiesener Trainer</label>
                   <select v-model="form.trainer_id" class="input">
                     <option :value="null">Kein Trainer zugewiesen</option>
                     <option v-for="trainer in trainers" :key="trainer.id" :value="trainer.id">
@@ -109,40 +109,40 @@
                 </div>
 
                 <!-- Adresse -->
-                <div class="pt-4 border-t border-gray-200">
-                  <h4 class="text-sm font-medium text-gray-900 mb-3">Adresse</h4>
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">Adresse</h4>
                   <div class="space-y-4">
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Straße</label>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Straße</label>
                       <input v-model="form.street" type="text" class="input" />
                     </div>
                     <div class="grid grid-cols-3 gap-4">
                       <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1">PLZ</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">PLZ</label>
                         <input v-model="form.postal_code" type="text" class="input" />
                       </div>
                       <div class="col-span-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Stadt</label>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Stadt</label>
                         <input v-model="form.city" type="text" class="input" />
                       </div>
                     </div>
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Land</label>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Land</label>
                       <input v-model="form.country" type="text" class="input" placeholder="Deutschland" />
                     </div>
                   </div>
                 </div>
 
                 <!-- Notizen -->
-                <div class="pt-4 border-t border-gray-200">
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notizen</label>
                   <textarea v-model="form.notes" rows="3" class="input"></textarea>
                 </div>
 
                 <!-- Hunde -->
-                <div v-if="customer" class="pt-4 border-t border-gray-200">
+                <div v-if="customer" class="pt-4 border-t border-gray-200 dark:border-gray-700">
                   <div class="flex justify-between items-center mb-3">
-                    <h4 class="text-sm font-medium text-gray-900">Hunde</h4>
+                    <h4 class="text-sm font-medium text-gray-900 dark:text-white">Hunde</h4>
                     <button type="button" @click="showDogForm = true" class="text-sm text-primary-600 hover:text-primary-700 font-medium">
                       + Hund hinzufügen
                     </button>
@@ -150,25 +150,25 @@
                   
                   <!-- Dog List -->
                   <div v-if="dogs.length > 0" class="space-y-2 mb-3">
-                    <div v-for="dog in dogs" :key="dog.id" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div v-for="dog in dogs" :key="dog.id" class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div class="flex-1">
-                        <p class="text-sm font-medium text-gray-900">{{ dog.name }}</p>
-                        <p class="text-xs text-gray-500">{{ dog.breed }}</p>
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ dog.name }}</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ dog.breed }}</p>
                       </div>
-                      <button type="button" @click="removeDog(dog)" class="text-red-600 hover:text-red-700">
+                      <button type="button" @click="removeDog(dog)" class="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
                       </button>
                     </div>
                   </div>
-                  <p v-else class="text-sm text-gray-500 italic">Noch keine Hunde zugeordnet</p>
+                  <p v-else class="text-sm text-gray-500 dark:text-gray-400 italic">Noch keine Hunde zugeordnet</p>
 
                   <!-- Dog Form -->
-                  <div v-if="showDogForm" class="mt-4 p-4 bg-gray-50 rounded-lg space-y-3">
+                  <div v-if="showDogForm" class="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-3">
                     <div class="flex justify-between items-center mb-2">
-                      <h5 class="text-sm font-medium text-gray-900">Neuer Hund</h5>
-                      <button type="button" @click="cancelDogForm" class="text-gray-500 hover:text-gray-700">
+                      <h5 class="text-sm font-medium text-gray-900 dark:text-white">Neuer Hund</h5>
+                      <button type="button" @click="cancelDogForm" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -176,21 +176,21 @@
                     </div>
                     <div class="grid grid-cols-2 gap-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Name *</label>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</label>
                         <input v-model="dogForm.name" type="text" required class="input text-sm" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Rasse *</label>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Rasse *</label>
                         <input v-model="dogForm.breed" type="text" required class="input text-sm" />
                       </div>
                     </div>
                     <div class="grid grid-cols-3 gap-3">
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Geburtsdatum</label>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Geburtsdatum</label>
                         <input v-model="dogForm.date_of_birth" type="date" class="input text-sm" />
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Geschlecht</label>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Geschlecht</label>
                         <select v-model="dogForm.gender" class="input text-sm">
                           <option value="">-</option>
                           <option value="male">Rüde</option>
@@ -198,12 +198,12 @@
                         </select>
                       </div>
                       <div>
-                        <label class="block text-xs font-medium text-gray-700 mb-1">Gewicht (kg)</label>
+                        <label class="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Gewicht (kg)</label>
                         <input v-model.number="dogForm.weight" type="number" step="0.1" class="input text-sm" />
                       </div>
                     </div>
                     <div class="flex justify-end space-x-2">
-                      <button type="button" @click="cancelDogForm" class="btn bg-white hover:bg-gray-50 text-gray-700 text-sm px-3 py-1.5">
+                      <button type="button" @click="cancelDogForm" class="btn bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 text-sm px-3 py-1.5">
                         Abbrechen
                       </button>
                       <button type="button" @click="saveDog" :disabled="!dogForm.name || !dogForm.breed" class="btn btn-primary text-sm px-3 py-1.5 disabled:opacity-50">
@@ -215,7 +215,7 @@
 
                 <!-- Buttons -->
                 <div class="flex justify-end space-x-3 pt-4">
-                  <button type="button" @click="closeModal" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700">
+                  <button type="button" @click="closeModal" class="btn bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300">
                     Abbrechen
                   </button>
                   <button type="submit" :disabled="loading" class="btn btn-primary disabled:opacity-50">

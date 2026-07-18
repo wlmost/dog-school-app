@@ -24,8 +24,8 @@
             leave-from="opacity-100 scale-100"
             leave-to="opacity-0 scale-95"
           >
-            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
-              <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 mb-4">
+            <DialogPanel class="w-full max-w-2xl transform overflow-hidden rounded-2xl bg-white dark:bg-gray-800 p-6 text-left align-middle shadow-xl transition-all">
+              <DialogTitle as="h3" class="text-lg font-medium leading-6 text-gray-900 dark:text-white mb-4">
                 {{ dog ? 'Hund bearbeiten' : 'Neuer Hund' }}
               </DialogTitle>
 
@@ -35,7 +35,7 @@
                   <div class="relative">
                     <div
                       v-if="imagePreview || dog?.profileImageUrl"
-                      class="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200"
+                      class="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200 dark:border-gray-700"
                     >
                       <img
                         :src="imagePreview || dog?.profileImageUrl"
@@ -45,15 +45,15 @@
                     </div>
                     <div
                       v-else
-                      class="w-20 h-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-3xl"
+                      class="w-20 h-20 rounded-full bg-gray-100 dark:bg-gray-700 border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-3xl"
                     >
                       🐕
                     </div>
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Profilbild</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Profilbild</label>
                     <label class="cursor-pointer">
-                      <span class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm">
+                      <span class="btn bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 text-sm">
                         Bild auswählen
                       </span>
                       <input
@@ -63,12 +63,12 @@
                         @change="handleImageChange"
                       />
                     </label>
-                    <p class="text-xs text-gray-500 mt-1">JPG, PNG, GIF oder WebP, max. 5 MB</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">JPG, PNG, GIF oder WebP, max. 5 MB</p>
                     <button
                       v-if="imagePreview"
                       type="button"
                       @click="clearImageSelection"
-                      class="text-xs text-red-600 hover:text-red-800 mt-1 block"
+                      class="text-xs text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 mt-1 block"
                     >
                       Auswahl aufheben
                     </button>
@@ -79,9 +79,9 @@
                 <div class="grid grid-cols-2 gap-4">
                 <!-- Besitzer: admin/trainer see dropdown, customers see their name as text -->
                 <div class="col-span-2">
-                  <label class="block text-sm font-medium text-gray-700 mb-1">Besitzer *</label>
+                  <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Besitzer *</label>
                   <template v-if="isCustomer">
-                    <p class="input bg-gray-50 text-gray-600">{{ dog?.customer?.user?.fullName || 'Sie' }}</p>
+                    <p class="input bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300">{{ dog?.customer?.user?.fullName || 'Sie' }}</p>
                   </template>
                   <template v-else>
                     <select v-model="form.customer_id" required class="input">
@@ -94,19 +94,19 @@
                 </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Name *</label>
                     <input v-model="form.name" type="text" required class="input" />
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Rasse *</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Rasse *</label>
                     <input v-model="form.breed" type="text" required class="input" />
                   </div>
                 </div>
 
                 <div class="grid grid-cols-3 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Geburtsdatum</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Geburtsdatum</label>
                     <input 
                       v-model="form.date_of_birth" 
                       type="date" 
@@ -116,7 +116,7 @@
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Geschlecht</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Geschlecht</label>
                     <select v-model="form.gender" class="input">
                       <option value="">Nicht angegeben</option>
                       <option value="male">Rüde</option>
@@ -125,39 +125,39 @@
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Gewicht (kg)</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Gewicht (kg)</label>
                     <input v-model.number="form.weight" type="number" step="0.1" class="input" />
                   </div>
                 </div>
 
                 <!-- Additional Info -->
-                <div class="pt-4 border-t border-gray-200 space-y-4">
+                <div class="pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Chipnummer</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Chipnummer</label>
                     <input v-model="form.chip_number" type="text" class="input" />
                   </div>
 
                   <div class="grid grid-cols-2 gap-4">
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Farbe</label>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Farbe</label>
                       <input v-model="form.color" type="text" class="input" />
                     </div>
 
                     <div>
-                      <label class="block text-sm font-medium text-gray-700 mb-1">Besondere Merkmale</label>
+                      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Besondere Merkmale</label>
                       <input v-model="form.special_characteristics" type="text" class="input" />
                     </div>
                   </div>
 
                   <div>
                     <label class="flex items-center">
-                      <input v-model="form.neutered" type="checkbox" class="rounded border-gray-300 text-primary-600 focus:ring-primary-500" />
-                      <span class="ml-2 text-sm text-gray-700">Kastriert/Sterilisiert</span>
+                      <input v-model="form.neutered" type="checkbox" class="rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500" />
+                      <span class="ml-2 text-sm text-gray-700 dark:text-gray-300">Kastriert/Sterilisiert</span>
                     </label>
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Notizen</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Notizen</label>
                     <textarea v-model="form.notes" rows="3" class="input"></textarea>
                   </div>
                 </div>
@@ -165,7 +165,7 @@
                 <!-- Owner History -->
                 <div class="grid grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Beim Halter seit</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Beim Halter seit</label>
                     <input
                       v-model="form.owner_since"
                       type="date"
@@ -175,7 +175,7 @@
                   </div>
 
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Herkunft</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Herkunft</label>
                     <select v-model="form.origin" class="input">
                       <option value="">Nicht angegeben</option>
                       <option value="breeder">Züchter</option>
@@ -186,7 +186,7 @@
                   </div>
 
                   <div class="col-span-2">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Alter bei Einzug</label>
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Alter bei Einzug</label>
                     <input
                       v-model="form.age_at_acquisition"
                       type="text"
@@ -197,13 +197,13 @@
                 </div>
 
                 <!-- Error Message -->
-                <div v-if="error" class="rounded-md bg-red-50 p-4">
-                  <p class="text-sm text-red-800">{{ error }}</p>
+                <div v-if="error" class="rounded-md bg-red-50 dark:bg-red-900/20 p-4">
+                  <p class="text-sm text-red-800 dark:text-red-200">{{ error }}</p>
                 </div>
 
                 <!-- Buttons -->
                 <div class="flex justify-end space-x-3 pt-4">
-                  <button type="button" @click="closeModal" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700">
+                  <button type="button" @click="closeModal" class="btn bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300">
                     Abbrechen
                   </button>
                   <button type="submit" :disabled="loading" class="btn btn-primary disabled:opacity-50">

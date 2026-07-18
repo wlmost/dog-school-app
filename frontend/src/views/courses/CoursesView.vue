@@ -30,10 +30,10 @@
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
         <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
       </svg>
-      <p class="mt-4 text-gray-500">Lade Kursdaten...</p>
+      <p class="mt-4 text-gray-500 dark:text-gray-400">Lade Kursdaten...</p>
     </div>
 
-    <div v-else-if="!courses.length" class="card text-center py-12 text-gray-500">
+    <div v-else-if="!courses.length" class="card text-center py-12 text-gray-500 dark:text-gray-400">
       Keine Kurse gefunden
     </div>
 
@@ -41,9 +41,9 @@
       <div v-for="course in courses" :key="course.id" class="card cursor-pointer hover:shadow-lg transition-shadow">
         <div class="flex items-start justify-between mb-4">
           <div class="flex-1">
-            <h3 class="text-xl font-semibold text-gray-900 mb-1">{{ course.name }}</h3>
+            <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-1">{{ course.name }}</h3>
             <!-- eslint-disable-next-line vue/no-v-html -->
-            <div class="text-sm text-gray-600 course-description" v-html="sanitizeHtml(course.description)"></div>
+            <div class="text-sm text-gray-600 dark:text-gray-400 course-description" v-html="sanitizeHtml(course.description)"></div>
           </div>
           <span :class="courseStatusClass(course.status)" class="px-3 py-1 text-xs font-medium rounded-full whitespace-nowrap">
             {{ courseStatusLabel(course.status) }}
@@ -52,33 +52,33 @@
 
         <div class="grid grid-cols-2 gap-4 mb-4">
           <div>
-            <p class="text-xs text-gray-500 mb-1">Startdatum</p>
-            <p class="text-sm font-medium text-gray-900">{{ formatDate(course.startDate) }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Startdatum</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ formatDate(course.startDate) }}</p>
           </div>
           <div>
-            <p class="text-xs text-gray-500 mb-1">Enddatum</p>
-            <p class="text-sm font-medium text-gray-900">{{ formatDate(course.endDate) }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Enddatum</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ formatDate(course.endDate) }}</p>
           </div>
           <div>
-            <p class="text-xs text-gray-500 mb-1">Teilnehmer</p>
-            <p class="text-sm font-medium text-gray-900">{{ course.currentParticipants || 0 }} / {{ course.maxParticipants }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Teilnehmer</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ course.currentParticipants || 0 }} / {{ course.maxParticipants }}</p>
           </div>
           <div>
-            <p class="text-xs text-gray-500 mb-1">Typ</p>
-            <p class="text-sm font-medium text-gray-900">{{ getCourseTypeLabel(course.courseType) }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Typ</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ getCourseTypeLabel(course.courseType) }}</p>
           </div>
           <div class="col-span-2">
-            <p class="text-xs text-gray-500 mb-1">Stornierungsfrist</p>
-            <p class="text-sm font-medium text-gray-900">{{ course.cancellationDeadlineHours ?? 24 }} Stunden vor Kursbeginn</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mb-1">Stornierungsfrist</p>
+            <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ course.cancellationDeadlineHours ?? 24 }} Stunden vor Kursbeginn</p>
           </div>
         </div>
 
         <div class="mb-4">
-          <div class="flex items-center justify-between text-xs text-gray-600 mb-1">
+          <div class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400 mb-1">
             <span>Auslastung</span>
             <span>{{ Math.round((course.currentParticipants || 0) / course.maxParticipants * 100) }}%</span>
           </div>
-          <div class="w-full bg-gray-200 rounded-full h-2">
+          <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
             <div
               class="bg-primary-600 h-2 rounded-full transition-all"
               :style="{ width: `${Math.round((course.currentParticipants || 0) / course.maxParticipants * 100)}%` }"
@@ -86,18 +86,18 @@
           </div>
         </div>
 
-        <div class="flex space-x-2 pt-4 border-t border-gray-200">
+        <div class="flex space-x-2 pt-4 border-t border-gray-200 dark:border-gray-700">
           <!-- Trainer/Admin: Bearbeiten -->
           <template v-if="isTrainerOrAdmin">
             <button @click="editCourse(course)" class="btn btn-primary flex-1">Bearbeiten</button>
             <!-- Admin only: Löschen -->
-            <button v-if="isAdmin" @click="deleteCourse(course)" class="btn bg-red-100 hover:bg-red-200 text-red-700 flex-1">Löschen</button>
+            <button v-if="isAdmin" @click="deleteCourse(course)" class="btn bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300 flex-1">Löschen</button>
           </template>
           <!-- Kunde: Buchen oder bereits gebucht -->
           <template v-else-if="isCustomer">
             <span
               v-if="bookedCourseIds.has(course.id)"
-              class="inline-flex items-center px-3 py-2 text-sm font-medium text-green-700 bg-green-100 rounded-lg w-full justify-center"
+              class="inline-flex items-center px-3 py-2 text-sm font-medium text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/30 rounded-lg w-full justify-center"
             >
               ✓ Bereits gebucht
             </span>
@@ -283,12 +283,12 @@ async function deleteCourse(course: any) {
 
 function courseStatusClass(status: string) {
   const classes = {
-    active: 'bg-green-100 text-green-800',
-    planned: 'bg-blue-100 text-blue-800',
-    completed: 'bg-gray-100 text-gray-800',
-    cancelled: 'bg-red-100 text-red-800'
+    active: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    planned: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    completed: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+    cancelled: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
   }
-  return classes[status as keyof typeof classes] || 'bg-gray-100 text-gray-800'
+  return classes[status as keyof typeof classes] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
 }
 
 function courseStatusLabel(status: string) {
