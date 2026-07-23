@@ -299,9 +299,9 @@ watch(() => props.course, (newCourse) => {
       duration_minutes: newCourse.durationMinutes || 60,
       cancellation_deadline_hours: newCourse.cancellationDeadlineHours ?? 24,
       notes: newCourse.notes || '',
-      sessionsMode: '',
+      sessionsMode: newCourse.recurrenceRule ? 'recurrence' : '',
       sessions: [],
-      recurrenceRule: null
+      recurrenceRule: (newCourse.recurrenceRule as RecurrenceRule | null) ?? null
     }
   } else {
     resetForm()
@@ -325,9 +325,9 @@ function resetForm() {
       duration_minutes: props.course.durationMinutes || 60,
       cancellation_deadline_hours: props.course.cancellationDeadlineHours ?? 24,
       notes: props.course.notes || '',
-      sessionsMode: '',
+      sessionsMode: props.course.recurrenceRule ? 'recurrence' : '',
       sessions: [],
-      recurrenceRule: null
+      recurrenceRule: (props.course.recurrenceRule as RecurrenceRule | null) ?? null
     }
   } else {
     form.value = {
