@@ -40,6 +40,16 @@
                 <p class="mt-2">Lade Kundendaten...</p>
               </td>
             </tr>
+            <tr v-else-if="error">
+              <td colspan="6" class="px-6 py-4">
+                <div class="rounded-lg p-4" :class="forbidden ? 'bg-yellow-50 border border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-700 dark:text-yellow-300' : 'bg-red-50 border border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-700 dark:text-red-300'">
+                  <p class="font-medium">{{ error }}</p>
+                  <button v-if="!forbidden" @click="loadCustomers()" class="mt-2 text-sm underline hover:no-underline">
+                    Erneut laden
+                  </button>
+                </div>
+              </td>
+            </tr>
             <tr v-else-if="!customers.length">
               <td colspan="6" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                 Keine Kunden gefunden
@@ -111,6 +121,8 @@ import { handleApiError, showSuccess } from '@/utils/errorHandler'
 import { usePagination } from '@/composables/usePagination'
 
 const loading = ref(true)
+const error = ref<string | null>(null)
+const forbidden = ref(false)
 const searchQuery = ref('')
 const customers = ref<any[]>([])
 const showFormModal = ref(false)
@@ -129,6 +141,8 @@ watch(searchQuery, () => {
 })
 
 async function loadCustomers() {
+  error.value = null
+  forbidden.value = false
   loading.value = true
   try {
     const params: any = { page: currentPage.value }
@@ -141,8 +155,15 @@ async function loadCustomers() {
     if (response.data.meta) {
       updateFromMeta(response.data.meta)
     }
-  } catch (error) {
-    console.error('Error loading customers:', error)
+  } catch (err) {
+    console.error('Error loading customers:', err)
+    const status = (err as { response?: { status?: number } })?.response?.status
+    if (status === 403) {
+      forbidden.value = true
+      error.value = 'Du hast keine Berechtigung, diese Daten zu sehen.'
+    } else {
+      error.value = 'Beim Laden der Daten ist ein Fehler aufgetreten.'
+    }
   } finally {
     loading.value = false
   }

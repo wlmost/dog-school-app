@@ -46,6 +46,16 @@
                 <p class="mt-2">Lade Buchungsdaten...</p>
               </td>
             </tr>
+            <tr v-else-if="error">
+              <td colspan="7" class="px-6 py-4">
+                <div class="rounded-lg p-4" :class="forbidden ? 'bg-yellow-50 border border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-700 dark:text-yellow-300' : 'bg-red-50 border border-red-200 text-red-800 dark:bg-red-900/20 dark:border-red-700 dark:text-red-300'">
+                  <p class="font-medium">{{ error }}</p>
+                  <button v-if="!forbidden" @click="loadBookings()" class="mt-2 text-sm underline hover:no-underline">
+                    Erneut laden
+                  </button>
+                </div>
+              </td>
+            </tr>
             <tr v-else-if="!bookings.length">
               <td colspan="7" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                 Keine Buchungen gefunden
@@ -184,6 +194,8 @@ const isCustomer = computed(() => authStore.user?.role === 'customer')
 const isTrainer = computed(() => authStore.user?.role === 'trainer')
 
 const loading = ref(true)
+const error = ref<string | null>(null)
+const forbidden = ref(false)
 const filterStatus = ref<string | null>(null)
 const bookings = ref<any[]>([])
 const showFormModal = ref(false)
@@ -197,6 +209,8 @@ onMounted(() => {
 })
 
 async function loadBookings() {
+  error.value = null
+  forbidden.value = false
   loading.value = true
   try {
     const params: any = { page: currentPage.value }
@@ -209,8 +223,15 @@ async function loadBookings() {
     if (response.data.meta) {
       updateFromMeta(response.data.meta)
     }
-  } catch (error) {
-    console.error('Error loading bookings:', error)
+  } catch (err) {
+    console.error('Error loading bookings:', err)
+    const status = (err as { response?: { status?: number } })?.response?.status
+    if (status === 403) {
+      forbidden.value = true
+      error.value = 'Du hast keine Berechtigung, diese Daten zu sehen.'
+    } else {
+      error.value = 'Beim Laden der Daten ist ein Fehler aufgetreten.'
+    }
   } finally {
     loading.value = false
   }
