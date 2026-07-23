@@ -72,7 +72,7 @@ it('weist die anfrage zurück wenn recurrenceRule.count größer als 52 ist', fu
 
 // ======== StoreCourseRequest — AC4 ========
 
-it('speichert keinen recurrence_rule-wert in der datenbank wenn validatedSnakeCase ihn ausschließt', function () {
+it('speichert recurrence_rule in der datenbank wenn sessionsMode recurrence ist', function () {
     $data = array_merge($this->baseData, [
         'sessionsMode'   => 'recurrence',
         'recurrenceRule' => $this->validRecurrenceRule,
@@ -83,7 +83,7 @@ it('speichert keinen recurrence_rule-wert in der datenbank wenn validatedSnakeCa
         ->assertCreated();
 
     $course = Course::latest('id')->first();
-    expect($course->recurrence_rule)->toBeNull();
+    expect($course->recurrence_rule)->not->toBeNull();
 });
 
 // ======== StoreCourseRequest — Weitere Validierungsregeln ========
