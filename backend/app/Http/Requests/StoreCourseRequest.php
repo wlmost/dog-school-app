@@ -97,7 +97,7 @@ class StoreCourseRequest extends FormRequest
         }
 
         // Exclude session fields — handled separately via getSessionsPayload() / getRecurrenceRule()
-        unset($snakeCase['sessions'], $snakeCase['recurrence_rule'], $snakeCase['sessions_mode']);
+        unset($snakeCase['sessions'], $snakeCase['sessions_mode']);
 
         return $snakeCase;
     }
