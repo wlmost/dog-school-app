@@ -88,7 +88,16 @@
 
             <!-- Footer -->
             <div class="sticky bottom-0 bg-gray-50 dark:bg-gray-700 px-6 py-4 rounded-b-xl border-t border-gray-200 dark:border-gray-700">
-              <div class="flex justify-end">
+              <div class="flex justify-end gap-2">
+                <button
+                  v-if="details"
+                  type="button"
+                  @click="downloadPdf"
+                  :disabled="pdfDownloading"
+                  class="btn btn-secondary"
+                >
+                  {{ pdfDownloading ? 'Wird heruntergeladen...' : 'PDF herunterladen' }}
+                </button>
                 <button type="button" @click="close" class="btn btn-primary">
                   Schließen
                 </button>
@@ -118,6 +127,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const loading = ref(false)
+const pdfDownloading = ref(false)
 const details = ref<AnamnesisResponse | null>(null)
 
 watch(() => props.modelValue, async (newValue) => {
@@ -160,6 +170,25 @@ function formatAnswer(value: string) {
     // Not JSON, return as-is
   }
   return value
+}
+
+async function downloadPdf() {
+  if (!details.value) return
+
+  pdfDownloading.value = true
+  try {
+    const blob = await anamnesisResponsesApi.downloadPdf(details.value.id)
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `anamnesis-${details.value.id}.pdf`
+    link.click()
+    window.URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Error downloading PDF:', error)
+  } finally {
+    pdfDownloading.value = false
+  }
 }
 
 function close() {
