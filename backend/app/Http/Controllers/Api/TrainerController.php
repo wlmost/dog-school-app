@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api;
 use App\Events\UserRegistered;
 use App\Helpers\DatabaseHelper;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\TrainerOptionResource;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -37,6 +38,24 @@ class TrainerController extends Controller
         $trainers = $query->orderBy('last_name')->orderBy('first_name')->get();
 
         return UserResource::collection($trainers);
+    }
+
+    /**
+     * Display a reduced-data listing of trainers for select boxes.
+     *
+     * Accessible to Admin and Trainer roles (unlike the full listing in
+     * index(), which is Admin-only). Returns only id/firstName/lastName/
+     * fullName, no contact or qualification data.
+     */
+    public function options(): AnonymousResourceCollection
+    {
+        $trainers = User::query()
+            ->where('role', 'trainer')
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get();
+
+        return TrainerOptionResource::collection($trainers);
     }
 
     /**

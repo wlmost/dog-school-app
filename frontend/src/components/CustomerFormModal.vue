@@ -249,13 +249,23 @@ const emit = defineEmits<{
   saved: []
 }>()
 
+// Schlankes Trainer-Format aus GET /api/v1/trainers/options
+// (TrainerOptionResource) — bewusst ohne Kontakt-/Profildaten wie email
+// oder phone, die der reduzierte Endpoint nicht liefert.
+interface TrainerOption {
+  id: number
+  firstName: string | null
+  lastName: string | null
+  fullName: string | null
+}
+
 const authStore = useAuthStore()
 const currentUser = computed(() => authStore.user)
 
 const loading = ref(false)
 const generatedPassword = ref('')
 const passwordCopied = ref(false)
-const trainers = ref<any[]>([])
+const trainers = ref<TrainerOption[]>([])
 const dogs = ref<any[]>([])
 const showDogForm = ref(false)
 
@@ -337,10 +347,11 @@ function resetForm() {
 
 async function loadTrainers() {
   try {
-    const response = await apiClient.get('/api/v1/trainers')
+    const response = await apiClient.get('/api/v1/trainers/options')
     trainers.value = response.data.data || response.data
   } catch (err) {
     console.error('Error loading trainers:', err)
+    handleApiError(err, 'Fehler beim Laden der Trainerliste')
   }
 }
 

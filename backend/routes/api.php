@@ -190,6 +190,13 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::apiResource('payments', PaymentController::class);
     Route::post('/payments/{payment}/mark-completed', [PaymentController::class, 'markAsCompleted']);
     
+    // Trainer Options (Admin + Trainer) - reduced fields for select boxes.
+    // Must be registered before the apiResource below, otherwise Laravel
+    // would match "options" as the {trainer} wildcard of the show route
+    // (same pattern as /customers/profile vs. apiResource('customers', ...)).
+    Route::middleware('can:trainer')->get('/trainers/options', [TrainerController::class, 'options'])
+        ->name('trainers.options');
+
     // Trainer Management (Admin only)
     Route::middleware('can:admin')->group(function () {
         Route::apiResource('trainers', TrainerController::class);

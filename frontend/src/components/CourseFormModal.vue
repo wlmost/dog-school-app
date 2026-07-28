@@ -42,7 +42,7 @@
                     <select v-model="form.trainer_id" required class="input">
                       <option value="">Trainer auswählen...</option>
                       <option v-for="trainer in trainers" :key="trainer.id" :value="trainer.id">
-                        {{ trainer.fullName || trainer.email }}
+                        {{ trainer.fullName || `${trainer.firstName} ${trainer.lastName}` }}
                       </option>
                     </select>
                   </div>
@@ -218,6 +218,18 @@ interface SessionRow {
   location: string
 }
 
+/**
+ * Reduced trainer representation returned by `GET /api/v1/trainers/options`
+ * (`TrainerOptionResource` on the backend) — deliberately excludes contact
+ * and qualification data, see `backend/app/Http/Resources/TrainerOptionResource.php`.
+ */
+interface TrainerOption {
+  id: number
+  firstName: string | null
+  lastName: string | null
+  fullName: string | null
+}
+
 const props = defineProps<{
   isOpen: boolean
   course?: any
@@ -229,7 +241,7 @@ const emit = defineEmits<{
 }>()
 
 const loading = ref(false)
-const trainers = ref<any[]>([])
+const trainers = ref<TrainerOption[]>([])
 
 onMounted(() => {
   loadTrainers()
@@ -275,10 +287,11 @@ const form = ref<{
 
 async function loadTrainers() {
   try {
-    const response = await apiClient.get('/api/v1/trainers')
+    const response = await apiClient.get('/api/v1/trainers/options')
     trainers.value = response.data.data
   } catch (err) {
     console.error('Error loading trainers:', err)
+    handleApiError(err, 'Fehler beim Laden der Trainerliste')
   }
 }
 
