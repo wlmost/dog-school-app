@@ -152,3 +152,64 @@ describe('Unauthenticated', function () {
             ->assertUnauthorized();
     });
 });
+
+describe('Trainer Options Endpoint', function () {
+    $sensitiveFields = [
+        'email',
+        'phone',
+        'mobilePhone',
+        'street',
+        'postalCode',
+        'city',
+        'country',
+        'qualifications',
+        'specializations',
+    ];
+
+    it('liefert für Admin reduzierte Trainer-Daten', function () use ($sensitiveFields) {
+        $response = $this->actingAs($this->admin)
+            ->getJson('/api/v1/trainers/options')
+            ->assertOk();
+
+        $response->assertJsonStructure([
+            'data' => [
+                '*' => ['id', 'firstName', 'lastName', 'fullName'],
+            ],
+        ]);
+
+        foreach ($response->json('data') as $trainerData) {
+            foreach ($sensitiveFields as $field) {
+                expect($trainerData)->not->toHaveKey($field);
+            }
+        }
+    });
+
+    it('liefert für Trainer reduzierte Trainer-Daten', function () use ($sensitiveFields) {
+        $response = $this->actingAs($this->trainer)
+            ->getJson('/api/v1/trainers/options')
+            ->assertOk();
+
+        $response->assertJsonStructure([
+            'data' => [
+                '*' => ['id', 'firstName', 'lastName', 'fullName'],
+            ],
+        ]);
+
+        foreach ($response->json('data') as $trainerData) {
+            foreach ($sensitiveFields as $field) {
+                expect($trainerData)->not->toHaveKey($field);
+            }
+        }
+    });
+
+    it('erhält 403 für Customer-Rolle', function () {
+        $this->actingAs($this->customer)
+            ->getJson('/api/v1/trainers/options')
+            ->assertForbidden();
+    });
+
+    it('erhält 401 wenn unauthentifiziert', function () {
+        $this->getJson('/api/v1/trainers/options')
+            ->assertUnauthorized();
+    });
+});
