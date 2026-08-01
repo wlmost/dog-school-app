@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * Invoice Model
@@ -17,21 +19,21 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $id
  * @property int $customer_id
  * @property string $invoice_number
- * @property \Illuminate\Support\Carbon $invoice_date
- * @property \Illuminate\Support\Carbon $due_date
+ * @property Carbon $invoice_date
+ * @property Carbon $due_date
  * @property float $subtotal
  * @property float $tax_rate
  * @property float $tax_amount
  * @property float $total
  * @property string $status
- * @property \Illuminate\Support\Carbon|null $payment_date
+ * @property Carbon|null $payment_date
  * @property string|null $payment_method
  * @property string|null $notes
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read Customer $customer
- * @property-read \Illuminate\Database\Eloquent\Collection<int, InvoiceItem> $items
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Payment> $payments
+ * @property-read Collection<int, InvoiceItem> $items
+ * @property-read Collection<int, Payment> $payments
  */
 class Invoice extends Model
 {
@@ -107,7 +109,7 @@ class Invoice extends Model
      */
     public function isOverdue(): bool
     {
-        return !in_array($this->status, ['paid', 'cancelled']) && $this->due_date->isPast();
+        return ! in_array($this->status, ['paid', 'cancelled']) && $this->due_date->isPast();
     }
 
     /**

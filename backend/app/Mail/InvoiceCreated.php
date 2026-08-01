@@ -44,7 +44,7 @@ class InvoiceCreated extends Mailable
                 $settings['company_email'] ?? env('MAIL_FROM_ADDRESS', 'info@hundeschule.de'),
                 $settings['company_name'] ?? env('MAIL_FROM_NAME', 'Hundeschule')
             ),
-            subject: 'Rechnung ' . $this->invoice->invoice_number,
+            subject: 'Rechnung '.$this->invoice->invoice_number,
         );
     }
 
@@ -66,7 +66,7 @@ class InvoiceCreated extends Mailable
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {

@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Setting;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 /**
@@ -20,9 +19,6 @@ class SettingsController extends Controller
 {
     /**
      * Get all settings grouped by category.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function index(Request $request): JsonResponse
     {
@@ -40,15 +36,12 @@ class SettingsController extends Controller
 
         return response()->json([
             'data' => $data,
-            'message' => 'Settings retrieved successfully'
+            'message' => 'Settings retrieved successfully',
         ]);
     }
 
     /**
      * Update settings.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function update(Request $request): JsonResponse
     {
@@ -81,7 +74,7 @@ class SettingsController extends Controller
         if ($validator->fails()) {
             return response()->json([
                 'message' => 'Validation failed',
-                'errors' => $validator->errors()
+                'errors' => $validator->errors(),
             ], 422);
         }
 
@@ -115,7 +108,7 @@ class SettingsController extends Controller
         foreach ($settingGroups as $group => $settings) {
             foreach ($settings as $key => $value) {
                 $type = $this->getSettingType($value);
-                
+
                 Setting::set(
                     $key,
                     $value,
@@ -131,15 +124,14 @@ class SettingsController extends Controller
 
         return response()->json([
             'message' => 'Settings updated successfully',
-            'data' => $this->index($request)->getData()->data
+            'data' => $this->index($request)->getData()->data,
         ]);
     }
 
     /**
      * Get setting type based on value.
      *
-     * @param mixed $value
-     * @return string
+     * @param  mixed  $value
      */
     private function getSettingType($value): string
     {
@@ -152,14 +144,12 @@ class SettingsController extends Controller
         if (is_array($value)) {
             return 'json';
         }
+
         return 'string';
     }
 
     /**
      * Get setting description based on key.
-     *
-     * @param string $key
-     * @return string
      */
     private function getSettingDescription(string $key): string
     {
@@ -193,8 +183,6 @@ class SettingsController extends Controller
     /**
      * Cast value from string to appropriate type.
      *
-     * @param string|null $value
-     * @param string $type
      * @return mixed
      */
     private function castValue(?string $value, string $type)
@@ -203,7 +191,7 @@ class SettingsController extends Controller
             return null;
         }
 
-        return match($type) {
+        return match ($type) {
             'boolean' => filter_var($value, FILTER_VALIDATE_BOOLEAN),
             'integer' => (int) $value,
             'json' => json_decode($value, true),

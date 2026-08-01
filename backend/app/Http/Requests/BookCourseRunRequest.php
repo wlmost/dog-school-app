@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Models\Customer;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 
@@ -48,14 +49,14 @@ class BookCourseRunRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
             'customerId' => ['required', 'integer', 'exists:customers,id'],
-            'dogId'      => ['required', 'integer', 'exists:dogs,id'],
-            'notes'      => ['nullable', 'string', 'max:1000'],
+            'dogId' => ['required', 'integer', 'exists:dogs,id'],
+            'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
 
@@ -85,7 +86,7 @@ class BookCourseRunRequest extends FormRequest
     {
         return [
             'customerId' => 'customer',
-            'dogId'      => 'dog',
+            'dogId' => 'dog',
         ];
     }
 }

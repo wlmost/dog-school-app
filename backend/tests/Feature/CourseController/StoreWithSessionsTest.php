@@ -13,29 +13,29 @@ beforeEach(function () {
     $this->trainer = User::factory()->trainer()->create();
 
     $this->courseData = [
-        'name'            => 'Welpen Grundkurs',
-        'description'     => 'Basis-Training für Welpen.',
-        'trainerId'       => $this->trainer->id,
-        'courseType'      => 'group',
+        'name' => 'Welpen Grundkurs',
+        'description' => 'Basis-Training für Welpen.',
+        'trainerId' => $this->trainer->id,
+        'courseType' => 'group',
         'maxParticipants' => 8,
         'durationMinutes' => 60,
         'pricePerSession' => 25.00,
-        'totalSessions'   => 4,
-        'startDate'       => '2026-06-01',
-        'endDate'         => '2026-07-01',
+        'totalSessions' => 4,
+        'startDate' => '2026-06-01',
+        'endDate' => '2026-07-01',
     ];
 });
 
 it('erstellt einen kurs mit wöchentlicher rekurrenz und legt die korrekte anzahl sessions in der datenbank an', function () {
     $data = array_merge($this->courseData, [
-        'sessionsMode'   => 'recurrence',
+        'sessionsMode' => 'recurrence',
         'recurrenceRule' => [
-            'type'      => 'weekly',
-            'weekday'   => 1,        // Montag
+            'type' => 'weekly',
+            'weekday' => 1,        // Montag
             'startTime' => '10:00',
-            'endTime'   => '11:00',
+            'endTime' => '11:00',
             'startDate' => '2026-06-01', // 2026-06-01 ist ein Montag
-            'count'     => 4,
+            'count' => 4,
         ],
     ]);
 
@@ -51,16 +51,16 @@ it('erstellt einen kurs mit wöchentlicher rekurrenz und legt die korrekte anzah
 it('erstellt einen kurs mit manuellen sessions und legt die korrekte anzahl sessions in der datenbank an', function () {
     $data = array_merge($this->courseData, [
         'sessionsMode' => 'manual',
-        'sessions'     => [
+        'sessions' => [
             [
                 'sessionDate' => '2026-06-08',
-                'startTime'   => '10:00',
-                'endTime'     => '11:00',
+                'startTime' => '10:00',
+                'endTime' => '11:00',
             ],
             [
                 'sessionDate' => '2026-06-15',
-                'startTime'   => '10:00',
-                'endTime'     => '11:00',
+                'startTime' => '10:00',
+                'endTime' => '11:00',
             ],
         ],
     ]);
@@ -82,14 +82,14 @@ it('erstellt einen kurs ohne sessions wenn kein sessionsMode übergeben wird', f
 
 it('gibt validierungsfehler 422 zurück wenn recurrenceRule.count größer als 52 ist', function () {
     $data = array_merge($this->courseData, [
-        'sessionsMode'   => 'recurrence',
+        'sessionsMode' => 'recurrence',
         'recurrenceRule' => [
-            'type'      => 'weekly',
-            'weekday'   => 1,
+            'type' => 'weekly',
+            'weekday' => 1,
             'startTime' => '10:00',
-            'endTime'   => '11:00',
+            'endTime' => '11:00',
             'startDate' => '2026-06-01',
-            'count'     => 53,
+            'count' => 53,
         ],
     ]);
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\Booking;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -12,7 +13,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *
  * Transforms booking model into a consistent JSON response format.
  *
- * @mixin \App\Models\Booking
+ * @mixin Booking
  */
 class BookingResource extends JsonResource
 {
@@ -40,7 +41,7 @@ class BookingResource extends JsonResource
             'isCancellationAllowed' => $this->isCancellationAllowed(),
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
-            
+
             // Conditional relationships
             'trainingSession' => new TrainingSessionResource($this->whenLoaded('trainingSession')),
             'customer' => new CustomerResource($this->whenLoaded('customer')),

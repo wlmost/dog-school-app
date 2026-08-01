@@ -45,13 +45,13 @@ class SettingsController extends Controller
             if ($request->hasFile($key)) {
                 $file = $request->file($key);
                 $path = $file->store('settings', 'public');
-                
+
                 // Delete old file if exists
                 $oldValue = Setting::get($key);
                 if ($oldValue && Storage::disk('public')->exists($oldValue)) {
                     Storage::disk('public')->delete($oldValue);
                 }
-                
+
                 $value = $path;
             }
 
@@ -81,8 +81,7 @@ class SettingsController extends Controller
     /**
      * Determine the type and group for a setting key.
      *
-     * @param string $key
-     * @param mixed $value
+     * @param  mixed  $value
      * @return array{0: string, 1: string}
      */
     private function determineTypeAndGroup(string $key, $value): array

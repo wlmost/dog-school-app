@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<ruleset name="dog-school-app-compat-check">
+    <description>
+        PHPCompatibility-Ruleset (testVersion 8.2) für "composer compat-check".
+        PHP_CodeSniffer 3.13.5 hat kein natives Baseline-Feature (verifiziert
+        via "vendor/bin/phpcs --help", siehe task-T01.notes.md) — deshalb wird
+        hier stattdessen gezielt die einzige zum Zeitpunkt der Einführung
+        dieses QA-Gates bestehende Bestandswarnung ausgeschlossen. Das ist ein
+        Snapshot des Ist-Zustands, kein Freifahrtschein für künftigen Code:
+        jeder neue PHPCompatibility-Verstoß lässt "composer compat-check"
+        weiterhin fehlschlagen.
+
+        Hinweis zur Paketversion: "phpcompatibility/php-compatibility" ist als
+        stabile Version bei 9.3.5 (2019) stehengeblieben und enthält dort
+        keinerlei Sniffs für PHP 8.x (verifiziert, siehe task-T01.notes.md).
+        Erst die getaggte Vorabversion "10.0.0-alpha2" prüft PHP-8.2/8.3/8.4-
+        Verstöße. composer.json pinnt deshalb bewusst exakt diese Version statt
+        eines "^9.3"-Ranges.
+    </description>
+
+    <config name="testVersion" value="8.2"/>
+
+    <rule ref="PHPCompatibility"/>
+
+    <!--
+        Baseline-Eintrag (Bestandsverstoß, dokumentiert in
+        openspec/changes/add-missing-qa-tooling/task-T01.notes.md):
+        routes/console.php:8 nutzt $this in einer Closure außerhalb einer
+        Klasse (Laravel-Standard-Pattern für artisan-Command-Closures).
+    -->
+    <rule ref="PHPCompatibility.FunctionDeclarations.NewClosure.ThisFoundOutsideClass">
+        <exclude-pattern>*/routes/console.php</exclude-pattern>
+    </rule>
+</ruleset>

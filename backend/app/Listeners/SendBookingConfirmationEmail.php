@@ -30,7 +30,7 @@ class SendBookingConfirmationEmail implements ShouldQueue
         // Load necessary relationships
         $event->booking->load([
             'trainingSession.course',
-            'dog.customer.user'
+            'dog.customer.user',
         ]);
 
         // Queue booking confirmation email to customer

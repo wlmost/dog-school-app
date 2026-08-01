@@ -4,12 +4,16 @@ declare(strict_types=1);
 
 namespace Database\Factories;
 
+use App\Models\Booking;
 use App\Models\Customer;
+use App\Models\CustomerCredit;
+use App\Models\Dog;
+use App\Models\Invoice;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Customer>
+ * @extends Factory<Customer>
  */
 class CustomerFactory extends Factory
 {
@@ -24,7 +28,7 @@ class CustomerFactory extends Factory
             'postal_code' => fake()->postcode(),
             'city' => fake()->city(),
             'country' => 'Deutschland',
-            'emergency_contact' => fake()->name() . ' - ' . fake()->phoneNumber(),
+            'emergency_contact' => fake()->name().' - '.fake()->phoneNumber(),
             'notes' => fake()->optional()->sentence(),
         ];
     }
@@ -34,7 +38,7 @@ class CustomerFactory extends Factory
      */
     public function hasDogs(int $count = 1): static
     {
-        return $this->has(\App\Models\Dog::factory()->count($count), 'dogs');
+        return $this->has(Dog::factory()->count($count), 'dogs');
     }
 
     /**
@@ -42,7 +46,7 @@ class CustomerFactory extends Factory
      */
     public function hasBookings(int $count = 1): static
     {
-        return $this->has(\App\Models\Booking::factory()->count($count), 'bookings');
+        return $this->has(Booking::factory()->count($count), 'bookings');
     }
 
     /**
@@ -50,7 +54,7 @@ class CustomerFactory extends Factory
      */
     public function hasInvoices(int $count = 1): static
     {
-        return $this->has(\App\Models\Invoice::factory()->count($count), 'invoices');
+        return $this->has(Invoice::factory()->count($count), 'invoices');
     }
 
     /**
@@ -58,6 +62,6 @@ class CustomerFactory extends Factory
      */
     public function hasCredits(int $count = 1): static
     {
-        return $this->has(\App\Models\CustomerCredit::factory()->count($count), 'credits');
+        return $this->has(CustomerCredit::factory()->count($count), 'credits');
     }
 }

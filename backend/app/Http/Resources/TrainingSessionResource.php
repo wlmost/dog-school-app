@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\TrainingSession;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -11,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * Training Session Resource
  *
- * @mixin \App\Models\TrainingSession
+ * @mixin TrainingSession
  */
 class TrainingSessionResource extends JsonResource
 {
@@ -34,7 +35,7 @@ class TrainingSessionResource extends JsonResource
             'availableSpots' => $this->available_spots,
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
-            
+
             'course' => new CourseResource($this->whenLoaded('course')),
             'trainer' => new UserResource($this->whenLoaded('trainer')),
             'bookings' => BookingResource::collection($this->whenLoaded('bookings')),

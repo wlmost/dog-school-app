@@ -16,14 +16,14 @@ use Illuminate\Support\Facades\Mail;
 
 beforeEach(function () {
     Mail::fake();
-    
+
     $this->admin = User::factory()->admin()->create();
     $this->trainer = User::factory()->trainer()->create();
     $this->customer = User::factory()->customer()->create();
-    
+
     $this->customerModel = Customer::factory()->for($this->customer)->create();
     $this->dog = Dog::factory()->for($this->customerModel, 'customer')->create();
-    
+
     $this->course = Course::factory()->create();
     $this->session = TrainingSession::factory()
         ->for($this->course)
@@ -93,6 +93,7 @@ describe('Booking Confirmation Emails', function () {
             expect($mail->booking->id)->toBe($booking->id);
             expect($mail->booking->dog->name)->toBe($this->dog->name);
             expect($mail->booking->trainingSession->id)->toBe($this->session->id);
+
             return true;
         });
     });
@@ -145,6 +146,7 @@ describe('Invoice Creation Emails', function () {
         Mail::assertQueued(InvoiceCreated::class, function ($mail) {
             $invoice = Invoice::latest()->first();
             expect($mail->invoice->id)->toBe($invoice->id);
+
             return true;
         });
     });
@@ -174,7 +176,7 @@ describe('Payment Reminder Emails', function () {
     it('sends reminders for overdue invoices via command', function () {
         // Clear any existing invoices from previous tests
         Invoice::query()->delete();
-        
+
         // Create overdue invoice
         $invoice = Invoice::factory()
             ->for($this->customerModel, 'customer')
@@ -189,6 +191,7 @@ describe('Payment Reminder Emails', function () {
 
         Mail::assertQueued(PaymentReminder::class, function ($mail) use ($invoice) {
             expect($mail->invoice->id)->toBe($invoice->id);
+
             return $mail->hasTo($this->customer->email);
         });
     });
@@ -196,7 +199,7 @@ describe('Payment Reminder Emails', function () {
     it('does not send reminders for paid invoices', function () {
         // Clear any existing invoices from previous tests
         Invoice::query()->delete();
-        
+
         Invoice::factory()
             ->for($this->customerModel, 'customer')
             ->create([
@@ -215,7 +218,7 @@ describe('Payment Reminder Emails', function () {
     it('does not send reminders for cancelled invoices', function () {
         // Clear any existing invoices from previous tests
         Invoice::query()->delete();
-        
+
         Invoice::factory()
             ->for($this->customerModel, 'customer')
             ->create([
@@ -233,7 +236,7 @@ describe('Payment Reminder Emails', function () {
     it('respects the days overdue threshold', function () {
         // Clear any existing invoices from previous tests
         Invoice::query()->delete();
-        
+
         // Invoice 5 days overdue (below threshold of 7 days)
         Invoice::factory()
             ->for($this->customerModel, 'customer')
@@ -252,10 +255,10 @@ describe('Payment Reminder Emails', function () {
     it('sends multiple reminders for multiple overdue invoices', function () {
         // Clear any existing invoices from previous tests
         Invoice::query()->delete();
-        
+
         $user2 = User::factory()->customer()->create();
         $customer2 = Customer::factory()->for($user2)->create();
-        
+
         Invoice::factory()
             ->for($this->customerModel, 'customer')
             ->create([
@@ -295,7 +298,7 @@ describe('Payment Reminder Emails', function () {
     it('includes invoice details in reminder email', function () {
         // Clear any existing invoices from previous tests
         Invoice::query()->delete();
-        
+
         $invoice = Invoice::factory()
             ->for($this->customerModel, 'customer')
             ->create([
@@ -312,7 +315,8 @@ describe('Payment Reminder Emails', function () {
         Mail::assertQueued(PaymentReminder::class, function ($mail) use ($invoice) {
             expect($mail->invoice->id)->toBe($invoice->id);
             expect($mail->invoice->invoice_number)->toBe('INV-2024-999');
-            expect((float)$mail->invoice->total_amount)->toBe(250.00);
+            expect((float) $mail->invoice->total_amount)->toBe(250.00);
+
             return true;
         });
     });

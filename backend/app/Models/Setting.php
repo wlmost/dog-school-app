@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 /**
@@ -19,8 +20,8 @@ use Illuminate\Support\Facades\Cache;
  * @property string $type
  * @property string|null $description
  * @property string $group
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 class Setting extends Model
 {
@@ -55,8 +56,7 @@ class Setting extends Model
     /**
      * Get a setting value by key.
      *
-     * @param string $key
-     * @param mixed $default
+     * @param  mixed  $default
      * @return mixed
      */
     public static function get(string $key, $default = null)
@@ -64,7 +64,7 @@ class Setting extends Model
         return Cache::remember("setting.{$key}", 3600, function () use ($key, $default) {
             $setting = static::where('key', $key)->first();
 
-            if (!$setting) {
+            if (! $setting) {
                 return $default;
             }
 
@@ -75,11 +75,7 @@ class Setting extends Model
     /**
      * Set a setting value.
      *
-     * @param string $key
-     * @param mixed $value
-     * @param string $type
-     * @param string|null $description
-     * @param string $group
+     * @param  mixed  $value
      * @return static
      */
     public static function set(string $key, $value, string $type = 'string', ?string $description = null, string $group = 'general'): self
@@ -103,28 +99,23 @@ class Setting extends Model
 
     /**
      * Get all settings by group.
-     *
-     * @param string $group
-     * @return array
      */
     public static function getByGroup(string $group): array
     {
         return Cache::remember("settings.group.{$group}", 3600, function () use ($group) {
             $settings = static::where('group', $group)->get();
-            
+
             $result = [];
             foreach ($settings as $setting) {
                 $result[$setting->key] = static::castValue($setting->value, $setting->type);
             }
-            
+
             return $result;
         });
     }
 
     /**
      * Clear all settings cache.
-     *
-     * @return void
      */
     public static function clearCache(): void
     {
@@ -134,8 +125,6 @@ class Setting extends Model
     /**
      * Cast value from string to appropriate type.
      *
-     * @param string|null $value
-     * @param string $type
      * @return mixed
      */
     protected static function castValue(?string $value, string $type)
@@ -144,7 +133,7 @@ class Setting extends Model
             return null;
         }
 
-        return match($type) {
+        return match ($type) {
             'boolean' => filter_var($value, FILTER_VALIDATE_BOOLEAN),
             'integer' => (int) $value,
             'json' => json_decode($value, true),
@@ -156,9 +145,7 @@ class Setting extends Model
     /**
      * Convert value to string for storage.
      *
-     * @param mixed $value
-     * @param string $type
-     * @return string|null
+     * @param  mixed  $value
      */
     protected static function valueToString($value, string $type): ?string
     {
@@ -166,7 +153,7 @@ class Setting extends Model
             return null;
         }
 
-        return match($type) {
+        return match ($type) {
             'boolean' => $value ? '1' : '0',
             'integer' => (string) $value,
             'json' => json_encode($value),

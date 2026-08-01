@@ -32,7 +32,7 @@ class CustomerPolicy
         if ($user->isAdmin() || $user->isTrainer()) {
             return true;
         }
-        
+
         // Customers can only view their own profile
         return $user->customer?->id === $customer->id;
     }
@@ -55,7 +55,7 @@ class CustomerPolicy
         if ($user->isAdmin() || $user->isTrainer()) {
             return true;
         }
-        
+
         // Customers can only update their own profile
         return $user->customer?->id === $customer->id;
     }

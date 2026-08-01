@@ -11,7 +11,7 @@ use App\Models\TrainingSession;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Booking>
+ * @extends Factory<Booking>
  */
 class BookingFactory extends Factory
 {
@@ -20,7 +20,7 @@ class BookingFactory extends Factory
     public function definition(): array
     {
         $customer = Customer::factory()->create();
-        
+
         return [
             'training_session_id' => TrainingSession::factory(),
             'customer_id' => $customer->id,

@@ -54,7 +54,8 @@ class SendTestEmail extends Command
 
             return Command::SUCCESS;
         } catch (\Exception $e) {
-            $this->error('Failed to send test email: ' . $e->getMessage());
+            $this->error('Failed to send test email: '.$e->getMessage());
+
             return Command::FAILURE;
         }
     }
@@ -70,7 +71,7 @@ class SendTestEmail extends Command
     protected function sendWelcomeEmail(string $recipient): void
     {
         $this->line('📧 Sending Welcome Email...');
-        
+
         $testUser = User::factory()->make([
             'email' => $recipient,
             'first_name' => 'Test',
@@ -79,20 +80,21 @@ class SendTestEmail extends Command
         ]);
 
         Mail::to($recipient)->send(new WelcomeEmail($testUser, 'TestPassword123!'));
-        
+
         $this->line('   ✓ Welcome email sent');
     }
 
     protected function sendBookingEmail(string $recipient): void
     {
         $this->line('📧 Sending Booking Confirmation Email...');
-        
+
         // Get or create a real booking for realistic data
         $booking = Booking::with(['trainingSession.course', 'dog', 'customer.user'])
             ->first();
 
-        if (!$booking) {
+        if (! $booking) {
             $this->warn('   ⚠ No bookings found in database. Skipping booking email.');
+
             return;
         }
 
@@ -104,19 +106,20 @@ class SendTestEmail extends Command
 
         // Restore original email
         $booking->customer->user->email = $originalEmail;
-        
+
         $this->line('   ✓ Booking confirmation sent');
     }
 
     protected function sendInvoiceEmail(string $recipient): void
     {
         $this->line('📧 Sending Invoice Created Email...');
-        
+
         // Get or create a real invoice for realistic data
         $invoice = Invoice::with(['customer.user', 'items'])->first();
 
-        if (!$invoice) {
+        if (! $invoice) {
             $this->warn('   ⚠ No invoices found in database. Skipping invoice email.');
+
             return;
         }
 
@@ -128,23 +131,24 @@ class SendTestEmail extends Command
 
         // Restore original email
         $invoice->customer->user->email = $originalEmail;
-        
+
         $this->line('   ✓ Invoice created email sent');
     }
 
     protected function sendReminderEmail(string $recipient): void
     {
         $this->line('📧 Sending Payment Reminder Email...');
-        
+
         // Get overdue invoice
         $invoice = Invoice::with(['customer.user', 'items'])
             ->where('status', 'pending')
             ->orWhere('status', 'overdue')
             ->first();
 
-        if (!$invoice) {
+        if (! $invoice) {
             // Create temporary overdue invoice
             $this->warn('   ⚠ No overdue invoices found. Skipping payment reminder.');
+
             return;
         }
 
@@ -156,7 +160,7 @@ class SendTestEmail extends Command
 
         // Restore original email
         $invoice->customer->user->email = $originalEmail;
-        
+
         $this->line('   ✓ Payment reminder sent');
     }
 }

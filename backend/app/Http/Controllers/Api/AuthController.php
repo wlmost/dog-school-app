@@ -9,7 +9,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\LoginRequest;
 use App\Http\Requests\RegisterRequest;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -29,15 +28,13 @@ class AuthController extends Controller
     /**
      * Handle user login.
      *
-     * @param LoginRequest $request
-     * @return JsonResponse
      * @throws ValidationException
      */
     public function login(LoginRequest $request): JsonResponse
     {
         $credentials = $request->only('email', 'password');
 
-        if (!Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             throw ValidationException::withMessages([
                 'email' => ['Die angegebenen Anmeldedaten sind ungültig.'],
             ]);
@@ -74,9 +71,6 @@ class AuthController extends Controller
 
     /**
      * Handle user logout.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function logout(Request $request): JsonResponse
     {
@@ -94,15 +88,12 @@ class AuthController extends Controller
 
     /**
      * Register a new user (Admin only).
-     *
-     * @param RegisterRequest $request
-     * @return JsonResponse
      */
     public function register(RegisterRequest $request): JsonResponse
     {
         // Generate temporary password if not provided
         $password = $request->password ?? Str::random(12);
-        
+
         $user = User::create([
             'email' => $request->email,
             'password' => Hash::make($password),
@@ -130,9 +121,6 @@ class AuthController extends Controller
 
     /**
      * Get the authenticated user.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function user(Request $request): JsonResponse
     {
@@ -154,9 +142,6 @@ class AuthController extends Controller
 
     /**
      * Send password reset link.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function forgotPassword(Request $request): JsonResponse
     {
@@ -181,9 +166,6 @@ class AuthController extends Controller
 
     /**
      * Reset password.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function resetPassword(Request $request): JsonResponse
     {
@@ -215,9 +197,6 @@ class AuthController extends Controller
 
     /**
      * Resend email verification notification.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function resendVerification(Request $request): JsonResponse
     {

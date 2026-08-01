@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Models\Invoice;
 use App\Models\Setting;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreInvoiceRequest extends FormRequest
@@ -20,7 +22,7 @@ class StoreInvoiceRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -78,10 +80,10 @@ class StoreInvoiceRequest extends FormRequest
             $taxAmount += $itemAmount * ($taxRate / 100);
         }
         $totalAmount = $subtotal + $taxAmount;
-        
+
         // Generate invoice number if not provided
         $invoiceNumber = $this->generateInvoiceNumber();
-        
+
         return [
             'customer_id' => $validated['customerId'],
             'invoice_number' => $invoiceNumber,
@@ -94,26 +96,24 @@ class StoreInvoiceRequest extends FormRequest
             'notes' => $validated['notes'] ?? null,
         ];
     }
-    
+
     /**
      * Generate a unique invoice number.
-     *
-     * @return string
      */
     private function generateInvoiceNumber(): string
     {
         $year = date('Y');
-        $lastInvoice = \App\Models\Invoice::where('invoice_number', 'like', "RE-{$year}-%")
+        $lastInvoice = Invoice::where('invoice_number', 'like', "RE-{$year}-%")
             ->orderBy('invoice_number', 'desc')
             ->first();
-            
+
         if ($lastInvoice) {
             $lastNumber = (int) substr($lastInvoice->invoice_number, -4);
             $newNumber = $lastNumber + 1;
         } else {
             $newNumber = 1;
         }
-        
+
         return sprintf('RE-%s-%04d', $year, $newNumber);
     }
 }

@@ -26,27 +26,27 @@ class DemoDataSeeder extends Seeder
         $password = Hash::make('demo1234');
 
         User::factory()->trainer()->create([
-            'first_name'        => 'Test',
-            'last_name'         => 'Trainer',
-            'email'             => 'trainer@example.com',
-            'password'          => $password,
+            'first_name' => 'Test',
+            'last_name' => 'Trainer',
+            'email' => 'trainer@example.com',
+            'password' => $password,
             'email_verified_at' => now(),
         ]);
 
         /** @var User $customerUser */
         $customerUser = User::factory()->customer()->create([
-            'first_name'        => 'Test',
-            'last_name'         => 'Kunde',
-            'email'             => 'customer@example.com',
-            'password'          => $password,
+            'first_name' => 'Test',
+            'last_name' => 'Kunde',
+            'email' => 'customer@example.com',
+            'password' => $password,
             'email_verified_at' => now(),
         ]);
 
         Customer::factory()->for($customerUser, 'user')->create([
             'address_line1' => 'Musterstraße 1',
-            'postal_code'   => '12345',
-            'city'          => 'Musterstadt',
-            'country'       => 'Deutschland',
+            'postal_code' => '12345',
+            'city' => 'Musterstadt',
+            'country' => 'Deutschland',
         ]);
     }
 }

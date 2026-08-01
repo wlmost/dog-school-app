@@ -74,7 +74,7 @@ test('can view single credit package', function () {
     $package = CreditPackage::factory()->create(['name' => 'Test Package']);
 
     $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/credit-packages/' . $package->id)
+        ->getJson('/api/v1/credit-packages/'.$package->id)
         ->assertOk()
         ->assertJsonPath('data.name', 'Test Package');
 });
@@ -164,7 +164,7 @@ test('trainer can update credit package', function () {
     $package = CreditPackage::factory()->create();
 
     $this->actingAs($this->trainer)
-        ->putJson('/api/v1/credit-packages/' . $package->id, [
+        ->putJson('/api/v1/credit-packages/'.$package->id, [
             'name' => 'Updated Package',
             'price' => 200.00,
         ])
@@ -182,7 +182,7 @@ test('customer cannot update credit package', function () {
     $package = CreditPackage::factory()->create();
 
     $this->actingAs($this->customerUser)
-        ->putJson('/api/v1/credit-packages/' . $package->id, [
+        ->putJson('/api/v1/credit-packages/'.$package->id, [
             'name' => 'Hacked',
         ])
         ->assertForbidden();
@@ -192,7 +192,7 @@ test('admin can delete unused credit package', function () {
     $package = CreditPackage::factory()->create();
 
     $this->actingAs($this->admin)
-        ->deleteJson('/api/v1/credit-packages/' . $package->id)
+        ->deleteJson('/api/v1/credit-packages/'.$package->id)
         ->assertNoContent();
 
     expect(CreditPackage::find($package->id))->toBeNull();
@@ -203,7 +203,7 @@ test('cannot delete credit package with purchases', function () {
     CustomerCredit::factory()->create(['credit_package_id' => $package->id]);
 
     $this->actingAs($this->admin)
-        ->deleteJson('/api/v1/credit-packages/' . $package->id)
+        ->deleteJson('/api/v1/credit-packages/'.$package->id)
         ->assertUnprocessable()
         ->assertJsonPath('message', 'Paket kann nicht gelöscht werden, da es bereits von Kunden erworben wurde.');
 
@@ -214,6 +214,6 @@ test('trainer cannot delete credit package', function () {
     $package = CreditPackage::factory()->create();
 
     $this->actingAs($this->trainer)
-        ->deleteJson('/api/v1/credit-packages/' . $package->id)
+        ->deleteJson('/api/v1/credit-packages/'.$package->id)
         ->assertForbidden();
 });

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * TrainingSession Model
@@ -18,20 +20,20 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $course_id
  * @property int|null $course_run_id
  * @property int $trainer_id
- * @property \Illuminate\Support\Carbon $session_date
+ * @property Carbon $session_date
  * @property string $start_time
  * @property string $end_time
  * @property string|null $location
  * @property int $max_participants
  * @property string $status
  * @property string|null $notes
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read Course|null $course
  * @property-read CourseRun|null $courseRun
  * @property-read User $trainer
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Booking> $bookings
- * @property-read \Illuminate\Database\Eloquent\Collection<int, TrainingLog> $trainingLogs
+ * @property-read Collection<int, Booking> $bookings
+ * @property-read Collection<int, TrainingLog> $trainingLogs
  */
 class TrainingSession extends Model
 {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -25,18 +26,18 @@ class UpdateCourseSessionRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            'sessionDate'     => ['sometimes', 'required', 'date'],
-            'startTime'       => ['sometimes', 'required', 'date_format:H:i'],
-            'endTime'         => ['sometimes', 'required', 'date_format:H:i', 'after:startTime'],
-            'location'        => ['sometimes', 'nullable', 'string', 'max:255'],
+            'sessionDate' => ['sometimes', 'required', 'date'],
+            'startTime' => ['sometimes', 'required', 'date_format:H:i'],
+            'endTime' => ['sometimes', 'required', 'date_format:H:i', 'after:startTime'],
+            'location' => ['sometimes', 'nullable', 'string', 'max:255'],
             'maxParticipants' => ['sometimes', 'nullable', 'integer', 'min:1', 'max:50'],
-            'status'          => ['sometimes', 'nullable', 'in:scheduled,cancelled,completed'],
-            'notes'           => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'status' => ['sometimes', 'nullable', 'in:scheduled,cancelled,completed'],
+            'notes' => ['sometimes', 'nullable', 'string', 'max:1000'],
         ];
     }
 
@@ -48,9 +49,9 @@ class UpdateCourseSessionRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'sessionDate'     => 'session date',
-            'startTime'       => 'start time',
-            'endTime'         => 'end time',
+            'sessionDate' => 'session date',
+            'startTime' => 'start time',
+            'endTime' => 'end time',
             'maxParticipants' => 'maximum participants',
         ];
     }

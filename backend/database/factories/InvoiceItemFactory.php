@@ -9,7 +9,7 @@ use App\Models\InvoiceItem;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\InvoiceItem>
+ * @extends Factory<InvoiceItem>
  */
 class InvoiceItemFactory extends Factory
 {
@@ -20,7 +20,7 @@ class InvoiceItemFactory extends Factory
         $quantity = fake()->numberBetween(1, 10);
         $unitPrice = fake()->randomFloat(2, 10, 100);
         $taxRate = 19.00;
-        
+
         return [
             'invoice_id' => Invoice::factory(),
             'description' => fake()->sentence(),

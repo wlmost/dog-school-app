@@ -25,9 +25,6 @@ class CustomerCreditController extends Controller
 
     /**
      * Display a listing of customer credits with optional filtering.
-     *
-     * @param Request $request
-     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -66,9 +63,6 @@ class CustomerCreditController extends Controller
 
     /**
      * Store a newly created customer credit (purchase).
-     *
-     * @param StoreCustomerCreditRequest $request
-     * @return CustomerCreditResource
      */
     public function store(StoreCustomerCreditRequest $request): CustomerCreditResource
     {
@@ -81,26 +75,19 @@ class CustomerCreditController extends Controller
 
     /**
      * Display the specified customer credit.
-     *
-     * @param CustomerCredit $customerCredit
-     * @return CustomerCreditResource
      */
     public function show(CustomerCredit $customerCredit): CustomerCreditResource
     {
         // Load customer for authorization check
         $customerCredit->load(['customer.user', 'package']);
-        
+
         $this->authorize('view', $customerCredit);
-        
+
         return new CustomerCreditResource($customerCredit);
     }
 
     /**
      * Update the specified customer credit.
-     *
-     * @param UpdateCustomerCreditRequest $request
-     * @param CustomerCredit $customerCredit
-     * @return CustomerCreditResource
      */
     public function update(UpdateCustomerCreditRequest $request, CustomerCredit $customerCredit): CustomerCreditResource
     {
@@ -113,9 +100,6 @@ class CustomerCreditController extends Controller
 
     /**
      * Remove the specified customer credit.
-     *
-     * @param CustomerCredit $customerCredit
-     * @return JsonResponse
      */
     public function destroy(CustomerCredit $customerCredit): JsonResponse
     {
@@ -135,9 +119,6 @@ class CustomerCreditController extends Controller
 
     /**
      * Use a credit from the customer's balance.
-     *
-     * @param CustomerCredit $customerCredit
-     * @return CustomerCreditResource|JsonResponse
      */
     public function useCredit(CustomerCredit $customerCredit): CustomerCreditResource|JsonResponse
     {
@@ -164,15 +145,12 @@ class CustomerCreditController extends Controller
 
     /**
      * Get active credits for a customer.
-     *
-     * @param Request $request
-     * @return AnonymousResourceCollection
      */
     public function active(Request $request): AnonymousResourceCollection
     {
         $customerId = $request->input('customerId');
 
-        if (!$customerId) {
+        if (! $customerId) {
             return response()->json([
                 'message' => 'Customer ID ist erforderlich.',
             ], 422);

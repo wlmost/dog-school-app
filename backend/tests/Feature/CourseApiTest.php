@@ -49,7 +49,7 @@ test('courses can be filtered by trainer', function () {
     Course::factory()->count(3)->create();
 
     $response = $this->actingAs($this->admin)
-        ->getJson('/api/v1/courses?trainerId=' . $this->trainer->id)
+        ->getJson('/api/v1/courses?trainerId='.$this->trainer->id)
         ->assertOk();
 
     expect($response->json('data'))->toHaveCount(2);
@@ -173,7 +173,7 @@ test('user can view course details', function () {
     $course = Course::factory()->create();
 
     $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/courses/' . $course->id)
+        ->getJson('/api/v1/courses/'.$course->id)
         ->assertOk()
         ->assertJsonPath('data.id', $course->id)
         ->assertJsonStructure([
@@ -194,7 +194,7 @@ test('trainer can update own course', function () {
     $course = Course::factory()->create(['trainer_id' => $this->trainer->id]);
 
     $this->actingAs($this->trainer)
-        ->putJson('/api/v1/courses/' . $course->id, [
+        ->putJson('/api/v1/courses/'.$course->id, [
             'name' => 'Updated Course Name',
             'status' => 'active',
         ])
@@ -213,7 +213,7 @@ test('trainer cannot update other trainers course', function () {
     $course = Course::factory()->create(['trainer_id' => $this->otherTrainer->id]);
 
     $this->actingAs($this->trainer)
-        ->putJson('/api/v1/courses/' . $course->id, ['name' => 'Hacked'])
+        ->putJson('/api/v1/courses/'.$course->id, ['name' => 'Hacked'])
         ->assertForbidden();
 });
 
@@ -221,7 +221,7 @@ test('admin can update any course', function () {
     $course = Course::factory()->create(['trainer_id' => $this->trainer->id]);
 
     $this->actingAs($this->admin)
-        ->putJson('/api/v1/courses/' . $course->id, [
+        ->putJson('/api/v1/courses/'.$course->id, [
             'status' => 'cancelled',
         ])
         ->assertOk()
@@ -232,7 +232,7 @@ test('customer cannot update course', function () {
     $course = Course::factory()->create();
 
     $this->actingAs($this->customerUser)
-        ->putJson('/api/v1/courses/' . $course->id, ['name' => 'Hacked'])
+        ->putJson('/api/v1/courses/'.$course->id, ['name' => 'Hacked'])
         ->assertForbidden();
 });
 
@@ -240,7 +240,7 @@ test('admin can delete course without sessions', function () {
     $course = Course::factory()->create();
 
     $this->actingAs($this->admin)
-        ->deleteJson('/api/v1/courses/' . $course->id)
+        ->deleteJson('/api/v1/courses/'.$course->id)
         ->assertNoContent();
 
     expect(Course::find($course->id))->toBeNull();
@@ -251,7 +251,7 @@ test('cannot delete course with existing sessions', function () {
     TrainingSession::factory()->create(['course_id' => $course->id]);
 
     $this->actingAs($this->admin)
-        ->deleteJson('/api/v1/courses/' . $course->id)
+        ->deleteJson('/api/v1/courses/'.$course->id)
         ->assertUnprocessable()
         ->assertJsonPath('message', 'Cannot delete course with existing training sessions.');
 });
@@ -260,7 +260,7 @@ test('trainer cannot delete course', function () {
     $course = Course::factory()->create(['trainer_id' => $this->trainer->id]);
 
     $this->actingAs($this->trainer)
-        ->deleteJson('/api/v1/courses/' . $course->id)
+        ->deleteJson('/api/v1/courses/'.$course->id)
         ->assertForbidden();
 });
 
@@ -270,7 +270,7 @@ test('can view course sessions', function () {
     TrainingSession::factory()->count(2)->create(); // Other sessions
 
     $response = $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/courses/' . $course->id . '/sessions')
+        ->getJson('/api/v1/courses/'.$course->id.'/sessions')
         ->assertOk();
 
     expect($response->json('data'))->toHaveCount(3);
@@ -296,7 +296,7 @@ test('course sessions are ordered by date and time', function () {
     ]);
 
     $response = $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/courses/' . $course->id . '/sessions')
+        ->getJson('/api/v1/courses/'.$course->id.'/sessions')
         ->assertOk();
 
     expect($response->json('data.0.sessionDate'))->toBe('2025-01-15');
@@ -330,7 +330,7 @@ test('can view course participant statistics', function () {
     ]);
 
     $response = $this->actingAs($this->admin)
-        ->getJson('/api/v1/courses/' . $course->id . '/participants')
+        ->getJson('/api/v1/courses/'.$course->id.'/participants')
         ->assertOk();
 
     expect($response->json('courseId'))->toBe($course->id);

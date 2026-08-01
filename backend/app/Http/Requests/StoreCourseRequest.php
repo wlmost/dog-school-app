@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\SanitizesHtmlContent;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 
@@ -29,7 +30,7 @@ class StoreCourseRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -92,7 +93,7 @@ class StoreCourseRequest extends FormRequest
         }
 
         // Set default status if not provided
-        if (!isset($snakeCase['status'])) {
+        if (! isset($snakeCase['status'])) {
             $snakeCase['status'] = 'planned';
         }
 
@@ -111,7 +112,7 @@ class StoreCourseRequest extends FormRequest
     {
         $sessions = $this->validated()['sessions'] ?? null;
 
-        if (!is_array($sessions) || empty($sessions)) {
+        if (! is_array($sessions) || empty($sessions)) {
             return null;
         }
 
@@ -130,7 +131,7 @@ class StoreCourseRequest extends FormRequest
     {
         $rule = $this->validated()['recurrenceRule'] ?? null;
 
-        if (!is_array($rule) || empty($rule)) {
+        if (! is_array($rule) || empty($rule)) {
             return null;
         }
 
@@ -157,4 +158,3 @@ class StoreCourseRequest extends FormRequest
         ];
     }
 }
-

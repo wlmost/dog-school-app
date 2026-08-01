@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /**
  * PricingItem Model
@@ -19,8 +20,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $unit
  * @property string|null $description
  * @property bool $is_from_price
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  */
 class PricingItem extends Model
 {
@@ -48,10 +49,10 @@ class PricingItem extends Model
     protected function casts(): array
     {
         return [
-            'price'         => 'decimal:2',
+            'price' => 'decimal:2',
             'is_from_price' => 'boolean',
-            'created_at'    => 'datetime',
-            'updated_at'    => 'datetime',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 }

@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\CreditPackage;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Credit Package Resource
  *
- * @mixin \App\Models\CreditPackage
+ * @mixin CreditPackage
  */
 class CreditPackageResource extends JsonResource
 {

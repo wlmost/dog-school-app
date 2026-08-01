@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * CourseRun Model
@@ -17,14 +19,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  *
  * @property int $id
  * @property int $course_id
- * @property \Illuminate\Support\Carbon $start_date
- * @property \Illuminate\Support\Carbon|null $end_date
+ * @property Carbon $start_date
+ * @property Carbon|null $end_date
  * @property string $status
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read Course $course
- * @property-read \Illuminate\Database\Eloquent\Collection<int, TrainingSession> $sessions
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Booking> $bookings
+ * @property-read Collection<int, TrainingSession> $sessions
+ * @property-read Collection<int, Booking> $bookings
  */
 class CourseRun extends Model
 {
@@ -51,7 +53,7 @@ class CourseRun extends Model
     {
         return [
             'start_date' => 'date',
-            'end_date'   => 'date',
+            'end_date' => 'date',
             'created_at' => 'datetime',
             'updated_at' => 'datetime',
         ];

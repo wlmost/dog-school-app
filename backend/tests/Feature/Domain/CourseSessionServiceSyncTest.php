@@ -15,20 +15,20 @@ uses()->group('domain', 'course');
 
 describe('syncSessions', function () {
     beforeEach(function () {
-        $this->service = new CourseSessionService();
-        $this->course  = Course::factory()->create();
+        $this->service = new CourseSessionService;
+        $this->course = Course::factory()->create();
     });
 
     it('legt eine neue session in der datenbank an wenn keine buchungen vorhanden sind', function () {
         $sessionData = [
-            'trainer_id'       => $this->course->trainer_id,
-            'session_date'     => '2026-06-08',
-            'start_time'       => '10:00',
-            'end_time'         => '11:00',
-            'location'         => null,
+            'trainer_id' => $this->course->trainer_id,
+            'session_date' => '2026-06-08',
+            'start_time' => '10:00',
+            'end_time' => '11:00',
+            'location' => null,
             'max_participants' => 8,
-            'status'           => 'scheduled',
-            'notes'            => null,
+            'status' => 'scheduled',
+            'notes' => null,
         ];
 
         $warnings = $this->service->syncSessions($this->course, [$sessionData]);
@@ -42,7 +42,7 @@ describe('syncSessions', function () {
 
     it('löscht eine session ohne buchungen und gibt keine warning zurück', function () {
         $session = TrainingSession::factory()->create([
-            'course_id'  => $this->course->id,
+            'course_id' => $this->course->id,
             'trainer_id' => $this->course->trainer_id,
         ]);
 
@@ -54,8 +54,8 @@ describe('syncSessions', function () {
 
     it('bewahrt eine session mit buchungen und gibt eine warning zurück', function () {
         $session = TrainingSession::factory()->create([
-            'course_id'    => $this->course->id,
-            'trainer_id'   => $this->course->trainer_id,
+            'course_id' => $this->course->id,
+            'trainer_id' => $this->course->trainer_id,
             'session_date' => '2026-06-08',
         ]);
         Booking::factory()->create(['training_session_id' => $session->id]);
@@ -70,21 +70,21 @@ describe('syncSessions', function () {
 
     it('überspringt eine neue session deren datum mit einer gebuchten session kollidiert', function () {
         $session = TrainingSession::factory()->create([
-            'course_id'    => $this->course->id,
-            'trainer_id'   => $this->course->trainer_id,
+            'course_id' => $this->course->id,
+            'trainer_id' => $this->course->trainer_id,
             'session_date' => '2026-06-08',
         ]);
         Booking::factory()->create(['training_session_id' => $session->id]);
 
         $newSessionData = [
-            'trainer_id'       => $this->course->trainer_id,
-            'session_date'     => '2026-06-08', // same date as protected session
-            'start_time'       => '14:00',
-            'end_time'         => '15:00',
-            'location'         => null,
+            'trainer_id' => $this->course->trainer_id,
+            'session_date' => '2026-06-08', // same date as protected session
+            'start_time' => '14:00',
+            'end_time' => '15:00',
+            'location' => null,
             'max_participants' => 8,
-            'status'           => 'scheduled',
-            'notes'            => null,
+            'status' => 'scheduled',
+            'notes' => null,
         ];
 
         $warnings = $this->service->syncSessions($this->course, [$newSessionData]);

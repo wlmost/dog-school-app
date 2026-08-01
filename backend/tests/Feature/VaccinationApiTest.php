@@ -43,7 +43,7 @@ test('customer can list their dogs vaccinations', function () {
     Vaccination::factory()->count(3)->create(); // Other vaccinations
 
     $response = $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/vaccinations?dogId=' . $this->dog->id)
+        ->getJson('/api/v1/vaccinations?dogId='.$this->dog->id)
         ->assertOk();
 
     expect($response->json('data'))->toHaveCount(2);
@@ -65,7 +65,7 @@ test('can get upcoming vaccinations due soon', function () {
     Vaccination::factory()->count(2)->create([
         'next_due_date' => now()->addDays(15),
     ]);
-    
+
     // Vaccinations not due soon
     Vaccination::factory()->count(3)->create([
         'next_due_date' => now()->addDays(60),
@@ -83,7 +83,7 @@ test('can get overdue vaccinations', function () {
     Vaccination::factory()->count(3)->create([
         'next_due_date' => now()->subDays(10),
     ]);
-    
+
     // Not overdue
     Vaccination::factory()->count(2)->create([
         'next_due_date' => now()->addDays(30),
@@ -100,7 +100,7 @@ test('trainer can view any vaccination', function () {
     $vaccination = Vaccination::factory()->create();
 
     $this->actingAs($this->trainer)
-        ->getJson('/api/v1/vaccinations/' . $vaccination->id)
+        ->getJson('/api/v1/vaccinations/'.$vaccination->id)
         ->assertOk()
         ->assertJsonPath('data.id', $vaccination->id);
 });
@@ -109,7 +109,7 @@ test('customer can view their own dogs vaccination', function () {
     $vaccination = Vaccination::factory()->create(['dog_id' => $this->dog->id]);
 
     $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/vaccinations/' . $vaccination->id)
+        ->getJson('/api/v1/vaccinations/'.$vaccination->id)
         ->assertOk()
         ->assertJsonPath('data.id', $vaccination->id);
 });
@@ -118,7 +118,7 @@ test('customer cannot view other dogs vaccination', function () {
     $otherVaccination = Vaccination::factory()->create();
 
     $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/vaccinations/' . $otherVaccination->id)
+        ->getJson('/api/v1/vaccinations/'.$otherVaccination->id)
         ->assertForbidden();
 });
 
@@ -194,7 +194,7 @@ test('admin can update vaccination', function () {
     $vaccination = Vaccination::factory()->create();
 
     $this->actingAs($this->admin)
-        ->putJson('/api/v1/vaccinations/' . $vaccination->id, [
+        ->putJson('/api/v1/vaccinations/'.$vaccination->id, [
             'veterinarian' => 'Dr. Johnson',
             'nextDueDate' => now()->addMonths(6)->format('Y-m-d'),
         ])
@@ -211,7 +211,7 @@ test('trainer can update vaccination', function () {
     $vaccination = Vaccination::factory()->create();
 
     $this->actingAs($this->trainer)
-        ->putJson('/api/v1/vaccinations/' . $vaccination->id, [
+        ->putJson('/api/v1/vaccinations/'.$vaccination->id, [
             'vaccinationType' => 'Updated Type',
         ])
         ->assertOk()
@@ -222,7 +222,7 @@ test('customer cannot update vaccination', function () {
     $vaccination = Vaccination::factory()->create(['dog_id' => $this->dog->id]);
 
     $this->actingAs($this->customerUser)
-        ->putJson('/api/v1/vaccinations/' . $vaccination->id, [
+        ->putJson('/api/v1/vaccinations/'.$vaccination->id, [
             'veterinarian' => 'Dr. New',
         ])
         ->assertForbidden();
@@ -232,7 +232,7 @@ test('admin can delete vaccination', function () {
     $vaccination = Vaccination::factory()->create();
 
     $this->actingAs($this->admin)
-        ->deleteJson('/api/v1/vaccinations/' . $vaccination->id)
+        ->deleteJson('/api/v1/vaccinations/'.$vaccination->id)
         ->assertNoContent();
 
     expect(Vaccination::find($vaccination->id))->toBeNull();
@@ -242,7 +242,7 @@ test('trainer cannot delete vaccination', function () {
     $vaccination = Vaccination::factory()->create();
 
     $this->actingAs($this->trainer)
-        ->deleteJson('/api/v1/vaccinations/' . $vaccination->id)
+        ->deleteJson('/api/v1/vaccinations/'.$vaccination->id)
         ->assertForbidden();
 });
 
@@ -250,6 +250,6 @@ test('customer cannot delete vaccination', function () {
     $vaccination = Vaccination::factory()->create(['dog_id' => $this->dog->id]);
 
     $this->actingAs($this->customerUser)
-        ->deleteJson('/api/v1/vaccinations/' . $vaccination->id)
+        ->deleteJson('/api/v1/vaccinations/'.$vaccination->id)
         ->assertForbidden();
 });

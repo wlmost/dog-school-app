@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -14,7 +15,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  * (e.g. trainer assignment in customer/course creation forms). Deliberately
  * excludes contact and qualification data available on {@see UserResource}.
  *
- * @mixin \App\Models\User
+ * @mixin User
  */
 class TrainerOptionResource extends JsonResource
 {

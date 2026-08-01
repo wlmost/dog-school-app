@@ -41,9 +41,6 @@ class PaymentController extends Controller
 
     /**
      * Display a listing of payments with optional filtering.
-     *
-     * @param Request $request
-     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -86,9 +83,6 @@ class PaymentController extends Controller
 
     /**
      * Store a newly created payment.
-     *
-     * @param StorePaymentRequest $request
-     * @return PaymentResource
      */
     public function store(StorePaymentRequest $request): PaymentResource
     {
@@ -112,26 +106,19 @@ class PaymentController extends Controller
 
     /**
      * Display the specified payment.
-     *
-     * @param Payment $payment
-     * @return PaymentResource
      */
     public function show(Payment $payment): PaymentResource
     {
         // Load invoice for authorization check
         $payment->load('invoice.customer.user');
-        
+
         $this->authorize('view', $payment);
-        
+
         return new PaymentResource($payment);
     }
 
     /**
      * Update the specified payment.
-     *
-     * @param UpdatePaymentRequest $request
-     * @param Payment $payment
-     * @return PaymentResource
      */
     public function update(UpdatePaymentRequest $request, Payment $payment): PaymentResource
     {
@@ -144,9 +131,6 @@ class PaymentController extends Controller
 
     /**
      * Remove the specified payment.
-     *
-     * @param Payment $payment
-     * @return JsonResponse
      */
     public function destroy(Payment $payment): JsonResponse
     {
@@ -166,9 +150,6 @@ class PaymentController extends Controller
 
     /**
      * Mark payment as completed.
-     *
-     * @param Payment $payment
-     * @return PaymentResource|JsonResponse
      */
     public function markAsCompleted(Payment $payment): PaymentResource|JsonResponse
     {
@@ -188,7 +169,7 @@ class PaymentController extends Controller
 
         if ($totalPaid >= $invoice->total_amount) {
             $invoice->update([
-                'status'    => 'paid',
+                'status' => 'paid',
                 'paid_date' => now(),
             ]);
         }
@@ -200,9 +181,6 @@ class PaymentController extends Controller
 
     /**
      * Create a PayPal order for an invoice
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function createPayPalOrder(Request $request): JsonResponse
     {
@@ -214,7 +192,7 @@ class PaymentController extends Controller
 
         // Check authorization
         $invoice->load('customer.user');
-        if (!$request->user()->hasRole('admin') && $invoice->customer->user_id !== $request->user()->id) {
+        if (! $request->user()->hasRole('admin') && $invoice->customer->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Nicht autorisiert'], 403);
         }
 
@@ -255,9 +233,6 @@ class PaymentController extends Controller
 
     /**
      * Capture a PayPal order
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function capturePayPalOrder(Request $request): JsonResponse
     {
@@ -270,7 +245,7 @@ class PaymentController extends Controller
 
         // Check authorization
         $invoice->load('customer.user');
-        if (!$request->user()->hasRole('admin') && $invoice->customer->user_id !== $request->user()->id) {
+        if (! $request->user()->hasRole('admin') && $invoice->customer->user_id !== $request->user()->id) {
             return response()->json(['message' => 'Nicht autorisiert'], 403);
         }
 
@@ -298,15 +273,13 @@ class PaymentController extends Controller
 
     /**
      * Handle PayPal webhook notifications
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function handleWebhook(Request $request): JsonResponse
     {
         // Validate PayPal webhook signature
-        if (!$this->webhookValidator->validate($request)) {
+        if (! $this->webhookValidator->validate($request)) {
             Log::warning('PayPal webhook signature validation failed');
+
             return response()->json(['status' => 'invalid signature'], 401);
         }
 
@@ -351,15 +324,12 @@ class PaymentController extends Controller
 
     /**
      * Handle successful payment capture from webhook
-     *
-     * @param array $resource
-     * @return void
      */
     private function handlePaymentCaptureCompleted(array $resource): void
     {
         $transactionId = $resource['id'] ?? null;
 
-        if (!$transactionId) {
+        if (! $transactionId) {
             return;
         }
 
@@ -383,15 +353,12 @@ class PaymentController extends Controller
 
     /**
      * Handle failed payment capture from webhook
-     *
-     * @param array $resource
-     * @return void
      */
     private function handlePaymentCaptureFailed(array $resource): void
     {
         $transactionId = $resource['id'] ?? null;
 
-        if (!$transactionId) {
+        if (! $transactionId) {
             return;
         }
 
@@ -405,15 +372,12 @@ class PaymentController extends Controller
 
     /**
      * Handle payment refund from webhook
-     *
-     * @param array $resource
-     * @return void
      */
     private function handlePaymentRefunded(array $resource): void
     {
         $transactionId = $resource['id'] ?? null;
 
-        if (!$transactionId) {
+        if (! $transactionId) {
             return;
         }
 

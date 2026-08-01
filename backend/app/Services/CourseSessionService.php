@@ -6,6 +6,7 @@ namespace App\Services;
 
 use App\Models\Course;
 use App\Models\TrainingSession;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * CourseSessionService
@@ -44,8 +45,7 @@ class CourseSessionService
      *     location?: string|null,
      *     maxParticipants?: int|null,
      * } $rule
-     * @param int $trainerId
-     * @param int $fallbackMaxParticipants  Used when $rule['maxParticipants'] is absent/null.
+     * @param  int  $fallbackMaxParticipants  Used when $rule['maxParticipants'] is absent/null.
      * @return array<int, array<string, mixed>>
      */
     public function generateFromRecurrence(
@@ -63,22 +63,22 @@ class CourseSessionService
             : $fallbackMaxParticipants;
 
         $dates = match ($type) {
-            'weekly'  => $this->generateWeeklyDates($rule['startDate'], (int) $rule['weekday'], $count),
+            'weekly' => $this->generateWeeklyDates($rule['startDate'], (int) $rule['weekday'], $count),
             'monthly' => $this->generateMonthlyDates($rule['startDate'], (int) $rule['dayOfMonth'], $count),
-            default   => [],
+            default => [],
         };
 
         $sessions = [];
         foreach ($dates as $date) {
             $sessions[] = [
-                'trainer_id'       => $trainerId,
-                'session_date'     => $date,
-                'start_time'       => $startTime,
-                'end_time'         => $endTime,
-                'location'         => $location,
+                'trainer_id' => $trainerId,
+                'session_date' => $date,
+                'start_time' => $startTime,
+                'end_time' => $endTime,
+                'location' => $location,
                 'max_participants' => $maxParticipants,
-                'status'           => 'scheduled',
-                'notes'            => null,
+                'status' => 'scheduled',
+                'notes' => null,
             ];
         }
 
@@ -98,16 +98,15 @@ class CourseSessionService
      * @note The caller (CourseController) is responsible for wrapping this
      *       method in a DB::transaction() to ensure atomicity.
      *
-     * @param Course                             $course
-     * @param array<int, array<string, mixed>>   $sessions  Normalised session data (from generateFromRecurrence or manual input).
-     * @return array<int, array<string, mixed>>  Warning entries for each preserved session (empty when no conflicts).
+     * @param  array<int, array<string, mixed>>  $sessions  Normalised session data (from generateFromRecurrence or manual input).
+     * @return array<int, array<string, mixed>> Warning entries for each preserved session (empty when no conflicts).
      */
     public function syncSessions(Course $course, array $sessions): array
     {
         $warnings = [];
         $protectedDates = [];
 
-        /** @var \Illuminate\Database\Eloquent\Collection<int, TrainingSession> $existing */
+        /** @var Collection<int, TrainingSession> $existing */
         $existing = $course->sessions()->get();
 
         foreach ($existing as $existingSession) {
@@ -119,9 +118,9 @@ class CourseSessionService
             if ($bookingCount > 0) {
                 $protectedDates[] = $dateString;
                 $warnings[] = [
-                    'type'         => 'protected_session',
-                    'sessionDate'  => $dateString,
-                    'message'      => 'Session hat aktive Buchungen und wurde nicht gelöscht.',
+                    'type' => 'protected_session',
+                    'sessionDate' => $dateString,
+                    'message' => 'Session hat aktive Buchungen und wurde nicht gelöscht.',
                     'bookingCount' => $bookingCount,
                 ];
             } else {
@@ -142,9 +141,6 @@ class CourseSessionService
 
     /**
      * Returns the number of bookings for a given session.
-     *
-     * @param TrainingSession $session
-     * @return int
      */
     public function getBookingCount(TrainingSession $session): int
     {
@@ -159,9 +155,8 @@ class CourseSessionService
      * Generates exactly $count date strings (Y-m-d) for the given weekday,
      * starting from the first occurrence on or after $startDate.
      *
-     * @param string $startDate  ISO date string (Y-m-d)
-     * @param int    $weekday    0 = Sunday … 6 = Saturday (PHP date('w') convention)
-     * @param int    $count
+     * @param  string  $startDate  ISO date string (Y-m-d)
+     * @param  int  $weekday  0 = Sunday … 6 = Saturday (PHP date('w') convention)
      * @return list<string>
      */
     private function generateWeeklyDates(string $startDate, int $weekday, int $count): array
@@ -193,9 +188,8 @@ class CourseSessionService
      * Months where dayOfMonth does not exist (e.g. 31 in February) are
      * skipped; the iteration continues until $count valid dates are found.
      *
-     * @param string $startDate   ISO date string (Y-m-d)
-     * @param int    $dayOfMonth  1–28 (spec constraint)
-     * @param int    $count
+     * @param  string  $startDate  ISO date string (Y-m-d)
+     * @param  int  $dayOfMonth  1–28 (spec constraint)
      * @return list<string>
      */
     private function generateMonthlyDates(string $startDate, int $dayOfMonth, int $count): array

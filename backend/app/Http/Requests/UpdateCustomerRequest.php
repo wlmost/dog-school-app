@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Hash;
 
 /**
  * Update Customer Request
@@ -19,12 +21,12 @@ class UpdateCustomerRequest extends FormRequest
     public function authorize(): bool
     {
         $customer = $this->route('customer');
-        
+
         // Admins and trainers can update any customer
         if ($this->user()?->isAdmin() || $this->user()?->isTrainer()) {
             return true;
         }
-        
+
         // Customers can only update their own profile
         return $this->user()?->customer?->id === $customer?->id;
     }
@@ -32,16 +34,16 @@ class UpdateCustomerRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         $customer = $this->route('customer');
-        
+
         return [
             'firstName' => ['sometimes', 'nullable', 'string', 'max:255'],
             'lastName' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'email' => ['sometimes', 'nullable', 'email', 'max:255', 'unique:users,email,' . $customer->user_id],
+            'email' => ['sometimes', 'nullable', 'email', 'max:255', 'unique:users,email,'.$customer->user_id],
             'phone' => ['sometimes', 'nullable', 'string', 'max:50'],
             'mobilePhone' => ['sometimes', 'nullable', 'string', 'max:50'],
             'password' => ['sometimes', 'nullable', 'string', 'min:8', 'confirmed', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d])/'],
@@ -93,7 +95,7 @@ class UpdateCustomerRequest extends FormRequest
     {
         $validated = $this->validated();
         $data = [];
-        
+
         if (isset($validated['trainerId'])) {
             $data['trainer_id'] = $validated['trainerId'];
         }
@@ -130,7 +132,7 @@ class UpdateCustomerRequest extends FormRequest
         if (array_key_exists('bankBic', $validated)) {
             $data['bank_bic'] = $validated['bankBic'];
         }
-        
+
         return $data;
     }
 
@@ -143,7 +145,7 @@ class UpdateCustomerRequest extends FormRequest
     {
         $validated = $this->validated();
         $data = [];
-        
+
         if (isset($validated['firstName'])) {
             $data['first_name'] = $validated['firstName'];
         }
@@ -159,10 +161,10 @@ class UpdateCustomerRequest extends FormRequest
         if (isset($validated['mobilePhone'])) {
             $data['mobile_phone'] = $validated['mobilePhone'];
         }
-        if (!empty($validated['password'])) {
-            $data['password'] = \Illuminate\Support\Facades\Hash::make($validated['password']);
+        if (! empty($validated['password'])) {
+            $data['password'] = Hash::make($validated['password']);
         }
-        
+
         return $data;
     }
 }

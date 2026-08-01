@@ -9,7 +9,7 @@ use App\Models\Vaccination;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Vaccination>
+ * @extends Factory<Vaccination>
  */
 class VaccinationFactory extends Factory
 {
@@ -18,7 +18,7 @@ class VaccinationFactory extends Factory
     public function definition(): array
     {
         $vaccinationDate = fake()->dateTimeBetween('-2 years', 'now');
-        
+
         return [
             'dog_id' => Dog::factory(),
             'vaccination_type' => fake()->randomElement(['Rabies', 'Distemper', 'Parvovirus', 'Leptospirosis', 'Bordetella']),

@@ -15,10 +15,10 @@ beforeEach(function () {
     $this->admin = User::factory()->create(['role' => 'admin']);
     $this->trainer = User::factory()->create(['role' => 'trainer']);
     $this->customerUser = User::factory()->create(['role' => 'customer']);
-    
+
     // Create customer model linked to customer user
     $this->customer = Customer::factory()->for($this->customerUser, 'user')->create();
-    
+
     // Create assigned customer for trainer
     $this->assignedCustomer = Customer::factory()
         ->for($this->trainer, 'trainer')
@@ -34,7 +34,7 @@ describe('Admin Dashboard', function () {
         Dog::factory()->count(10)->create();
         Course::factory()->count(3)->create(['status' => 'active']);
         Invoice::factory()->count(2)->create(['status' => 'sent']);
-        
+
         $response = $this->getJson('/api/v1/dashboard');
 
         $response->assertOk()
@@ -82,7 +82,7 @@ describe('Admin Dashboard', function () {
         $session = TrainingSession::factory()->for($course)->create();
         $customer = Customer::factory()->create();
         $dog = Dog::factory()->for($customer)->create();
-        
+
         Booking::factory()
             ->for($session, 'trainingSession')
             ->for($customer)
@@ -105,7 +105,7 @@ describe('Trainer Dashboard', function () {
 
         // Create trainer's course
         $course = Course::factory()->for($this->trainer, 'trainer')->create(['status' => 'active']);
-        
+
         // Create dogs for assigned customer
         Dog::factory()->for($this->assignedCustomer)->count(3)->create();
 
@@ -134,7 +134,7 @@ describe('Trainer Dashboard', function () {
 
         // Create dogs for assigned customer
         Dog::factory()->for($this->assignedCustomer)->count(2)->create();
-        
+
         // Create dogs for non-assigned customer (should not be counted)
         $otherCustomer = Customer::factory()->create();
         Dog::factory()->for($otherCustomer)->count(5)->create();
@@ -182,7 +182,7 @@ describe('Customer Dashboard', function () {
 
         // Create customer's dogs
         Dog::factory()->for($this->customer)->count(2)->create();
-        
+
         // Create invoices for customer
         Invoice::factory()->for($this->customer, 'customer')->count(1)->create(['status' => 'sent']);
 
@@ -266,7 +266,7 @@ describe('Customer Dashboard', function () {
 
         // Create own dogs
         Dog::factory()->for($this->customer)->count(2)->create();
-        
+
         // Create other customer's dogs (should not be counted)
         $otherCustomer = Customer::factory()->create();
         Dog::factory()->for($otherCustomer)->count(5)->create();

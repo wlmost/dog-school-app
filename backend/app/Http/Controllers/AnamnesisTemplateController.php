@@ -7,10 +7,11 @@ namespace App\Http\Controllers;
 use App\Helpers\DatabaseHelper;
 use App\Http\Requests\StoreAnamnesisTemplateRequest;
 use App\Http\Requests\UpdateAnamnesisTemplateRequest;
+use App\Http\Resources\AnamnesisQuestionResource;
 use App\Http\Resources\AnamnesisTemplateResource;
 use App\Models\AnamnesisTemplate;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +35,7 @@ class AnamnesisTemplateController extends Controller
             // Trainer sees default templates and their own templates
             $query->where(function ($q) use ($user) {
                 $q->where('is_default', true)
-                  ->orWhere('trainer_id', $user->id);
+                    ->orWhere('trainer_id', $user->id);
             });
         } elseif ($user->isCustomer()) {
             // Customers only see default templates (for information)
@@ -54,7 +55,7 @@ class AnamnesisTemplateController extends Controller
 
         // Search by name
         if ($request->has('search')) {
-            $query->where('name', DatabaseHelper::caseInsensitiveLike(), '%' . $request->input('search') . '%');
+            $query->where('name', DatabaseHelper::caseInsensitiveLike(), '%'.$request->input('search').'%');
         }
 
         // Order by name by default
@@ -80,7 +81,7 @@ class AnamnesisTemplateController extends Controller
             $template = AnamnesisTemplate::create($data);
 
             // Create questions if provided
-            if (!empty($questions)) {
+            if (! empty($questions)) {
                 foreach ($questions as $questionData) {
                     $template->questions()->create($questionData);
                 }
@@ -143,7 +144,7 @@ class AnamnesisTemplateController extends Controller
      * those are kept to avoid cascading away recorded customer answers
      * (see `anamnesis_answers.question_id` foreign key `onDelete('cascade')`).
      *
-     * @param array<int, array<string, mixed>> $questions
+     * @param  array<int, array<string, mixed>>  $questions
      */
     private function syncQuestions(AnamnesisTemplate $template, array $questions): void
     {
@@ -183,7 +184,7 @@ class AnamnesisTemplateController extends Controller
         // Prevent deletion if template has responses
         if ($anamnesisTemplate->responses()->exists()) {
             return response()->json([
-                'message' => 'Cannot delete template with existing responses.'
+                'message' => 'Cannot delete template with existing responses.',
             ], 422);
         }
 
@@ -203,6 +204,6 @@ class AnamnesisTemplateController extends Controller
             ->orderBy('order')
             ->get();
 
-        return \App\Http\Resources\AnamnesisQuestionResource::collection($questions);
+        return AnamnesisQuestionResource::collection($questions);
     }
 }

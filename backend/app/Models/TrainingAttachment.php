@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * TrainingAttachment Model
@@ -18,9 +19,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $file_type
  * @property string $file_path
  * @property string $file_name
- * @property \Illuminate\Support\Carbon $uploaded_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon $uploaded_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read TrainingLog $trainingLog
  */
 class TrainingAttachment extends Model

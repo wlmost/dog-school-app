@@ -32,6 +32,7 @@ class TrainingAttachmentPolicy
         // Customers can only view attachments for their own dogs
         if ($user->isCustomer()) {
             $trainingAttachment->load('trainingLog.dog.customer');
+
             return $trainingAttachment->trainingLog->dog->customer->user_id === $user->id;
         }
 
@@ -69,6 +70,7 @@ class TrainingAttachmentPolicy
         // Trainers can delete attachments they uploaded
         if ($user->isTrainer()) {
             $trainingAttachment->load('trainingLog');
+
             return $trainingAttachment->trainingLog->trainer_id === $user->id;
         }
 

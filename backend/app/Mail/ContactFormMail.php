@@ -30,8 +30,7 @@ class ContactFormMail extends Mailable
         public readonly string $contactSubject,
         public readonly string $contactMessage,
         public readonly ?string $phone = null,
-    ) {
-    }
+    ) {}
 
     public function envelope(): Envelope
     {
@@ -59,7 +58,7 @@ class ContactFormMail extends Mailable
             from: new Address($fromAddress, $fromName),
             to: [new Address($toAddress, $companyName)],
             replyTo: [new Address($this->senderEmail, $this->senderName)],
-            subject: 'Kontaktformular: ' . $this->contactSubject,
+            subject: 'Kontaktformular: '.$this->contactSubject,
         );
     }
 

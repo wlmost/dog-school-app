@@ -10,7 +10,7 @@ use App\Models\CustomerCredit;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\CustomerCredit>
+ * @extends Factory<CustomerCredit>
  */
 class CustomerCreditFactory extends Factory
 {
@@ -19,7 +19,7 @@ class CustomerCreditFactory extends Factory
     public function definition(): array
     {
         $totalCredits = fake()->numberBetween(5, 20);
-        
+
         return [
             'customer_id' => Customer::factory(),
             'credit_package_id' => CreditPackage::factory(),
@@ -35,6 +35,7 @@ class CustomerCreditFactory extends Factory
     {
         return $this->state(function (array $attributes) {
             $totalCredits = $attributes['total_credits'] ?? 10;
+
             return [
                 'status' => 'active',
                 'total_credits' => $totalCredits,

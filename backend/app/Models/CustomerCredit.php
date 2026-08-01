@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * CustomerCredit Model
@@ -17,11 +18,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $customer_id
  * @property int $credit_package_id
  * @property int $remaining_credits
- * @property \Illuminate\Support\Carbon $purchase_date
- * @property \Illuminate\Support\Carbon|null $expiry_date
+ * @property Carbon $purchase_date
+ * @property Carbon|null $expiry_date
  * @property string $status
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read Customer $customer
  * @property-read CreditPackage $package
  */
@@ -82,9 +83,9 @@ class CustomerCredit extends Model
      */
     public function isActive(): bool
     {
-        return $this->status === 'active' 
+        return $this->status === 'active'
             && $this->remaining_credits > 0
-            && (!$this->expiration_date || $this->expiration_date->isFuture());
+            && (! $this->expiration_date || $this->expiration_date->isFuture());
     }
 
     /**
@@ -105,7 +106,7 @@ class CustomerCredit extends Model
         }
 
         $this->remaining_credits -= $amount;
-        
+
         if ($this->remaining_credits === 0) {
             $this->status = 'used';
         }
@@ -124,7 +125,7 @@ class CustomerCredit extends Model
             ->where('remaining_credits', '>', 0)
             ->where(function ($q) {
                 $q->whereNull('expiration_date')
-                  ->orWhere('expiration_date', '>', now());
+                    ->orWhere('expiration_date', '>', now());
             });
     }
 

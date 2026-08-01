@@ -17,17 +17,17 @@ beforeEach(function () {
     $this->admin = User::factory()->admin()->create();
     $this->trainer = User::factory()->trainer()->create();
     $this->customer = User::factory()->customer()->create();
-    
+
     $customerRecord = Customer::factory()->create(['user_id' => $this->customer->id]);
     $this->dog = Dog::factory()->create(['customer_id' => $customerRecord->id]);
-    
+
     // Create an anamnesis template with questions
     $this->template = AnamnesisTemplate::factory()->create([
         'trainer_id' => $this->trainer->id,
         'name' => 'Standard Hunde-Anamnese',
         'description' => 'Grundlegende Verhaltens- und Gesundheitsanamnese',
     ]);
-    
+
     // Create various question types
     $this->questions = [
         AnamnesisQuestion::factory()->create([
@@ -68,7 +68,7 @@ beforeEach(function () {
             'order' => 5,
         ]),
     ];
-    
+
     // Create anamnesis response
     $this->response = AnamnesisResponse::factory()->create([
         'dog_id' => $this->dog->id,
@@ -76,32 +76,32 @@ beforeEach(function () {
         'completed_at' => now(),
         'completed_by' => $this->trainer->id,
     ]);
-    
+
     // Create answers
     AnamnesisAnswer::factory()->create([
         'response_id' => $this->response->id,
         'question_id' => $this->questions[0]->id,
         'answer_value' => '3 Jahre',
     ]);
-    
+
     AnamnesisAnswer::factory()->create([
         'response_id' => $this->response->id,
         'question_id' => $this->questions[1]->id,
         'answer_value' => 'Der Hund ist sehr freundlich und aufgeschlossen. Zeigt gelegentlich Angstverhalten bei lauten Geräuschen.',
     ]);
-    
+
     AnamnesisAnswer::factory()->create([
         'response_id' => $this->response->id,
         'question_id' => $this->questions[2]->id,
         'answer_value' => 'Manchmal',
     ]);
-    
+
     AnamnesisAnswer::factory()->create([
         'response_id' => $this->response->id,
         'question_id' => $this->questions[3]->id,
         'answer_value' => json_encode(['Sitz', 'Platz', 'Hier']),
     ]);
-    
+
     AnamnesisAnswer::factory()->create([
         'response_id' => $this->response->id,
         'question_id' => $this->questions[4]->id,
@@ -115,23 +115,23 @@ beforeEach(function () {
 
 test('admin cannot download anamnesis response as PDF', function () {
     $response = $this->actingAs($this->admin)
-        ->getJson('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->getJson('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertForbidden();
 });
 
 test('trainer can download anamnesis response as PDF', function () {
     $response = $this->actingAs($this->trainer)
-        ->getJson('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->getJson('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk()
         ->assertHeader('content-type', 'application/pdf');
 });
 
 test('customer can download their own dogs anamnesis response as PDF', function () {
     $response = $this->actingAs($this->customer)
-        ->getJson('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->getJson('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk()
         ->assertHeader('content-type', 'application/pdf');
 });
@@ -140,19 +140,19 @@ test('customer cannot download other customers dogs anamnesis response PDF', fun
     $otherCustomer = User::factory()->customer()->create();
     $otherCustomerRecord = Customer::factory()->create(['user_id' => $otherCustomer->id]);
     $otherDog = Dog::factory()->create(['customer_id' => $otherCustomerRecord->id]);
-    
+
     $otherResponse = AnamnesisResponse::factory()->create([
         'dog_id' => $otherDog->id,
         'template_id' => $this->template->id,
     ]);
-    
+
     $this->actingAs($this->customer)
-        ->getJson('/api/v1/anamnesis-responses/' . $otherResponse->id . '/pdf')
+        ->getJson('/api/v1/anamnesis-responses/'.$otherResponse->id.'/pdf')
         ->assertForbidden();
 });
 
 test('unauthenticated user cannot download anamnesis response PDF', function () {
-    $this->getJson('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf')
+    $this->getJson('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf')
         ->assertUnauthorized();
 });
 
@@ -162,8 +162,8 @@ test('unauthenticated user cannot download anamnesis response PDF', function () 
 
 test('PDF includes dog information', function () {
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk();
     $response->assertHeader('content-type', 'application/pdf');
     expect($response->getContent())->not()->toBeEmpty();
@@ -171,8 +171,8 @@ test('PDF includes dog information', function () {
 
 test('PDF includes template information', function () {
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk();
     $response->assertHeader('content-type', 'application/pdf');
     expect($response->getContent())->not()->toBeEmpty();
@@ -180,8 +180,8 @@ test('PDF includes template information', function () {
 
 test('PDF includes customer information', function () {
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk();
     $response->assertHeader('content-type', 'application/pdf');
     expect($response->getContent())->not()->toBeEmpty();
@@ -189,8 +189,8 @@ test('PDF includes customer information', function () {
 
 test('PDF includes all questions', function () {
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk();
     $response->assertHeader('content-type', 'application/pdf');
     expect($response->getContent())->not()->toBeEmpty();
@@ -198,8 +198,8 @@ test('PDF includes all questions', function () {
 
 test('PDF includes all answers', function () {
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk();
     $response->assertHeader('content-type', 'application/pdf');
     expect($response->getContent())->not()->toBeEmpty();
@@ -207,8 +207,8 @@ test('PDF includes all answers', function () {
 
 test('PDF shows completed status correctly', function () {
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk();
     $response->assertHeader('content-type', 'application/pdf');
     expect($response->getContent())->not()->toBeEmpty();
@@ -216,10 +216,10 @@ test('PDF shows completed status correctly', function () {
 
 test('PDF shows incomplete status correctly', function () {
     $this->response->update(['completed_at' => null, 'completed_by' => null]);
-    
+
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk();
     $response->assertHeader('content-type', 'application/pdf');
     expect($response->getContent())->not()->toBeEmpty();
@@ -227,8 +227,8 @@ test('PDF shows incomplete status correctly', function () {
 
 test('PDF includes completion date when completed', function () {
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk();
     $response->assertHeader('content-type', 'application/pdf');
     expect($response->getContent())->not()->toBeEmpty();
@@ -236,8 +236,8 @@ test('PDF includes completion date when completed', function () {
 
 test('PDF includes completedBy user when completed', function () {
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk();
     $response->assertHeader('content-type', 'application/pdf');
     expect($response->getContent())->not()->toBeEmpty();
@@ -245,8 +245,8 @@ test('PDF includes completedBy user when completed', function () {
 
 test('PDF handles text answers correctly', function () {
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk();
     $response->assertHeader('content-type', 'application/pdf');
     expect($response->getContent())->not()->toBeEmpty();
@@ -254,8 +254,8 @@ test('PDF handles text answers correctly', function () {
 
 test('PDF handles textarea answers correctly', function () {
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk();
     $response->assertHeader('content-type', 'application/pdf');
     expect($response->getContent())->not()->toBeEmpty();
@@ -263,8 +263,8 @@ test('PDF handles textarea answers correctly', function () {
 
 test('PDF handles radio answers correctly', function () {
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk();
     $response->assertHeader('content-type', 'application/pdf');
     expect($response->getContent())->not()->toBeEmpty();
@@ -272,8 +272,8 @@ test('PDF handles radio answers correctly', function () {
 
 test('PDF handles checkbox answers correctly', function () {
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk();
     $response->assertHeader('content-type', 'application/pdf');
     expect($response->getContent())->not()->toBeEmpty();
@@ -281,8 +281,8 @@ test('PDF handles checkbox answers correctly', function () {
 
 test('PDF handles rating answers correctly', function () {
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk();
     $response->assertHeader('content-type', 'application/pdf');
     expect($response->getContent())->not()->toBeEmpty();
@@ -297,10 +297,10 @@ test('PDF shows unanswered questions appropriately', function () {
         'is_required' => false,
         'order' => 6,
     ]);
-    
+
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk();
     $response->assertHeader('content-type', 'application/pdf');
     expect($response->getContent())->not()->toBeEmpty();
@@ -312,10 +312,10 @@ test('PDF shows unanswered questions appropriately', function () {
 
 test('PDF filename includes dog name and response ID', function () {
     $response = $this->actingAs($this->trainer)
-        ->getJson('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
-    $expectedFilename = 'anamnesis-' . $this->dog->name . '-' . $this->response->id . '.pdf';
-    
+        ->getJson('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
+    $expectedFilename = 'anamnesis-'.$this->dog->name.'-'.$this->response->id.'.pdf';
+
     $response->assertHeader('content-disposition');
     $disposition = $response->headers->get('content-disposition');
     expect($disposition)->toContain($expectedFilename);
@@ -333,10 +333,10 @@ test('returns 404 for non-existent anamnesis response PDF', function () {
 
 test('PDF generation works with response without answers', function () {
     AnamnesisAnswer::query()->where('response_id', $this->response->id)->delete();
-    
+
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk()
         ->assertHeader('content-type', 'application/pdf');
 });
@@ -349,10 +349,10 @@ test('PDF generation works with minimal dog data', function () {
         'is_neutered' => null,
         'chip_number' => null,
     ]);
-    
+
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk()
         ->assertHeader('content-type', 'application/pdf');
 });
@@ -366,35 +366,35 @@ test('PDF generation works with minimal customer data', function () {
         'city' => null,
         'country' => null,
     ]);
-    
+
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk()
         ->assertHeader('content-type', 'application/pdf');
 });
 
 test('PDF generation works with template without description', function () {
     $this->template->update(['description' => null]);
-    
+
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk()
         ->assertHeader('content-type', 'application/pdf');
 });
 
 test('PDF generation works with long text answers', function () {
     $longText = str_repeat('Dies ist ein sehr langer Text. ', 100);
-    
+
     AnamnesisAnswer::query()
         ->where('response_id', $this->response->id)
         ->where('question_id', $this->questions[1]->id)
         ->update(['answer_value' => $longText]);
-    
+
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk()
         ->assertHeader('content-type', 'application/pdf');
 });
@@ -404,10 +404,10 @@ test('PDF generation works with special characters in answers', function () {
         ->where('response_id', $this->response->id)
         ->where('question_id', $this->questions[0]->id)
         ->update(['answer_value' => 'Spezial: äöü ÄÖÜ ß € <>&"\'']);
-    
+
     $response = $this->actingAs($this->trainer)
-        ->get('/api/v1/anamnesis-responses/' . $this->response->id . '/pdf');
-    
+        ->get('/api/v1/anamnesis-responses/'.$this->response->id.'/pdf');
+
     $response->assertOk()
         ->assertHeader('content-type', 'application/pdf');
 });

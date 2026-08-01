@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\Invoice;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -12,7 +13,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *
  * Transforms invoice model into a consistent JSON response format.
  *
- * @mixin \App\Models\Invoice
+ * @mixin Invoice
  */
 class InvoiceResource extends JsonResource
 {

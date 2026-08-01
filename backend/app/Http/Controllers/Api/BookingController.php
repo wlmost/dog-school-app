@@ -12,7 +12,9 @@ use App\Http\Requests\UpdateBookingRequest;
 use App\Http\Resources\BookingResource;
 use App\Mail\BookingCancellationApproved;
 use App\Models\Booking;
+use App\Models\Course;
 use App\Models\Customer;
+use App\Models\Dog;
 use App\Models\TrainingSession;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
@@ -31,9 +33,6 @@ class BookingController extends Controller
 
     /**
      * Display a listing of bookings with optional filtering.
-     *
-     * @param Request $request
-     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -46,13 +45,13 @@ class BookingController extends Controller
         // Role-based filtering
         if ($user->isTrainer()) {
             // Trainer sees only bookings for courses they train
-            $trainerCourses = \App\Models\Course::where('trainer_id', $user->id)->pluck('id');
+            $trainerCourses = Course::where('trainer_id', $user->id)->pluck('id');
             $query->whereHas('trainingSession', function ($q) use ($trainerCourses) {
                 $q->whereIn('course_id', $trainerCourses);
             });
         } elseif ($user->isCustomer()) {
             // Customer sees only their own bookings
-            $customer = \App\Models\Customer::where('user_id', $user->id)->first();
+            $customer = Customer::where('user_id', $user->id)->first();
             if ($customer) {
                 $query->where('customer_id', $customer->id);
             } else {
@@ -93,14 +92,14 @@ class BookingController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->whereHas('customer.user', function ($q) use ($search) {
                     $q->where('first_name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
-                      ->orWhere('last_name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
+                        ->orWhere('last_name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
                 })
-                ->orWhereHas('dog', function ($q) use ($search) {
-                    $q->where('name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
-                })
-                ->orWhereHas('trainingSession.course', function ($q) use ($search) {
-                    $q->where('name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
-                });
+                    ->orWhereHas('dog', function ($q) use ($search) {
+                        $q->where('name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
+                    })
+                    ->orWhereHas('trainingSession.course', function ($q) use ($search) {
+                        $q->where('name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
+                    });
             });
         }
 
@@ -112,9 +111,6 @@ class BookingController extends Controller
 
     /**
      * Store a newly created booking.
-     *
-     * @param StoreBookingRequest $request
-     * @return BookingResource|JsonResponse
      */
     public function store(StoreBookingRequest $request): BookingResource|JsonResponse
     {
@@ -125,7 +121,7 @@ class BookingController extends Controller
         // Check session capacity
         $session = TrainingSession::findOrFail($data['training_session_id']);
         $currentBookings = $session->bookings()->whereIn('status', ['pending', 'confirmed'])->count();
-        
+
         if ($currentBookings >= $session->max_participants) {
             return response()->json([
                 'message' => 'Training session is full. Please join the waiting list.',
@@ -134,7 +130,7 @@ class BookingController extends Controller
         }
 
         // Verify dog belongs to customer
-        $dog = \App\Models\Dog::findOrFail($data['dog_id']);
+        $dog = Dog::findOrFail($data['dog_id']);
         if ($dog->customer_id !== $data['customer_id']) {
             return response()->json([
                 'message' => 'The selected dog does not belong to this customer.',
@@ -164,9 +160,6 @@ class BookingController extends Controller
 
     /**
      * Display the specified booking.
-     *
-     * @param Booking $booking
-     * @return BookingResource
      */
     public function show(Booking $booking): BookingResource
     {
@@ -177,10 +170,6 @@ class BookingController extends Controller
 
     /**
      * Update the specified booking.
-     *
-     * @param UpdateBookingRequest $request
-     * @param Booking $booking
-     * @return BookingResource
      */
     public function update(UpdateBookingRequest $request, Booking $booking): BookingResource
     {
@@ -198,10 +187,6 @@ class BookingController extends Controller
      * - Customers: if within the cancellation window, set status to
      *   'cancellation_requested' so the responsible trainer can approve it.
      *   If the window has passed, return a 422 with a descriptive message.
-     *
-     * @param Request $request
-     * @param Booking $booking
-     * @return BookingResource|JsonResponse
      */
     public function cancel(Request $request, Booking $booking): BookingResource|JsonResponse
     {
@@ -232,7 +217,7 @@ class BookingController extends Controller
 
             return response()->json([
                 'message' => "Die Stornierungsfrist ist abgelaufen (war bis {$deadlineFormatted}). "
-                    . 'Eine Stornierung ist nicht mehr möglich. Die Kurskosten fallen an.',
+                    .'Eine Stornierung ist nicht mehr möglich. Die Kurskosten fallen an.',
                 'deadlineExpired' => true,
                 'cancellationDeadline' => $deadline?->toISOString(),
             ], 422);
@@ -252,10 +237,6 @@ class BookingController extends Controller
      *
      * Only trainers (and admins) may approve. On approval the booking status
      * is set to 'cancelled' and the customer receives a notification email.
-     *
-     * @param Request $request
-     * @param Booking $booking
-     * @return BookingResource|JsonResponse
      */
     public function approveCancellation(Request $request, Booking $booking): BookingResource|JsonResponse
     {
@@ -281,9 +262,6 @@ class BookingController extends Controller
 
     /**
      * Confirm the specified booking.
-     *
-     * @param Booking $booking
-     * @return BookingResource
      */
     public function confirm(Booking $booking): BookingResource
     {
@@ -300,9 +278,6 @@ class BookingController extends Controller
 
     /**
      * Remove the specified booking.
-     *
-     * @param Booking $booking
-     * @return JsonResponse
      */
     public function destroy(Booking $booking): JsonResponse
     {

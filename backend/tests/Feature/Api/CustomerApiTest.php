@@ -68,10 +68,10 @@ describe('Customer API - Index', function () {
 
     test('can filter customers by search term', function () {
         $admin = User::factory()->admin()->create();
-        
+
         $user1 = User::factory()->create(['first_name' => 'John', 'last_name' => 'Doe']);
         $customer1 = Customer::factory()->create(['user_id' => $user1->id]);
-        
+
         $user2 = User::factory()->create(['first_name' => 'Jane', 'last_name' => 'Smith']);
         $customer2 = Customer::factory()->create(['user_id' => $user2->id]);
 
@@ -85,10 +85,10 @@ describe('Customer API - Index', function () {
 
     test('can filter customers with active credits', function () {
         $admin = User::factory()->admin()->create();
-        
+
         $customer1 = Customer::factory()->create();
         $customer2 = Customer::factory()->create();
-        
+
         CustomerCredit::factory()->active()->create([
             'customer_id' => $customer1->id,
             'remaining_credits' => 5,
@@ -313,7 +313,7 @@ describe('Customer API - Delete', function () {
     test('cannot delete customer with active bookings', function () {
         $admin = User::factory()->admin()->create();
         $customer = Customer::factory()->create();
-        
+
         Booking::factory()->confirmed()->create(['customer_id' => $customer->id]);
 
         $response = $this->actingAs($admin)
@@ -328,7 +328,7 @@ describe('Customer API - Delete', function () {
     test('cannot delete customer with active credits', function () {
         $admin = User::factory()->admin()->create();
         $customer = Customer::factory()->create();
-        
+
         CustomerCredit::factory()->active()->create([
             'customer_id' => $customer->id,
             'remaining_credits' => 5,

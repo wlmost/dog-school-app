@@ -26,9 +26,6 @@ class VaccinationController extends Controller
 
     /**
      * Display a listing of vaccinations with optional filtering.
-     *
-     * @param Request $request
-     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -41,7 +38,7 @@ class VaccinationController extends Controller
 
         // Filter by vaccination type
         if ($request->has('vaccinationType')) {
-            $query->where('vaccination_type', DatabaseHelper::caseInsensitiveLike(), '%' . $request->input('vaccinationType') . '%');
+            $query->where('vaccination_type', DatabaseHelper::caseInsensitiveLike(), '%'.$request->input('vaccinationType').'%');
         }
 
         // Filter vaccinations due soon (within 30 days)
@@ -71,9 +68,6 @@ class VaccinationController extends Controller
 
     /**
      * Store a newly created vaccination.
-     *
-     * @param StoreVaccinationRequest $request
-     * @return VaccinationResource
      */
     public function store(StoreVaccinationRequest $request): VaccinationResource
     {
@@ -84,26 +78,19 @@ class VaccinationController extends Controller
 
     /**
      * Display the specified vaccination.
-     *
-     * @param Vaccination $vaccination
-     * @return VaccinationResource
      */
     public function show(Vaccination $vaccination): VaccinationResource
     {
         // Load dog for authorization check
         $vaccination->load('dog.customer.user');
-        
+
         $this->authorize('view', $vaccination);
-        
+
         return new VaccinationResource($vaccination);
     }
 
     /**
      * Update the specified vaccination.
-     *
-     * @param UpdateVaccinationRequest $request
-     * @param Vaccination $vaccination
-     * @return VaccinationResource
      */
     public function update(UpdateVaccinationRequest $request, Vaccination $vaccination): VaccinationResource
     {
@@ -114,14 +101,11 @@ class VaccinationController extends Controller
 
     /**
      * Remove the specified vaccination.
-     *
-     * @param Vaccination $vaccination
-     * @return JsonResponse
      */
     public function destroy(Vaccination $vaccination): JsonResponse
     {
         $this->authorize('delete', $vaccination);
-        
+
         $vaccination->delete();
 
         return response()->json(null, 204);
@@ -129,9 +113,6 @@ class VaccinationController extends Controller
 
     /**
      * Get upcoming vaccinations that are due soon.
-     *
-     * @param Request $request
-     * @return AnonymousResourceCollection
      */
     public function upcoming(Request $request): AnonymousResourceCollection
     {
@@ -147,9 +128,6 @@ class VaccinationController extends Controller
 
     /**
      * Get overdue vaccinations.
-     *
-     * @param Request $request
-     * @return AnonymousResourceCollection
      */
     public function overdue(Request $request): AnonymousResourceCollection
     {

@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * Vaccination Model
@@ -16,12 +17,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $id
  * @property int $dog_id
  * @property string $vaccination_type
- * @property \Illuminate\Support\Carbon $vaccination_date
- * @property \Illuminate\Support\Carbon|null $next_due_date
+ * @property Carbon $vaccination_date
+ * @property Carbon|null $next_due_date
  * @property string|null $veterinarian
  * @property string|null $document_path
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read Dog $dog
  */
 class Vaccination extends Model
@@ -70,7 +71,7 @@ class Vaccination extends Model
      */
     public function isDue(): bool
     {
-        if (!$this->next_due_date) {
+        if (! $this->next_due_date) {
             return false;
         }
 
@@ -82,7 +83,7 @@ class Vaccination extends Model
      */
     public function isOverdue(): bool
     {
-        if (!$this->next_due_date) {
+        if (! $this->next_due_date) {
             return false;
         }
 

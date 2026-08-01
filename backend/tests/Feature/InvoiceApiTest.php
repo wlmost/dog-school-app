@@ -45,7 +45,7 @@ test('customer can list their own invoices', function () {
     Invoice::factory()->count(3)->create(); // Other invoices
 
     $response = $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/invoices?customerId=' . $this->customer->id)
+        ->getJson('/api/v1/invoices?customerId='.$this->customer->id)
         ->assertOk();
 
     expect($response->json('data'))->toHaveCount(2);
@@ -79,7 +79,7 @@ test('can get overdue invoices', function () {
         'status' => 'sent',
         'due_date' => now()->subDays(10),
     ]);
-    
+
     // Not overdue
     Invoice::factory()->count(2)->create([
         'status' => 'sent',
@@ -97,7 +97,7 @@ test('trainer can view any invoice', function () {
     $invoice = Invoice::factory()->create();
 
     $this->actingAs($this->trainer)
-        ->getJson('/api/v1/invoices/' . $invoice->id)
+        ->getJson('/api/v1/invoices/'.$invoice->id)
         ->assertOk()
         ->assertJsonPath('data.id', $invoice->id);
 });
@@ -106,7 +106,7 @@ test('customer can view their own invoice', function () {
     $invoice = Invoice::factory()->create(['customer_id' => $this->customer->id]);
 
     $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/invoices/' . $invoice->id)
+        ->getJson('/api/v1/invoices/'.$invoice->id)
         ->assertOk()
         ->assertJsonPath('data.id', $invoice->id);
 });
@@ -115,7 +115,7 @@ test('customer cannot view other customers invoice', function () {
     $otherInvoice = Invoice::factory()->create();
 
     $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/invoices/' . $otherInvoice->id)
+        ->getJson('/api/v1/invoices/'.$otherInvoice->id)
         ->assertForbidden();
 });
 
@@ -174,7 +174,7 @@ test('can create invoice with items', function () {
         ->assertCreated();
 
     $invoiceId = $response->json('data.id');
-    
+
     $this->assertDatabaseHas('invoice_items', [
         'invoice_id' => $invoiceId,
         'description' => 'Training Session',
@@ -244,7 +244,7 @@ test('trainer can update invoice', function () {
     $invoice = Invoice::factory()->create();
 
     $this->actingAs($this->trainer)
-        ->putJson('/api/v1/invoices/' . $invoice->id, [
+        ->putJson('/api/v1/invoices/'.$invoice->id, [
             'status' => 'sent',
             'notes' => 'Updated notes',
         ])
@@ -263,7 +263,7 @@ test('customer cannot update invoice', function () {
     $invoice = Invoice::factory()->create(['customer_id' => $this->customer->id]);
 
     $this->actingAs($this->customerUser)
-        ->putJson('/api/v1/invoices/' . $invoice->id, [
+        ->putJson('/api/v1/invoices/'.$invoice->id, [
             'status' => 'paid',
         ])
         ->assertForbidden();
@@ -276,7 +276,7 @@ test('trainer can mark invoice as paid', function () {
     ]);
 
     $this->actingAs($this->trainer)
-        ->postJson('/api/v1/invoices/' . $invoice->id . '/mark-paid')
+        ->postJson('/api/v1/invoices/'.$invoice->id.'/mark-paid')
         ->assertOk()
         ->assertJsonPath('data.status', 'paid');
 
@@ -292,7 +292,7 @@ test('cannot mark already paid invoice as paid', function () {
     ]);
 
     $this->actingAs($this->trainer)
-        ->postJson('/api/v1/invoices/' . $invoice->id . '/mark-paid')
+        ->postJson('/api/v1/invoices/'.$invoice->id.'/mark-paid')
         ->assertUnprocessable()
         ->assertJsonPath('message', 'Rechnung ist bereits bezahlt.');
 });
@@ -301,7 +301,7 @@ test('admin can delete invoice without payments', function () {
     $invoice = Invoice::factory()->create();
 
     $this->actingAs($this->admin)
-        ->deleteJson('/api/v1/invoices/' . $invoice->id)
+        ->deleteJson('/api/v1/invoices/'.$invoice->id)
         ->assertNoContent();
 
     expect(Invoice::find($invoice->id))->toBeNull();
@@ -315,7 +315,7 @@ test('cannot delete invoice with completed payments', function () {
     ]);
 
     $this->actingAs($this->admin)
-        ->deleteJson('/api/v1/invoices/' . $invoice->id)
+        ->deleteJson('/api/v1/invoices/'.$invoice->id)
         ->assertUnprocessable()
         ->assertJsonPath('message', 'Rechnung kann nicht gelöscht werden, da bereits Zahlungen vorhanden sind.');
 });
@@ -324,6 +324,6 @@ test('trainer cannot delete invoice', function () {
     $invoice = Invoice::factory()->create();
 
     $this->actingAs($this->trainer)
-        ->deleteJson('/api/v1/invoices/' . $invoice->id)
+        ->deleteJson('/api/v1/invoices/'.$invoice->id)
         ->assertForbidden();
 });

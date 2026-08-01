@@ -7,9 +7,9 @@ namespace App\Console\Commands;
 use App\Events\BookingCreated;
 use App\Events\InvoiceWasCreated;
 use App\Events\UserRegistered;
-use App\Models\Booking;
-use App\Models\Invoice;
-use App\Models\User;
+use App\Listeners\SendBookingConfirmationEmail;
+use App\Listeners\SendInvoiceCreatedEmail;
+use App\Listeners\SendWelcomeEmail;
 use Illuminate\Console\Command;
 
 class TestEventIntegration extends Command
@@ -62,9 +62,9 @@ class TestEventIntegration extends Command
     protected function testEventClassLoading(): void
     {
         $events = [
-            'BookingCreated' => \App\Events\BookingCreated::class,
-            'InvoiceWasCreated' => \App\Events\InvoiceWasCreated::class,
-            'UserRegistered' => \App\Events\UserRegistered::class,
+            'BookingCreated' => BookingCreated::class,
+            'InvoiceWasCreated' => InvoiceWasCreated::class,
+            'UserRegistered' => UserRegistered::class,
         ];
 
         foreach ($events as $name => $class) {
@@ -79,9 +79,9 @@ class TestEventIntegration extends Command
     protected function testListenerClassLoading(): void
     {
         $listeners = [
-            'SendBookingConfirmationEmail' => \App\Listeners\SendBookingConfirmationEmail::class,
-            'SendInvoiceCreatedEmail' => \App\Listeners\SendInvoiceCreatedEmail::class,
-            'SendWelcomeEmail' => \App\Listeners\SendWelcomeEmail::class,
+            'SendBookingConfirmationEmail' => SendBookingConfirmationEmail::class,
+            'SendInvoiceCreatedEmail' => SendInvoiceCreatedEmail::class,
+            'SendWelcomeEmail' => SendWelcomeEmail::class,
         ];
 
         foreach ($listeners as $name => $class) {
@@ -104,21 +104,21 @@ class TestEventIntegration extends Command
         $userListeners = $events->getListeners(UserRegistered::class);
 
         if (count($bookingListeners) > 0) {
-            $this->line("  ✓ BookingCreated has " . count($bookingListeners) . " listener(s)");
+            $this->line('  ✓ BookingCreated has '.count($bookingListeners).' listener(s)');
         } else {
-            $this->warn("  ⚠ BookingCreated has NO listeners");
+            $this->warn('  ⚠ BookingCreated has NO listeners');
         }
 
         if (count($invoiceListeners) > 0) {
-            $this->line("  ✓ InvoiceWasCreated has " . count($invoiceListeners) . " listener(s)");
+            $this->line('  ✓ InvoiceWasCreated has '.count($invoiceListeners).' listener(s)');
         } else {
-            $this->warn("  ⚠ InvoiceWasCreated has NO listeners");
+            $this->warn('  ⚠ InvoiceWasCreated has NO listeners');
         }
 
         if (count($userListeners) > 0) {
-            $this->line("  ✓ UserRegistered has " . count($userListeners) . " listener(s)");
+            $this->line('  ✓ UserRegistered has '.count($userListeners).' listener(s)');
         } else {
-            $this->warn("  ⚠ UserRegistered has NO listeners");
+            $this->warn('  ⚠ UserRegistered has NO listeners');
         }
     }
 }

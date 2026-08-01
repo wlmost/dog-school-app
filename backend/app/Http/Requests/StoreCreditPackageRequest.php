@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreCreditPackageRequest extends FormRequest
@@ -19,7 +20,7 @@ class StoreCreditPackageRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -56,7 +57,7 @@ class StoreCreditPackageRequest extends FormRequest
     public function validatedSnakeCase(): array
     {
         $validated = $this->validated();
-        
+
         return [
             'name' => $validated['name'],
             'total_credits' => $validated['totalCredits'],

@@ -48,7 +48,7 @@ test('customer can list payments for their invoices', function () {
     Payment::factory()->count(3)->create(); // Other payments
 
     $response = $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/payments?invoiceId=' . $this->invoice->id)
+        ->getJson('/api/v1/payments?invoiceId='.$this->invoice->id)
         ->assertOk();
 
     expect($response->json('data'))->toHaveCount(2);
@@ -91,7 +91,7 @@ test('trainer can view any payment', function () {
     $payment = Payment::factory()->create();
 
     $this->actingAs($this->trainer)
-        ->getJson('/api/v1/payments/' . $payment->id)
+        ->getJson('/api/v1/payments/'.$payment->id)
         ->assertOk()
         ->assertJsonPath('data.id', $payment->id);
 });
@@ -100,7 +100,7 @@ test('customer can view payment for their invoice', function () {
     $payment = Payment::factory()->create(['invoice_id' => $this->invoice->id]);
 
     $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/payments/' . $payment->id)
+        ->getJson('/api/v1/payments/'.$payment->id)
         ->assertOk()
         ->assertJsonPath('data.id', $payment->id);
 });
@@ -109,7 +109,7 @@ test('customer cannot view payment for other invoice', function () {
     $otherPayment = Payment::factory()->create();
 
     $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/payments/' . $otherPayment->id)
+        ->getJson('/api/v1/payments/'.$otherPayment->id)
         ->assertForbidden();
 });
 
@@ -235,7 +235,7 @@ test('trainer can update payment', function () {
     $payment = Payment::factory()->create(['status' => 'pending']);
 
     $this->actingAs($this->trainer)
-        ->putJson('/api/v1/payments/' . $payment->id, [
+        ->putJson('/api/v1/payments/'.$payment->id, [
             'status' => 'completed',
             'transactionId' => 'TXN-UPDATED',
         ])
@@ -254,7 +254,7 @@ test('customer cannot update payment', function () {
     $payment = Payment::factory()->create(['invoice_id' => $this->invoice->id]);
 
     $this->actingAs($this->customerUser)
-        ->putJson('/api/v1/payments/' . $payment->id, [
+        ->putJson('/api/v1/payments/'.$payment->id, [
             'status' => 'completed',
         ])
         ->assertForbidden();
@@ -264,7 +264,7 @@ test('trainer can mark payment as completed', function () {
     $payment = Payment::factory()->create(['status' => 'pending']);
 
     $this->actingAs($this->trainer)
-        ->postJson('/api/v1/payments/' . $payment->id . '/mark-completed')
+        ->postJson('/api/v1/payments/'.$payment->id.'/mark-completed')
         ->assertOk()
         ->assertJsonPath('data.status', 'completed');
 
@@ -278,7 +278,7 @@ test('cannot mark already completed payment', function () {
     $payment = Payment::factory()->create(['status' => 'completed']);
 
     $this->actingAs($this->trainer)
-        ->postJson('/api/v1/payments/' . $payment->id . '/mark-completed')
+        ->postJson('/api/v1/payments/'.$payment->id.'/mark-completed')
         ->assertUnprocessable()
         ->assertJsonPath('message', 'Zahlung ist bereits abgeschlossen.');
 });
@@ -296,7 +296,7 @@ test('marking payment completed updates invoice status if fully paid', function 
     ]);
 
     $this->actingAs($this->trainer)
-        ->postJson('/api/v1/payments/' . $payment->id . '/mark-completed')
+        ->postJson('/api/v1/payments/'.$payment->id.'/mark-completed')
         ->assertOk();
 
     $invoice->refresh();
@@ -308,7 +308,7 @@ test('admin can delete pending payment', function () {
     $payment = Payment::factory()->create(['status' => 'pending']);
 
     $this->actingAs($this->admin)
-        ->deleteJson('/api/v1/payments/' . $payment->id)
+        ->deleteJson('/api/v1/payments/'.$payment->id)
         ->assertNoContent();
 
     expect(Payment::find($payment->id))->toBeNull();
@@ -318,7 +318,7 @@ test('cannot delete completed payment', function () {
     $payment = Payment::factory()->create(['status' => 'completed']);
 
     $this->actingAs($this->admin)
-        ->deleteJson('/api/v1/payments/' . $payment->id)
+        ->deleteJson('/api/v1/payments/'.$payment->id)
         ->assertUnprocessable()
         ->assertJsonPath('message', 'Abgeschlossene Zahlungen können nicht gelöscht werden.');
 });
@@ -327,6 +327,6 @@ test('trainer cannot delete payment', function () {
     $payment = Payment::factory()->create();
 
     $this->actingAs($this->trainer)
-        ->deleteJson('/api/v1/payments/' . $payment->id)
+        ->deleteJson('/api/v1/payments/'.$payment->id)
         ->assertForbidden();
 });

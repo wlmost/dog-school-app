@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
  *
  * Transforms Setting model to API response format.
  *
- * @mixin \App\Models\Setting
+ * @mixin Setting
  */
 class SettingsResource extends JsonResource
 {

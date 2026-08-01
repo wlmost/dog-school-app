@@ -9,8 +9,8 @@ uses(RefreshDatabase::class);
 uses()->group('feature', 'trainers');
 
 beforeEach(function () {
-    $this->admin    = User::factory()->admin()->create();
-    $this->trainer  = User::factory()->trainer()->create();
+    $this->admin = User::factory()->admin()->create();
+    $this->trainer = User::factory()->trainer()->create();
     $this->customer = User::factory()->customer()->create();
 });
 
@@ -34,13 +34,13 @@ describe('Admin', function () {
 
     it('zeigt einen einzelnen trainer an', function () {
         $this->actingAs($this->admin)
-            ->getJson('/api/v1/trainers/' . $this->trainer->id)
+            ->getJson('/api/v1/trainers/'.$this->trainer->id)
             ->assertOk();
     });
 
     it('aktualisiert einen trainer', function () {
         $this->actingAs($this->admin)
-            ->putJson('/api/v1/trainers/' . $this->trainer->id, [
+            ->putJson('/api/v1/trainers/'.$this->trainer->id, [
                 'firstName' => 'Hans',
             ])
             ->assertOk();
@@ -48,7 +48,7 @@ describe('Admin', function () {
 
     it('löscht einen trainer', function () {
         $this->actingAs($this->admin)
-            ->deleteJson('/api/v1/trainers/' . $this->trainer->id)
+            ->deleteJson('/api/v1/trainers/'.$this->trainer->id)
             ->assertOk();
     });
 });
@@ -73,13 +73,13 @@ describe('Trainer-Rolle', function () {
 
     it('erhält 403 beim anzeigen eines trainers', function () {
         $this->actingAs($this->trainer)
-            ->getJson('/api/v1/trainers/' . $this->trainer->id)
+            ->getJson('/api/v1/trainers/'.$this->trainer->id)
             ->assertForbidden();
     });
 
     it('erhält 403 beim aktualisieren eines trainers', function () {
         $this->actingAs($this->trainer)
-            ->putJson('/api/v1/trainers/' . $this->trainer->id, [
+            ->putJson('/api/v1/trainers/'.$this->trainer->id, [
                 'firstName' => 'Hans',
             ])
             ->assertForbidden();
@@ -87,7 +87,7 @@ describe('Trainer-Rolle', function () {
 
     it('erhält 403 beim löschen eines trainers', function () {
         $this->actingAs($this->trainer)
-            ->deleteJson('/api/v1/trainers/' . $this->trainer->id)
+            ->deleteJson('/api/v1/trainers/'.$this->trainer->id)
             ->assertForbidden();
     });
 });
@@ -112,13 +112,13 @@ describe('Customer-Rolle', function () {
 
     it('erhält 403 beim anzeigen eines trainers', function () {
         $this->actingAs($this->customer)
-            ->getJson('/api/v1/trainers/' . $this->trainer->id)
+            ->getJson('/api/v1/trainers/'.$this->trainer->id)
             ->assertForbidden();
     });
 
     it('erhält 403 beim aktualisieren eines trainers', function () {
         $this->actingAs($this->customer)
-            ->putJson('/api/v1/trainers/' . $this->trainer->id, [
+            ->putJson('/api/v1/trainers/'.$this->trainer->id, [
                 'firstName' => 'Hans',
             ])
             ->assertForbidden();
@@ -126,7 +126,7 @@ describe('Customer-Rolle', function () {
 
     it('erhält 403 beim löschen eines trainers', function () {
         $this->actingAs($this->customer)
-            ->deleteJson('/api/v1/trainers/' . $this->trainer->id)
+            ->deleteJson('/api/v1/trainers/'.$this->trainer->id)
             ->assertForbidden();
     });
 });
@@ -148,7 +148,7 @@ describe('Unauthenticated', function () {
     });
 
     it('erhält 401 beim löschen eines trainers', function () {
-        $this->deleteJson('/api/v1/trainers/' . $this->trainer->id)
+        $this->deleteJson('/api/v1/trainers/'.$this->trainer->id)
             ->assertUnauthorized();
     });
 });

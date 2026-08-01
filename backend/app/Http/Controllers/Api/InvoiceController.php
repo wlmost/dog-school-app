@@ -10,7 +10,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
 use App\Http\Resources\InvoiceResource;
+use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
@@ -29,9 +31,6 @@ class InvoiceController extends Controller
 
     /**
      * Display a listing of invoices with optional filtering.
-     *
-     * @param Request $request
-     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -47,7 +46,7 @@ class InvoiceController extends Controller
             });
         } elseif ($user->isCustomer()) {
             // Customer sees only their own invoices
-            $customer = \App\Models\Customer::where('user_id', $user->id)->first();
+            $customer = Customer::where('user_id', $user->id)->first();
             if ($customer) {
                 $query->where('customer_id', $customer->id);
             } else {
@@ -91,10 +90,10 @@ class InvoiceController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('invoice_number', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
-                  ->orWhereHas('customer.user', function ($q) use ($search) {
-                      $q->where('first_name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
-                        ->orWhere('last_name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
-                  });
+                    ->orWhereHas('customer.user', function ($q) use ($search) {
+                        $q->where('first_name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
+                            ->orWhere('last_name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
+                    });
             });
         }
 
@@ -106,9 +105,6 @@ class InvoiceController extends Controller
 
     /**
      * Store a newly created invoice.
-     *
-     * @param StoreInvoiceRequest $request
-     * @return InvoiceResource
      */
     public function store(StoreInvoiceRequest $request): InvoiceResource
     {
@@ -117,7 +113,7 @@ class InvoiceController extends Controller
         $invoice = Invoice::create($request->validatedSnakeCase());
 
         // Check if small business regulation applies (no VAT)
-        $isSmallBusiness = \App\Models\Setting::get('company_small_business', false);
+        $isSmallBusiness = Setting::get('company_small_business', false);
         $defaultTaxRate = $isSmallBusiness ? 0 : 19;
 
         // Create invoice items if provided
@@ -127,7 +123,7 @@ class InvoiceController extends Controller
                 $unitPrice = $item['unitPrice'];
                 $quantity = $item['quantity'];
                 $amount = $unitPrice * $quantity;
-                
+
                 $invoice->items()->create([
                     'description' => $item['description'],
                     'quantity' => $quantity,
@@ -148,26 +144,19 @@ class InvoiceController extends Controller
 
     /**
      * Display the specified invoice.
-     *
-     * @param Invoice $invoice
-     * @return InvoiceResource
      */
     public function show(Invoice $invoice): InvoiceResource
     {
         // Load customer for authorization check
         $invoice->load(['customer.user', 'items', 'payments']);
-        
+
         $this->authorize('view', $invoice);
-        
+
         return new InvoiceResource($invoice);
     }
 
     /**
      * Update the specified invoice.
-     *
-     * @param UpdateInvoiceRequest $request
-     * @param Invoice $invoice
-     * @return InvoiceResource
      */
     public function update(UpdateInvoiceRequest $request, Invoice $invoice): InvoiceResource
     {
@@ -180,9 +169,6 @@ class InvoiceController extends Controller
 
     /**
      * Remove the specified invoice.
-     *
-     * @param Invoice $invoice
-     * @return JsonResponse
      */
     public function destroy(Invoice $invoice): JsonResponse
     {
@@ -202,9 +188,6 @@ class InvoiceController extends Controller
 
     /**
      * Mark invoice as paid.
-     *
-     * @param Invoice $invoice
-     * @return InvoiceResource|JsonResponse
      */
     public function markAsPaid(Invoice $invoice): InvoiceResource|JsonResponse
     {
@@ -226,9 +209,6 @@ class InvoiceController extends Controller
 
     /**
      * Get overdue invoices.
-     *
-     * @param Request $request
-     * @return AnonymousResourceCollection
      */
     public function overdue(Request $request): AnonymousResourceCollection
     {
@@ -244,15 +224,12 @@ class InvoiceController extends Controller
 
     /**
      * Generate and download invoice as PDF.
-     *
-     * @param Invoice $invoice
-     * @return Response
      */
     public function downloadPdf(Invoice $invoice): Response
     {
         // Load relationships for authorization and PDF generation
         $invoice->load(['customer.user', 'items', 'payments']);
-        
+
         $this->authorize('view', $invoice);
 
         // Generate PDF
@@ -262,6 +239,6 @@ class InvoiceController extends Controller
             ->setOption('isRemoteEnabled', true);
 
         // Return PDF download
-        return $pdf->download($invoice->invoice_number . '.pdf');
+        return $pdf->download($invoice->invoice_number.'.pdf');
     }
 }

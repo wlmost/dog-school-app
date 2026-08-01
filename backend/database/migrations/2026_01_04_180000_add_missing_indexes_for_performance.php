@@ -13,68 +13,68 @@ return new class extends Migration
     {
         // Add index to customers.trainer_id for faster trainer-customer queries
         Schema::table('customers', function (Blueprint $table) {
-            if (!$this->indexExists('customers', 'customers_trainer_id_index')) {
+            if (! $this->indexExists('customers', 'customers_trainer_id_index')) {
                 $table->index('trainer_id');
             }
         });
 
         // Add indexes for dogs table (customer_id already exists, only add breed)
         Schema::table('dogs', function (Blueprint $table) {
-            if (!$this->indexExists('dogs', 'dogs_breed_index')) {
+            if (! $this->indexExists('dogs', 'dogs_breed_index')) {
                 $table->index('breed');
             }
         });
 
         // Add indexes for courses table for status filtering
         Schema::table('courses', function (Blueprint $table) {
-            if (!$this->indexExists('courses', 'courses_status_index')) {
+            if (! $this->indexExists('courses', 'courses_status_index')) {
                 $table->index('status');
             }
         });
 
         // Add indexes for training_sessions for date and course filtering
         Schema::table('training_sessions', function (Blueprint $table) {
-            if (!$this->indexExists('training_sessions', 'training_sessions_session_date_index')) {
+            if (! $this->indexExists('training_sessions', 'training_sessions_session_date_index')) {
                 $table->index('session_date');
             }
-            if (!$this->indexExists('training_sessions', 'training_sessions_course_id_session_date_index')) {
+            if (! $this->indexExists('training_sessions', 'training_sessions_course_id_session_date_index')) {
                 $table->index(['course_id', 'session_date']); // Composite index for common query
             }
         });
 
         // Add indexes for payments table
         Schema::table('payments', function (Blueprint $table) {
-            if (!$this->indexExists('payments', 'payments_invoice_id_index')) {
+            if (! $this->indexExists('payments', 'payments_invoice_id_index')) {
                 $table->index('invoice_id');
             }
-            if (!$this->indexExists('payments', 'payments_payment_date_index')) {
+            if (! $this->indexExists('payments', 'payments_payment_date_index')) {
                 $table->index('payment_date');
             }
         });
 
         // Add indexes for invoice_items
         Schema::table('invoice_items', function (Blueprint $table) {
-            if (!$this->indexExists('invoice_items', 'invoice_items_invoice_id_index')) {
+            if (! $this->indexExists('invoice_items', 'invoice_items_invoice_id_index')) {
                 $table->index('invoice_id');
             }
         });
 
         // Add composite indexes for common queries on invoices
         Schema::table('invoices', function (Blueprint $table) {
-            if (!$this->indexExists('invoices', 'invoices_customer_id_status_index')) {
+            if (! $this->indexExists('invoices', 'invoices_customer_id_status_index')) {
                 $table->index(['customer_id', 'status']); // For filtering customer invoices by status
             }
-            if (!$this->indexExists('invoices', 'invoices_status_due_date_index')) {
+            if (! $this->indexExists('invoices', 'invoices_status_due_date_index')) {
                 $table->index(['status', 'due_date']); // For finding overdue invoices
             }
         });
 
         // Add composite indexes for common queries on bookings
         Schema::table('bookings', function (Blueprint $table) {
-            if (!$this->indexExists('bookings', 'bookings_customer_id_status_index')) {
+            if (! $this->indexExists('bookings', 'bookings_customer_id_status_index')) {
                 $table->index(['customer_id', 'status']); // For customer bookings by status
             }
-            if (!$this->indexExists('bookings', 'bookings_training_session_id_status_index')) {
+            if (! $this->indexExists('bookings', 'bookings_training_session_id_status_index')) {
                 $table->index(['training_session_id', 'status']); // For session bookings
             }
         });
@@ -90,11 +90,11 @@ return new class extends Migration
     private function indexExists(string $table, string $index): bool
     {
         try {
-            $prefix  = Schema::getConnection()->getTablePrefix();
+            $prefix = Schema::getConnection()->getTablePrefix();
             $indexes = Schema::getIndexes($table);
 
             // The index names stored in the DB are prefixed (e.g. dsa_customers_trainer_id_index)
-            $prefixedIndex = $prefix . $index;
+            $prefixedIndex = $prefix.$index;
 
             foreach ($indexes as $idx) {
                 if ($idx['name'] === $prefixedIndex) {
@@ -103,7 +103,7 @@ return new class extends Migration
             }
 
             return false;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             // Table does not exist yet or other schema error – treat as "index not present"
             return false;
         }

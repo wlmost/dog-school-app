@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateTrainingLogRequest extends FormRequest
@@ -19,7 +20,7 @@ class UpdateTrainingLogRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -42,31 +43,31 @@ class UpdateTrainingLogRequest extends FormRequest
     {
         $validated = $this->validated();
         $result = [];
-        
+
         if (isset($validated['dogId'])) {
             $result['dog_id'] = $validated['dogId'];
         }
-        
+
         if (isset($validated['trainingSessionId'])) {
             $result['training_session_id'] = $validated['trainingSessionId'];
         }
-        
+
         if (isset($validated['trainerId'])) {
             $result['trainer_id'] = $validated['trainerId'];
         }
-        
+
         if (isset($validated['progressNotes'])) {
             $result['progress_notes'] = $validated['progressNotes'];
         }
-        
+
         if (isset($validated['behaviorNotes'])) {
             $result['behavior_notes'] = $validated['behaviorNotes'];
         }
-        
+
         if (isset($validated['homework'])) {
             $result['homework'] = $validated['homework'];
         }
-        
+
         return $result;
     }
 }

@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * AnamnesisQuestion Model
@@ -21,10 +23,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property array|null $options
  * @property bool $is_required
  * @property int $order
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read AnamnesisTemplate $template
- * @property-read \Illuminate\Database\Eloquent\Collection<int, AnamnesisAnswer> $answers
+ * @property-read Collection<int, AnamnesisAnswer> $answers
  */
 class AnamnesisQuestion extends Model
 {

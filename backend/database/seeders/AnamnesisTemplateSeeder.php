@@ -62,7 +62,7 @@ class AnamnesisTemplateSeeder extends Seeder
                     'Ja, vollständig',
                     'Teilweise',
                     'Nein',
-                    'Unbekannt'
+                    'Unbekannt',
                 ]),
             ],
             [
@@ -86,7 +86,7 @@ class AnamnesisTemplateSeeder extends Seeder
                     'Ja, vollständig',
                     'Überwiegend',
                     'In Arbeit',
-                    'Noch nicht begonnen'
+                    'Noch nicht begonnen',
                 ]),
             ],
             [
@@ -146,7 +146,7 @@ class AnamnesisTemplateSeeder extends Seeder
                     'Täglich',
                     'Mehrmals wöchentlich',
                     'Wöchentlich',
-                    'Seltener'
+                    'Seltener',
                 ]),
             ],
             [
@@ -164,7 +164,7 @@ class AnamnesisTemplateSeeder extends Seeder
                     '7',
                     '8',
                     '9',
-                    '10 - sehr stark'
+                    '10 - sehr stark',
                 ]),
             ],
             [
@@ -182,7 +182,7 @@ class AnamnesisTemplateSeeder extends Seeder
                     'Ja, keine medizinischen Ursachen',
                     'Ja, medizinische Ursachen vorhanden',
                     'Nein, noch nicht',
-                    'Nicht notwendig'
+                    'Nicht notwendig',
                 ]),
             ],
             [
@@ -207,7 +207,7 @@ class AnamnesisTemplateSeeder extends Seeder
                     'Vorsichtig, aber positiv',
                     'Ängstlich',
                     'Aggressiv',
-                    'Ignorierend'
+                    'Ignorierend',
                 ]),
             ],
             [
@@ -220,7 +220,7 @@ class AnamnesisTemplateSeeder extends Seeder
                     'Vorsichtig, aber positiv',
                     'Ängstlich bei Fremden',
                     'Aggressiv bei Fremden',
-                    'Nur im Familienkreis sicher'
+                    'Nur im Familienkreis sicher',
                 ]),
             ],
             [
@@ -248,7 +248,7 @@ class AnamnesisTemplateSeeder extends Seeder
                 'options' => json_encode([
                     'Kastriert',
                     'Nicht kastriert',
-                    'Sterilisiert'
+                    'Sterilisiert',
                 ]),
             ],
             [
@@ -291,7 +291,7 @@ class AnamnesisTemplateSeeder extends Seeder
                     'Leichte Einschränkung',
                     'Starke Einschränkung',
                     'Taub',
-                    'Blind'
+                    'Blind',
                 ]),
             ],
             [
@@ -316,7 +316,7 @@ class AnamnesisTemplateSeeder extends Seeder
                     'Gut',
                     'Durchschnittlich',
                     'Unterdurchschnittlich',
-                    'Stark eingeschränkt'
+                    'Stark eingeschränkt',
                 ]),
             ],
             [

@@ -21,21 +21,17 @@ class ContactController extends Controller
 {
     public function __construct(
         private readonly MailConfigService $mailConfigService,
-    ) {
-    }
+    ) {}
 
     /**
      * Send a contact form message.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function send(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'name'    => ['required', 'string', 'max:255'],
-            'email'   => ['required', 'email', 'max:255'],
-            'phone'   => ['nullable', 'string', 'max:50'],
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255'],
+            'phone' => ['nullable', 'string', 'max:50'],
             'subject' => ['required', 'string', 'max:255'],
             'message' => ['required', 'string', 'max:5000'],
         ]);

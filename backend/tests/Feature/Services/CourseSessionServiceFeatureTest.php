@@ -13,9 +13,9 @@ uses(RefreshDatabase::class);
 uses()->group('feature', 'course');
 
 beforeEach(function () {
-    $this->service = new CourseSessionService();
+    $this->service = new CourseSessionService;
     $this->trainer = User::factory()->trainer()->create();
-    $this->course  = Course::factory()->create(['trainer_id' => $this->trainer->id]);
+    $this->course = Course::factory()->create(['trainer_id' => $this->trainer->id]);
 });
 
 // ---------------------------------------------------------------------------
@@ -44,24 +44,24 @@ describe('syncSessions', function () {
     it('legt neue sessions in der datenbank an mit korrekter course_id', function () {
         $sessionData = [
             [
-                'trainer_id'       => $this->trainer->id,
-                'session_date'     => '2025-06-02',
-                'start_time'       => '09:00',
-                'end_time'         => '10:00',
-                'location'         => null,
+                'trainer_id' => $this->trainer->id,
+                'session_date' => '2025-06-02',
+                'start_time' => '09:00',
+                'end_time' => '10:00',
+                'location' => null,
                 'max_participants' => 10,
-                'status'           => 'scheduled',
-                'notes'            => null,
+                'status' => 'scheduled',
+                'notes' => null,
             ],
             [
-                'trainer_id'       => $this->trainer->id,
-                'session_date'     => '2025-06-09',
-                'start_time'       => '09:00',
-                'end_time'         => '10:00',
-                'location'         => null,
+                'trainer_id' => $this->trainer->id,
+                'session_date' => '2025-06-09',
+                'start_time' => '09:00',
+                'end_time' => '10:00',
+                'location' => null,
                 'max_participants' => 10,
-                'status'           => 'scheduled',
-                'notes'            => null,
+                'status' => 'scheduled',
+                'notes' => null,
             ],
         ];
 
@@ -81,7 +81,7 @@ describe('syncSessions', function () {
 
     it('erhält eine gebuchte session und gibt ein warning zurück', function () {
         $session = TrainingSession::factory()->create([
-            'course_id'    => $this->course->id,
+            'course_id' => $this->course->id,
             'session_date' => '2025-06-02',
         ]);
 
@@ -101,7 +101,7 @@ describe('syncSessions', function () {
 
     it('verhindert duplikat-insert wenn neuer termin mit gebuchter session kollidiert', function () {
         $session = TrainingSession::factory()->create([
-            'course_id'    => $this->course->id,
+            'course_id' => $this->course->id,
             'session_date' => '2025-06-02',
         ]);
 
@@ -110,24 +110,24 @@ describe('syncSessions', function () {
         // New sessions list also contains 2025-06-02 — should be skipped
         $sessionData = [
             [
-                'trainer_id'       => $this->trainer->id,
-                'session_date'     => '2025-06-02',
-                'start_time'       => '09:00',
-                'end_time'         => '10:00',
-                'location'         => null,
+                'trainer_id' => $this->trainer->id,
+                'session_date' => '2025-06-02',
+                'start_time' => '09:00',
+                'end_time' => '10:00',
+                'location' => null,
                 'max_participants' => 10,
-                'status'           => 'scheduled',
-                'notes'            => null,
+                'status' => 'scheduled',
+                'notes' => null,
             ],
             [
-                'trainer_id'       => $this->trainer->id,
-                'session_date'     => '2025-06-09',
-                'start_time'       => '09:00',
-                'end_time'         => '10:00',
-                'location'         => null,
+                'trainer_id' => $this->trainer->id,
+                'session_date' => '2025-06-09',
+                'start_time' => '09:00',
+                'end_time' => '10:00',
+                'location' => null,
                 'max_participants' => 10,
-                'status'           => 'scheduled',
-                'notes'            => null,
+                'status' => 'scheduled',
+                'notes' => null,
             ],
         ];
 
@@ -170,8 +170,8 @@ describe('getBookingCount', function () {
     });
 
     it('zählt buchungen anderer sessions nicht mit', function () {
-        $session        = TrainingSession::factory()->create(['course_id' => $this->course->id]);
-        $otherSession   = TrainingSession::factory()->create(['course_id' => $this->course->id]);
+        $session = TrainingSession::factory()->create(['course_id' => $this->course->id]);
+        $otherSession = TrainingSession::factory()->create(['course_id' => $this->course->id]);
 
         Booking::factory()->count(2)->create(['training_session_id' => $session->id]);
         Booking::factory()->count(5)->create(['training_session_id' => $otherSession->id]);

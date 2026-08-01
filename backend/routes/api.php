@@ -78,10 +78,10 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/auth/user', [AuthController::class, 'user']);
     Route::post('/auth/resend-verification', [AuthController::class, 'resendVerification']);
-    
+
     // User registration (Admins and Trainers only) - Authorization handled in RegisterRequest
     Route::post('/auth/register', [AuthController::class, 'register']);
-    
+
     // Admin only routes
     Route::middleware('can:admin')->group(function () {
         // Admin specific routes can go here
@@ -92,10 +92,10 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
             Route::delete('/pricing-items/{pricingItem}', [PricingItemController::class, 'destroy']);
         });
     });
-    
+
     // Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index']);
-    
+
     // Customer Management
     Route::get('/customers/profile', [CustomerController::class, 'profile']);
     Route::apiResource('customers', CustomerController::class);
@@ -103,7 +103,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/customers/{customer}/bookings', [CustomerController::class, 'bookings']);
     Route::get('/customers/{customer}/invoices', [CustomerController::class, 'invoices']);
     Route::get('/customers/{customer}/credits', [CustomerController::class, 'credits']);
-    
+
     // Dog Management
     Route::apiResource('dogs', DogController::class);
     Route::get('/dogs/{dog}/vaccinations', [DogController::class, 'vaccinations']);
@@ -120,19 +120,19 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     // Dog Deletion Requests (admin only actions)
     Route::post('/dog-deletion-requests/{dogDeletionRequest}/approve', [DogDeletionRequestController::class, 'approve']);
     Route::post('/dog-deletion-requests/{dogDeletionRequest}/reject', [DogDeletionRequestController::class, 'reject']);
-    
+
     // Training Session Management
     Route::get('/training-sessions', [TrainingSessionController::class, 'index']);
     Route::get('/training-sessions/{trainingSession}', [TrainingSessionController::class, 'show']);
     Route::get('/training-sessions/{trainingSession}/bookings', [TrainingSessionController::class, 'bookings']);
     Route::get('/training-sessions/{trainingSession}/availability', [TrainingSessionController::class, 'availability']);
-    
+
     // Booking Management
     Route::apiResource('bookings', BookingController::class);
     Route::post('/bookings/{booking}/cancel', [BookingController::class, 'cancel']);
     Route::post('/bookings/{booking}/confirm', [BookingController::class, 'confirm']);
     Route::post('/bookings/{booking}/approve-cancellation', [BookingController::class, 'approveCancellation']);
-    
+
     // Course Management
     Route::apiResource('courses', CourseController::class);
     Route::get('/courses/{course}/sessions', [CourseController::class, 'sessions']);
@@ -145,51 +145,50 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::get('/courses/{course}/runs', [CourseRunController::class, 'index']);
     Route::post('/courses/{course}/runs', [CourseRunController::class, 'store']);
     Route::post('/course-runs/{courseRun}/book', [CourseRunController::class, 'book']);
-    
+
     // Anamnesis Template Management
     Route::apiResource('anamnesis-templates', AnamnesisTemplateController::class);
     Route::get('/anamnesis-templates/{anamnesisTemplate}/questions', [AnamnesisTemplateController::class, 'questions']);
-    
+
     // Anamnesis Response Management
     Route::apiResource('anamnesis-responses', AnamnesisResponseController::class);
     Route::get('/anamnesis-responses/{anamnesisResponse}/pdf', [AnamnesisResponseController::class, 'downloadPdf']);
     Route::post('/anamnesis-responses/{anamnesisResponse}/complete', [AnamnesisResponseController::class, 'complete']);
-    
+
     // Training Log Management
     Route::apiResource('training-logs', TrainingLogController::class);
-    
+
     // Training Attachment Management
     Route::apiResource('training-attachments', TrainingAttachmentController::class)->except(['update']);
     Route::get('/training-attachments/{trainingAttachment}/download', [TrainingAttachmentController::class, 'download'])->name('training-attachments.download');
-    
+
     // Vaccination Management
     Route::apiResource('vaccinations', VaccinationController::class);
     Route::get('/vaccinations/upcoming/list', [VaccinationController::class, 'upcoming']);
     Route::get('/vaccinations/overdue/list', [VaccinationController::class, 'overdue']);
-    
+
     // Credit Package Management
     Route::apiResource('credit-packages', CreditPackageController::class);
     Route::get('/credit-packages/available/list', [CreditPackageController::class, 'available']);
-    
+
     // Customer Credit Management
     Route::apiResource('customer-credits', CustomerCreditController::class);
     Route::post('/customer-credits/{customerCredit}/use', [CustomerCreditController::class, 'useCredit']);
     Route::get('/customer-credits/active/list', [CustomerCreditController::class, 'active']);
-    
+
     // Invoice Management
     Route::apiResource('invoices', InvoiceController::class);
     Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'downloadPdf']);
     Route::post('/invoices/{invoice}/mark-paid', [InvoiceController::class, 'markAsPaid']);
     Route::get('/invoices/overdue/list', [InvoiceController::class, 'overdue']);
-    
-    
+
     // PayPal Integration
     Route::post('/payments/paypal/create-order', [PaymentController::class, 'createPayPalOrder']);
     Route::post('/payments/paypal/capture-order', [PaymentController::class, 'capturePayPalOrder']);
     // Payment Management
     Route::apiResource('payments', PaymentController::class);
     Route::post('/payments/{payment}/mark-completed', [PaymentController::class, 'markAsCompleted']);
-    
+
     // Trainer Options (Admin + Trainer) - reduced fields for select boxes.
     // Must be registered before the apiResource below, otherwise Laravel
     // would match "options" as the {trainer} wildcard of the show route
@@ -216,4 +215,3 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
         Route::delete('/admin/announcements/{announcement}', [AnnouncementController::class, 'destroy']);
     });
 });
-
