@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
 /**
  * Dog Model
@@ -20,7 +22,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property int $customer_id
  * @property string $name
  * @property string|null $breed
- * @property \Illuminate\Support\Carbon|null $date_of_birth
+ * @property Carbon|null $date_of_birth
  * @property string|null $gender
  * @property bool $neutered
  * @property float|null $weight
@@ -29,17 +31,17 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * @property string|null $veterinarian_contact
  * @property string|null $medical_notes
  * @property string|null $profile_image
- * @property \Illuminate\Support\Carbon|null $owner_since
+ * @property Carbon|null $owner_since
  * @property string|null $age_at_acquisition
  * @property string|null $origin
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property \Illuminate\Support\Carbon|null $deleted_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property Carbon|null $deleted_at
  * @property-read Customer $customer
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Vaccination> $vaccinations
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Booking> $bookings
- * @property-read \Illuminate\Database\Eloquent\Collection<int, AnamnesisResponse> $anamnesisResponses
- * @property-read \Illuminate\Database\Eloquent\Collection<int, TrainingLog> $trainingLogs
+ * @property-read Collection<int, Vaccination> $vaccinations
+ * @property-read Collection<int, Booking> $bookings
+ * @property-read Collection<int, AnamnesisResponse> $anamnesisResponses
+ * @property-read Collection<int, TrainingLog> $trainingLogs
  */
 class Dog extends Model
 {
@@ -135,7 +137,7 @@ class Dog extends Model
      */
     protected function getAgeAttribute(): ?int
     {
-        if (!$this->date_of_birth) {
+        if (! $this->date_of_birth) {
             return null;
         }
 

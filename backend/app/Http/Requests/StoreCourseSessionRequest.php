@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -24,18 +25,18 @@ class StoreCourseSessionRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            'sessionDate'     => ['required', 'date'],
-            'startTime'       => ['required', 'date_format:H:i'],
-            'endTime'         => ['required', 'date_format:H:i', 'after:startTime'],
-            'location'        => ['nullable', 'string', 'max:255'],
+            'sessionDate' => ['required', 'date'],
+            'startTime' => ['required', 'date_format:H:i'],
+            'endTime' => ['required', 'date_format:H:i', 'after:startTime'],
+            'location' => ['nullable', 'string', 'max:255'],
             'maxParticipants' => ['nullable', 'integer', 'min:1', 'max:50'],
-            'status'          => ['nullable', 'in:scheduled,cancelled,completed'],
-            'notes'           => ['nullable', 'string', 'max:1000'],
+            'status' => ['nullable', 'in:scheduled,cancelled,completed'],
+            'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
 
@@ -47,9 +48,9 @@ class StoreCourseSessionRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'sessionDate'     => 'session date',
-            'startTime'       => 'start time',
-            'endTime'         => 'end time',
+            'sessionDate' => 'session date',
+            'startTime' => 'start time',
+            'endTime' => 'end time',
             'maxParticipants' => 'maximum participants',
         ];
     }

@@ -1,0 +1,769 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Class App\\Mail\\PaymentReminder constructor invoked with 2 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: app/Console/Commands/SendTestEmail.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Booking\:\:\$booking_number\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/TestEmailTemplates.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Invoice\:\:\$paid_amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/TestEmailTemplates.php
+
+		-
+			message: '#^Instantiated class App\\Mail\\BookingConfirmationMail not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Console/Commands/TestEmailTemplates.php
+
+		-
+			message: '#^Instantiated class App\\Mail\\InvoiceCreatedMail not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Console/Commands/TestEmailTemplates.php
+
+		-
+			message: '#^Instantiated class App\\Mail\\WelcomeMail not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Console/Commands/TestEmailTemplates.php
+
+		-
+			message: '#^Parameter \#1 \$mailable of method Illuminate\\Mail\\PendingMail\:\:send\(\) expects Illuminate\\Contracts\\Mail\\Mailable, App\\Mail\\BookingConfirmationMail given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/TestEmailTemplates.php
+
+		-
+			message: '#^Parameter \#1 \$mailable of method Illuminate\\Mail\\PendingMail\:\:send\(\) expects Illuminate\\Contracts\\Mail\\Mailable, App\\Mail\\InvoiceCreatedMail given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/TestEmailTemplates.php
+
+		-
+			message: '#^Parameter \#1 \$mailable of method Illuminate\\Mail\\PendingMail\:\:send\(\) expects Illuminate\\Contracts\\Mail\\Mailable, App\\Mail\\WelcomeMail given\.$#'
+			identifier: argument.type
+			count: 1
+			path: app/Console/Commands/TestEmailTemplates.php
+
+		-
+			message: '#^If condition is always true\.$#'
+			identifier: if.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/Api/AuthController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Customer\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/BookingController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/BookingController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Course\:\:\$level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/CourseController.php
+
+		-
+			message: '#^Instanceof between Illuminate\\Support\\Carbon and DateTimeInterface will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/Api/CourseController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/Api/CourseController.php
+
+		-
+			message: '#^Cannot call method isPast\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Controllers/Api/CustomerCreditController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\Api\\CustomerCreditController\:\:active\(\) should return Illuminate\\Http\\Resources\\Json\\AnonymousResourceCollection but returns Illuminate\\Http\\JsonResponse\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Http/Controllers/Api/CustomerCreditController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$session_date\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Api/DashboardController.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Http/Controllers/Api/DashboardController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>full_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/DashboardController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/DashboardController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/DogController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/DogDeletionRequestController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type App\\Models\\Dog\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Api/DogDeletionRequestController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:completed\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Api/InvoiceController.php
+
+		-
+			message: '#^Call to an undefined method App\\Models\\User\:\:hasRole\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Controllers/Api/PaymentController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:completed\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Http/Controllers/Api/PaymentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Api/TrainingAttachmentController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Requests/UpdateCustomerRequest.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Http/Resources/AnamnesisAnswerResource.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Http/Resources/AnamnesisQuestionResource.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 2
+			path: app/Http/Resources/AnamnesisResponseResource.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>fullName" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/AnamnesisResponseResource.php
+
+		-
+			message: '#^Method App\\Http\\Resources\\AnamnesisTemplateResource\:\:resolveQuestionsCount\(\) never returns null so it can be removed from the return type\.$#'
+			identifier: return.unusedType
+			count: 1
+			path: app/Http/Resources/AnamnesisTemplateResource.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between int\<0, max\> and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Http/Resources/AnamnesisTemplateResource.php
+
+		-
+			message: '#^Unreachable statement \- code above always terminates\.$#'
+			identifier: deadCode.unreachable
+			count: 1
+			path: app/Http/Resources/AnamnesisTemplateResource.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/AnnouncementResource.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/BookingResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CourseResource\:\:\$level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CourseResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\CourseResource\:\:\$price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/CourseResource.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/CourseRunResource.php
+
+		-
+			message: '#^Cannot call method toDateString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Http/Resources/CustomerCreditResource.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/CustomerCreditResource.php
+
+		-
+			message: '#^Cannot call method toDateString\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 2
+			path: app/Http/Resources/InvoiceResource.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/InvoiceResource.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type string\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/InvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\PaymentResource\:\:\$notes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/PaymentResource.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/PaymentResource.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/TrainingAttachmentResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\TrainingSessionResource\:\:\$duration\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/TrainingSessionResource.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/TrainingSessionResource.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/VaccinationResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Mail/BookingCancellationApproved.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 2
+			path: app/Mail/BookingCancellationApproved.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Mail/BookingCancellationApproved.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$course\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Mail/BookingConfirmation.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 2
+			path: app/Mail/BookingConfirmation.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 2
+			path: app/Mail/InvoiceCreated.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 2
+			path: app/Mail/PaymentReminder.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 2
+			path: app/Mail/WelcomeEmail.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\AnamnesisAnswer\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/AnamnesisAnswer.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\AnamnesisQuestion\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/AnamnesisQuestion.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\AnamnesisResponse\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/AnamnesisResponse.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\AnamnesisTemplate\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/AnamnesisTemplate.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\Announcement\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/Announcement.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$session_date\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Models/Booking.php
+
+		-
+			message: '#^Method App\\Models\\Booking\:\:courseRun\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\CourseRun, App\\Models\\Booking\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\CourseRun, \$this\(App\\Models\\Booking\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Booking.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\Booking\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/Booking.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>cancellation_deadline_hours" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Models/Booking.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:isFull\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Models/Course.php
+
+		-
+			message: '#^Generic type Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\CourseRun\> in PHPDoc tag @return does not specify all template types of class Illuminate\\Database\\Eloquent\\Relations\\HasMany\: TRelatedModel, TDeclaringModel$#'
+			identifier: generics.lessTypes
+			count: 1
+			path: app/Models/Course.php
+
+		-
+			message: '#^Method App\\Models\\Course\:\:runs\(\) should return Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\CourseRun\> but returns Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\CourseRun, \$this\(App\\Models\\Course\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Course.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\Course\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/Course.php
+
+		-
+			message: '#^Generic type Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\Booking\> in PHPDoc tag @return does not specify all template types of class Illuminate\\Database\\Eloquent\\Relations\\HasMany\: TRelatedModel, TDeclaringModel$#'
+			identifier: generics.lessTypes
+			count: 1
+			path: app/Models/CourseRun.php
+
+		-
+			message: '#^Generic type Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\TrainingSession\> in PHPDoc tag @return does not specify all template types of class Illuminate\\Database\\Eloquent\\Relations\\HasMany\: TRelatedModel, TDeclaringModel$#'
+			identifier: generics.lessTypes
+			count: 1
+			path: app/Models/CourseRun.php
+
+		-
+			message: '#^Method App\\Models\\CourseRun\:\:bookings\(\) should return Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\Booking\> but returns Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\Booking, \$this\(App\\Models\\CourseRun\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/CourseRun.php
+
+		-
+			message: '#^Method App\\Models\\CourseRun\:\:course\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Course, App\\Models\\CourseRun\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Course, \$this\(App\\Models\\CourseRun\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/CourseRun.php
+
+		-
+			message: '#^Method App\\Models\\CourseRun\:\:sessions\(\) should return Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\TrainingSession\> but returns Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\TrainingSession, \$this\(App\\Models\\CourseRun\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/CourseRun.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\CourseRun\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/CourseRun.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\CreditPackage\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/CreditPackage.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\Customer\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/Customer.php
+
+		-
+			message: '#^Cannot call method isFuture\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/CustomerCredit.php
+
+		-
+			message: '#^Cannot call method isPast\(\) on string\.$#'
+			identifier: method.nonObject
+			count: 1
+			path: app/Models/CustomerCredit.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\CustomerCredit\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/CustomerCredit.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\Dog\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/Dog.php
+
+		-
+			message: '#^Method App\\Models\\DogRegistrationRequest\:\:customer\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Customer, App\\Models\\DogRegistrationRequest\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\Customer, \$this\(App\\Models\\DogRegistrationRequest\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/DogRegistrationRequest.php
+
+		-
+			message: '#^Method App\\Models\\DogRegistrationRequest\:\:reviewer\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\User, App\\Models\\DogRegistrationRequest\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\User, \$this\(App\\Models\\DogRegistrationRequest\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/DogRegistrationRequest.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\DogRegistrationRequest\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/DogRegistrationRequest.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\Invoice\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/Invoice.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\InvoiceItem\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/InvoiceItem.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\Payment\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/Payment.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\PricingItem\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/PricingItem.php
+
+		-
+			message: '#^Method App\\Models\\Setting\:\:set\(\) should return static\(App\\Models\\Setting\) but returns App\\Models\\Setting\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/Setting.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\Setting\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/Setting.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\TrainingAttachment\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/TrainingAttachment.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\TrainingLog\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/TrainingLog.php
+
+		-
+			message: '#^Method App\\Models\\TrainingSession\:\:courseRun\(\) should return Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\CourseRun, App\\Models\\TrainingSession\> but returns Illuminate\\Database\\Eloquent\\Relations\\BelongsTo\<App\\Models\\CourseRun, \$this\(App\\Models\\TrainingSession\)\>\.$#'
+			identifier: return.type
+			count: 1
+			path: app/Models/TrainingSession.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\TrainingSession\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/TrainingSession.php
+
+		-
+			message: '#^PHPDoc type array\<int, string\> of property App\\Models\\Vaccination\:\:\$fillable is not covariant with PHPDoc type list\<string\> of overridden property Illuminate\\Database\\Eloquent\\Model\:\:\$fillable\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: app/Models/Vaccination.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Policies/AnamnesisResponsePolicy.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Policies/CustomerPolicy.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Customer\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Policies/DogPolicy.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Policies/TrainingLogPolicy.php
+
+		-
+			message: '#^Instanceof between Illuminate\\Support\\Carbon and DateTimeInterface will always evaluate to true\.$#'
+			identifier: instanceof.alwaysTrue
+			count: 1
+			path: app/Services/CourseSessionService.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between int and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Services/CourseSessionService.php
+
+		-
+			message: '#^Access to private property PaypalServerSdkLib\\Models\\AmountWithBreakdown\:\:\$currencyCode\.$#'
+			identifier: property.private
+			count: 1
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Access to private property PaypalServerSdkLib\\Models\\AmountWithBreakdown\:\:\$value\.$#'
+			identifier: property.private
+			count: 1
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Access to private property PaypalServerSdkLib\\Models\\OrderRequest\:\:\$applicationContext\.$#'
+			identifier: property.private
+			count: 1
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Access to private property PaypalServerSdkLib\\Models\\OrderRequest\:\:\$intent\.$#'
+			identifier: property.private
+			count: 1
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Access to private property PaypalServerSdkLib\\Models\\OrderRequest\:\:\$purchaseUnits\.$#'
+			identifier: property.private
+			count: 1
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Access to private property PaypalServerSdkLib\\Models\\PurchaseUnitRequest\:\:\$amount\.$#'
+			identifier: property.private
+			count: 1
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Access to private property PaypalServerSdkLib\\Models\\PurchaseUnitRequest\:\:\$description\.$#'
+			identifier: property.private
+			count: 1
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Access to private property PaypalServerSdkLib\\Models\\PurchaseUnitRequest\:\:\$referenceId\.$#'
+			identifier: property.private
+			count: 1
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Access to property \$brandName on an unknown class PaypalServerSdkLib\\Models\\ApplicationContext\.$#'
+			identifier: class.notFound
+			count: 2
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Access to property \$cancelUrl on an unknown class PaypalServerSdkLib\\Models\\ApplicationContext\.$#'
+			identifier: class.notFound
+			count: 2
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Access to property \$returnUrl on an unknown class PaypalServerSdkLib\\Models\\ApplicationContext\.$#'
+			identifier: class.notFound
+			count: 2
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Call to an undefined method PaypalServerSdkLib\\Controllers\\OrdersController\:\:ordersCapture\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Call to an undefined method PaypalServerSdkLib\\Controllers\\OrdersController\:\:ordersCreate\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Call to an undefined method PaypalServerSdkLib\\Controllers\\OrdersController\:\:ordersGet\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Class PaypalServerSdkLib\\Models\\AmountWithBreakdown constructor invoked with 0 parameters, 2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Class PaypalServerSdkLib\\Models\\OrderRequest constructor invoked with 0 parameters, 2 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Class PaypalServerSdkLib\\Models\\PurchaseUnitRequest constructor invoked with 0 parameters, 1 required\.$#'
+			identifier: arguments.count
+			count: 1
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Instantiated class PaypalServerSdkLib\\Models\\ApplicationContext not found\.$#'
+			identifier: class.notFound
+			count: 1
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Property PaypalServerSdkLib\\Models\\OrderRequest\:\:\$applicationContext \(PaypalServerSdkLib\\Models\\OrderApplicationContext\|null\) does not accept PaypalServerSdkLib\\Models\\ApplicationContext\.$#'
+			identifier: assign.propertyType
+			count: 1
+			path: app/Services/PayPalService.php
+
+		-
+			message: '#^Call to an undefined method Faker\\Generator\:\:secondaryAddress\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: database/factories/CustomerFactory.php
+
+		-
+			message: '#^PHPDoc type class\-string\<Illuminate\\Database\\Eloquent\\Model\> of property Database\\Factories\\TrainingAttachmentFactory\:\:\$model is not covariant with PHPDoc type class\-string\<App\\Models\\TrainingAttachment\> of overridden property Illuminate\\Database\\Eloquent\\Factories\\Factory\<App\\Models\\TrainingAttachment\>\:\:\$model\.$#'
+			identifier: property.phpDocType
+			count: 1
+			path: database/factories/TrainingAttachmentFactory.php
+
+		-
+			message: '#^Function error not found\.$#'
+			identifier: function.notFound
+			count: 1
+			path: routes/console.php

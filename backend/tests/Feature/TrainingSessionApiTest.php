@@ -45,7 +45,7 @@ test('sessions can be filtered by course', function () {
     TrainingSession::factory()->count(3)->create();
 
     $response = $this->actingAs($this->admin)
-        ->getJson('/api/v1/training-sessions?courseId=' . $course->id)
+        ->getJson('/api/v1/training-sessions?courseId='.$course->id)
         ->assertOk();
 
     expect($response->json('data'))->toHaveCount(2);
@@ -57,7 +57,7 @@ test('sessions can be filtered by trainer', function () {
     TrainingSession::factory()->count(3)->create();
 
     $response = $this->actingAs($this->admin)
-        ->getJson('/api/v1/training-sessions?trainerId=' . $trainer->id)
+        ->getJson('/api/v1/training-sessions?trainerId='.$trainer->id)
         ->assertOk();
 
     expect($response->json('data'))->toHaveCount(2);
@@ -125,7 +125,7 @@ test('user can view training session details', function () {
     $session = TrainingSession::factory()->create();
 
     $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/training-sessions/' . $session->id)
+        ->getJson('/api/v1/training-sessions/'.$session->id)
         ->assertOk()
         ->assertJsonPath('data.id', $session->id)
         ->assertJsonStructure([
@@ -150,7 +150,7 @@ test('user can view bookings for a training session', function () {
     Booking::factory()->count(2)->create(); // Other bookings
 
     $response = $this->actingAs($this->admin)
-        ->getJson('/api/v1/training-sessions/' . $session->id . '/bookings')
+        ->getJson('/api/v1/training-sessions/'.$session->id.'/bookings')
         ->assertOk();
 
     expect($response->json('data'))->toHaveCount(3);
@@ -169,7 +169,7 @@ test('can check training session availability', function () {
     ]);
 
     $response = $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/training-sessions/' . $session->id . '/availability')
+        ->getJson('/api/v1/training-sessions/'.$session->id.'/availability')
         ->assertOk();
 
     expect($response->json('sessionId'))->toBe($session->id);
@@ -193,7 +193,7 @@ test('availability shows session as full when max participants reached', functio
     ]);
 
     $response = $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/training-sessions/' . $session->id . '/availability')
+        ->getJson('/api/v1/training-sessions/'.$session->id.'/availability')
         ->assertOk();
 
     expect($response->json('availableSpots'))->toBe(0);
@@ -218,7 +218,7 @@ test('availability does not count cancelled bookings', function () {
     ]);
 
     $response = $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/training-sessions/' . $session->id . '/availability')
+        ->getJson('/api/v1/training-sessions/'.$session->id.'/availability')
         ->assertOk();
 
     expect($response->json('currentBookings'))->toBe(2);

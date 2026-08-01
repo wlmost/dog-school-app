@@ -9,7 +9,7 @@ use App\Models\Invoice;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Invoice>
+ * @extends Factory<Invoice>
  */
 class InvoiceFactory extends Factory
 {
@@ -19,7 +19,7 @@ class InvoiceFactory extends Factory
     {
         return [
             'customer_id' => Customer::factory(),
-            'invoice_number' => 'INV-' . fake()->unique()->numerify('######'),
+            'invoice_number' => 'INV-'.fake()->unique()->numerify('######'),
             'status' => 'draft',
             'total_amount' => fake()->randomFloat(2, 50, 500),
             'issue_date' => now(),

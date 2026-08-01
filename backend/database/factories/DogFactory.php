@@ -9,7 +9,7 @@ use App\Models\Dog;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Dog>
+ * @extends Factory<Dog>
  */
 class DogFactory extends Factory
 {

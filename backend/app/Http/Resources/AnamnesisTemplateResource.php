@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\AnamnesisTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Anamnesis Template Resource
  *
- * @mixin \App\Models\AnamnesisTemplate
+ * @mixin AnamnesisTemplate
  */
 class AnamnesisTemplateResource extends JsonResource
 {
@@ -29,7 +30,7 @@ class AnamnesisTemplateResource extends JsonResource
             'questionsCount' => $this->resolveQuestionsCount(),
             'responsesCount' => $this->when(
                 $this->relationLoaded('responses'),
-                fn() => $this->responses->count()
+                fn () => $this->responses->count()
             ),
         ];
     }

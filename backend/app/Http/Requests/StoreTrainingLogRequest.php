@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreTrainingLogRequest extends FormRequest
@@ -19,7 +20,7 @@ class StoreTrainingLogRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -41,7 +42,7 @@ class StoreTrainingLogRequest extends FormRequest
     public function validatedSnakeCase(): array
     {
         $validated = $this->validated();
-        
+
         return [
             'dog_id' => $validated['dogId'],
             'training_session_id' => $validated['trainingSessionId'] ?? null,

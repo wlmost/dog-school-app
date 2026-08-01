@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 use App\Models\Course;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
-uses(Tests\TestCase::class, RefreshDatabase::class);
+uses(TestCase::class, RefreshDatabase::class);
 uses()->group('unit', 'course');
 
 it('speichert recurrence_rule als array und liest es korrekt zurück', function () {

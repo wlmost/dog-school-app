@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Http\Requests\Concerns\SanitizesHtmlContent;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
 
@@ -29,7 +30,7 @@ class UpdateCourseRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -106,7 +107,7 @@ class UpdateCourseRequest extends FormRequest
     {
         $sessions = $this->validated()['sessions'] ?? null;
 
-        if (!is_array($sessions) || empty($sessions)) {
+        if (! is_array($sessions) || empty($sessions)) {
             return null;
         }
 
@@ -125,7 +126,7 @@ class UpdateCourseRequest extends FormRequest
     {
         $rule = $this->validated()['recurrenceRule'] ?? null;
 
-        if (!is_array($rule) || empty($rule)) {
+        if (! is_array($rule) || empty($rule)) {
             return null;
         }
 
@@ -152,4 +153,3 @@ class UpdateCourseRequest extends FormRequest
         ];
     }
 }
-

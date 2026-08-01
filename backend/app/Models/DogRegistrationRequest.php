@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * DogRegistrationRequest Model
@@ -19,18 +20,18 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $name
  * @property string|null $breed
  * @property string|null $gender
- * @property \Illuminate\Support\Carbon|null $date_of_birth
+ * @property Carbon|null $date_of_birth
  * @property bool $neutered
  * @property string|null $chip_number
- * @property \Illuminate\Support\Carbon|null $owner_since
+ * @property Carbon|null $owner_since
  * @property string|null $age_at_acquisition
- * @property string|null $origin  breeder|shelter|private|unknown
+ * @property string|null $origin breeder|shelter|private|unknown
  * @property string|null $notes
- * @property string $status  pending|approved|rejected
+ * @property string $status pending|approved|rejected
  * @property int|null $reviewed_by
- * @property \Illuminate\Support\Carbon|null $reviewed_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $reviewed_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read Customer $customer
  * @property-read User|null $reviewer
  */
@@ -69,11 +70,11 @@ class DogRegistrationRequest extends Model
     {
         return [
             'date_of_birth' => 'date',
-            'neutered'      => 'boolean',
-            'owner_since'   => 'date',
-            'reviewed_at'   => 'datetime',
-            'created_at'    => 'datetime',
-            'updated_at'    => 'datetime',
+            'neutered' => 'boolean',
+            'owner_since' => 'date',
+            'reviewed_at' => 'datetime',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 
@@ -107,8 +108,6 @@ class DogRegistrationRequest extends Model
 
     /**
      * Determine whether this request is still pending review.
-     *
-     * @return bool
      */
     public function isPending(): bool
     {
@@ -117,8 +116,6 @@ class DogRegistrationRequest extends Model
 
     /**
      * Determine whether this request has been approved.
-     *
-     * @return bool
      */
     public function isApproved(): bool
     {
@@ -127,8 +124,6 @@ class DogRegistrationRequest extends Model
 
     /**
      * Determine whether this request has been rejected.
-     *
-     * @return bool
      */
     public function isRejected(): bool
     {

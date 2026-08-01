@@ -9,6 +9,7 @@ use App\Http\Resources\BookingResource;
 use App\Http\Resources\TrainingSessionResource;
 use App\Models\TrainingSession;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -23,9 +24,6 @@ class TrainingSessionController extends Controller
 
     /**
      * Display a listing of training sessions with optional filtering.
-     *
-     * @param Request $request
-     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -73,9 +71,6 @@ class TrainingSessionController extends Controller
 
     /**
      * Display the specified training session.
-     *
-     * @param TrainingSession $trainingSession
-     * @return TrainingSessionResource
      */
     public function show(TrainingSession $trainingSession): TrainingSessionResource
     {
@@ -86,9 +81,6 @@ class TrainingSessionController extends Controller
 
     /**
      * Get bookings for a specific training session.
-     *
-     * @param TrainingSession $trainingSession
-     * @return AnonymousResourceCollection
      */
     public function bookings(TrainingSession $trainingSession): AnonymousResourceCollection
     {
@@ -104,11 +96,8 @@ class TrainingSessionController extends Controller
 
     /**
      * Get availability information for a training session.
-     *
-     * @param TrainingSession $trainingSession
-     * @return \Illuminate\Http\JsonResponse
      */
-    public function availability(TrainingSession $trainingSession): \Illuminate\Http\JsonResponse
+    public function availability(TrainingSession $trainingSession): JsonResponse
     {
         $confirmedBookings = $trainingSession->bookings()
             ->whereIn('status', ['pending', 'confirmed'])

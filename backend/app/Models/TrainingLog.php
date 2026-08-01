@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * TrainingLog Model
@@ -18,16 +20,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $dog_id
  * @property int|null $training_session_id
  * @property int $trainer_id
- * @property \Illuminate\Support\Carbon $log_date
+ * @property Carbon $log_date
  * @property string $title
  * @property string|null $notes
  * @property string|null $recommendations
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read Dog $dog
  * @property-read TrainingSession|null $session
  * @property-read User $trainer
- * @property-read \Illuminate\Database\Eloquent\Collection<int, TrainingAttachment> $attachments
+ * @property-read Collection<int, TrainingAttachment> $attachments
  */
 class TrainingLog extends Model
 {

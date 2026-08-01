@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\Dog;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Storage;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
  *
  * Transforms dog model into a consistent JSON response format.
  *
- * @mixin \App\Models\Dog
+ * @mixin Dog
  */
 class DogResource extends JsonResource
 {
@@ -48,7 +49,7 @@ class DogResource extends JsonResource
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
             'deletedAt' => $this->deleted_at?->toISOString(),
-            
+
             // Conditional relationships
             'customer' => new CustomerResource($this->whenLoaded('customer')),
             'vaccinations' => VaccinationResource::collection($this->whenLoaded('vaccinations')),

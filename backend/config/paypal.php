@@ -79,7 +79,7 @@ return [
     |
     */
 
-    'return_url' => env('APP_URL') . '/payment/success',
+    'return_url' => env('APP_URL').'/payment/success',
 
     /*
     |--------------------------------------------------------------------------
@@ -90,6 +90,6 @@ return [
     |
     */
 
-    'cancel_url' => env('APP_URL') . '/payment/cancel',
+    'cancel_url' => env('APP_URL').'/payment/cancel',
 
 ];

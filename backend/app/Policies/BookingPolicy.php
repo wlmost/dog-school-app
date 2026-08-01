@@ -77,7 +77,7 @@ class BookingPolicy
 
         // Customers can cancel their own bookings if not yet attended
         if ($user->isCustomer() && $booking->customer->user_id === $user->id) {
-            return $booking->status !== 'cancelled' && !$booking->attended;
+            return $booking->status !== 'cancelled' && ! $booking->attended;
         }
 
         return false;

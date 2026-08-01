@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * Course Model
@@ -23,16 +25,16 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int|null $duration_minutes
  * @property float|null $price_per_session
  * @property int|null $total_sessions
- * @property \Illuminate\Support\Carbon|null $start_date
- * @property \Illuminate\Support\Carbon|null $end_date
+ * @property Carbon|null $start_date
+ * @property Carbon|null $end_date
  * @property string $status
  * @property int $cancellation_deadline_hours
  * @property array|null $recurrence_rule
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read User $trainer
- * @property-read \Illuminate\Database\Eloquent\Collection<int, TrainingSession> $sessions
- * @property-read \Illuminate\Database\Eloquent\Collection<int, CourseRun> $runs
+ * @property-read Collection<int, TrainingSession> $sessions
+ * @property-read Collection<int, CourseRun> $runs
  */
 class Course extends Model
 {
@@ -124,7 +126,7 @@ class Course extends Model
             ->get();
 
         foreach ($upcomingSessions as $session) {
-            if (!$session->isFull()) {
+            if (! $session->isFull()) {
                 return false;
             }
         }

@@ -6,11 +6,10 @@ namespace Database\Factories;
 
 use App\Models\Course;
 use App\Models\TrainingSession;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\TrainingSession>
+ * @extends Factory<TrainingSession>
  */
 class TrainingSessionFactory extends Factory
 {
@@ -19,7 +18,7 @@ class TrainingSessionFactory extends Factory
     public function definition(): array
     {
         $course = Course::factory()->create();
-        
+
         return [
             'course_id' => $course->id,
             'trainer_id' => $course->trainer_id,

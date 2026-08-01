@@ -18,7 +18,7 @@ class SecurityHeaders
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -40,7 +40,7 @@ class SecurityHeaders
         $response->headers->set('Permissions-Policy', 'geolocation=(), microphone=(), camera=()');
 
         // Content Security Policy (CSP)
-        if (!app()->environment('local')) {
+        if (! app()->environment('local')) {
             $csp = [
                 "default-src 'self'",
                 "script-src 'self' 'unsafe-inline' https://www.paypal.com https://www.sandbox.paypal.com",
@@ -48,7 +48,7 @@ class SecurityHeaders
                 "img-src 'self' data: https:",
                 "font-src 'self' data:",
                 "connect-src 'self' https://api-m.paypal.com https://api-m.sandbox.paypal.com",
-                "frame-src https://www.paypal.com https://www.sandbox.paypal.com",
+                'frame-src https://www.paypal.com https://www.sandbox.paypal.com',
                 "object-src 'none'",
                 "base-uri 'self'",
                 "form-action 'self'",
@@ -57,7 +57,7 @@ class SecurityHeaders
         }
 
         // HTTP Strict Transport Security (HSTS) - only in production with HTTPS
-        if (!app()->environment('local') && $request->secure()) {
+        if (! app()->environment('local') && $request->secure()) {
             $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
         }
 

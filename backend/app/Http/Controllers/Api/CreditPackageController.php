@@ -26,9 +26,6 @@ class CreditPackageController extends Controller
 
     /**
      * Display a listing of credit packages.
-     *
-     * @param Request $request
-     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -36,7 +33,7 @@ class CreditPackageController extends Controller
 
         // Search by name
         if ($request->has('search')) {
-            $query->where('name', DatabaseHelper::caseInsensitiveLike(), '%' . $request->input('search') . '%');
+            $query->where('name', DatabaseHelper::caseInsensitiveLike(), '%'.$request->input('search').'%');
         }
 
         // Filter by minimum credits
@@ -59,9 +56,6 @@ class CreditPackageController extends Controller
 
     /**
      * Store a newly created credit package.
-     *
-     * @param StoreCreditPackageRequest $request
-     * @return CreditPackageResource
      */
     public function store(StoreCreditPackageRequest $request): CreditPackageResource
     {
@@ -74,9 +68,6 @@ class CreditPackageController extends Controller
 
     /**
      * Display the specified credit package.
-     *
-     * @param CreditPackage $creditPackage
-     * @return CreditPackageResource
      */
     public function show(CreditPackage $creditPackage): CreditPackageResource
     {
@@ -85,10 +76,6 @@ class CreditPackageController extends Controller
 
     /**
      * Update the specified credit package.
-     *
-     * @param UpdateCreditPackageRequest $request
-     * @param CreditPackage $creditPackage
-     * @return CreditPackageResource
      */
     public function update(UpdateCreditPackageRequest $request, CreditPackage $creditPackage): CreditPackageResource
     {
@@ -101,9 +88,6 @@ class CreditPackageController extends Controller
 
     /**
      * Remove the specified credit package.
-     *
-     * @param CreditPackage $creditPackage
-     * @return JsonResponse
      */
     public function destroy(CreditPackage $creditPackage): JsonResponse
     {
@@ -123,8 +107,6 @@ class CreditPackageController extends Controller
 
     /**
      * Get all credit packages available for purchase.
-     *
-     * @return AnonymousResourceCollection
      */
     public function available(): AnonymousResourceCollection
     {

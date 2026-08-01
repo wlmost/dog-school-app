@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Models\Dog;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreAnamnesisResponseRequest extends FormRequest
@@ -20,7 +21,7 @@ class StoreAnamnesisResponseRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -61,10 +62,10 @@ class StoreAnamnesisResponseRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
-            if (!$validator->failed()) {
+            if (! $validator->failed()) {
                 // Verify the user has access to the dog
                 $dog = Dog::find($this->input('dogId'));
-                if ($dog && !$this->user()->can('view', $dog)) {
+                if ($dog && ! $this->user()->can('view', $dog)) {
                     $validator->errors()->add('dogId', 'You do not have access to this dog.');
                 }
             }

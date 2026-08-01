@@ -86,7 +86,7 @@ class TrainingLogController extends Controller
     {
         // Load dog relation for policy check
         $trainingLog->load('dog');
-        
+
         $this->authorize('view', $trainingLog);
 
         $trainingLog->load(['session', 'trainer', 'attachments']);

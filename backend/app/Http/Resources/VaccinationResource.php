@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\Vaccination;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Vaccination Resource
  *
- * @mixin \App\Models\Vaccination
+ * @mixin Vaccination
  */
 class VaccinationResource extends JsonResource
 {
@@ -19,7 +20,7 @@ class VaccinationResource extends JsonResource
         return [
             'id' => $this->id,
             'dogId' => $this->dog_id,
-            'dog' => $this->whenLoaded('dog', fn() => new DogResource($this->dog)),
+            'dog' => $this->whenLoaded('dog', fn () => new DogResource($this->dog)),
             'vaccinationType' => $this->vaccination_type,
             'vaccinationDate' => $this->vaccination_date?->toDateString(),
             'nextDueDate' => $this->next_due_date?->toDateString(),

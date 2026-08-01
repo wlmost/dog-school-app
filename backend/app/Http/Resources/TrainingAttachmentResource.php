@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\TrainingAttachment;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Training Attachment Resource
  *
- * @mixin \App\Models\TrainingAttachment
+ * @mixin TrainingAttachment
  */
 class TrainingAttachmentResource extends JsonResource
 {

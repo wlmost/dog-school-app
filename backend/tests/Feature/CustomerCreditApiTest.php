@@ -48,7 +48,7 @@ test('customer can list their own credits', function () {
     CustomerCredit::factory()->count(3)->create(); // Other credits
 
     $response = $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/customer-credits?customerId=' . $this->customer->id)
+        ->getJson('/api/v1/customer-credits?customerId='.$this->customer->id)
         ->assertOk();
 
     expect($response->json('data'))->toHaveCount(2);
@@ -72,7 +72,7 @@ test('can get active credits for customer', function () {
         'status' => 'active',
         'remaining_credits' => 5,
     ]);
-    
+
     // Used credits
     CustomerCredit::factory()->create([
         'customer_id' => $this->customer->id,
@@ -81,7 +81,7 @@ test('can get active credits for customer', function () {
     ]);
 
     $response = $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/customer-credits/active/list?customerId=' . $this->customer->id)
+        ->getJson('/api/v1/customer-credits/active/list?customerId='.$this->customer->id)
         ->assertOk();
 
     expect($response->json('data'))->toHaveCount(2);
@@ -91,7 +91,7 @@ test('trainer can view any customer credit', function () {
     $credit = CustomerCredit::factory()->create();
 
     $this->actingAs($this->trainer)
-        ->getJson('/api/v1/customer-credits/' . $credit->id)
+        ->getJson('/api/v1/customer-credits/'.$credit->id)
         ->assertOk()
         ->assertJsonPath('data.id', $credit->id);
 });
@@ -100,7 +100,7 @@ test('customer can view their own credit', function () {
     $credit = CustomerCredit::factory()->create(['customer_id' => $this->customer->id]);
 
     $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/customer-credits/' . $credit->id)
+        ->getJson('/api/v1/customer-credits/'.$credit->id)
         ->assertOk()
         ->assertJsonPath('data.id', $credit->id);
 });
@@ -109,7 +109,7 @@ test('customer cannot view other customers credit', function () {
     $otherCredit = CustomerCredit::factory()->create();
 
     $this->actingAs($this->customerUser)
-        ->getJson('/api/v1/customer-credits/' . $otherCredit->id)
+        ->getJson('/api/v1/customer-credits/'.$otherCredit->id)
         ->assertForbidden();
 });
 
@@ -195,7 +195,7 @@ test('trainer can update customer credit', function () {
     $credit = CustomerCredit::factory()->create();
 
     $this->actingAs($this->trainer)
-        ->putJson('/api/v1/customer-credits/' . $credit->id, [
+        ->putJson('/api/v1/customer-credits/'.$credit->id, [
             'remainingCredits' => 5,
         ])
         ->assertOk()
@@ -211,7 +211,7 @@ test('customer cannot update credit', function () {
     $credit = CustomerCredit::factory()->create(['customer_id' => $this->customer->id]);
 
     $this->actingAs($this->customerUser)
-        ->putJson('/api/v1/customer-credits/' . $credit->id, [
+        ->putJson('/api/v1/customer-credits/'.$credit->id, [
             'remainingCredits' => 100,
         ])
         ->assertForbidden();
@@ -225,7 +225,7 @@ test('can use credit from active package', function () {
     ]);
 
     $this->actingAs($this->trainer)
-        ->postJson('/api/v1/customer-credits/' . $credit->id . '/use')
+        ->postJson('/api/v1/customer-credits/'.$credit->id.'/use')
         ->assertOk()
         ->assertJsonPath('data.remainingCredits', 9);
 
@@ -244,7 +244,7 @@ test('credit status changes to used when depleted', function () {
     ]);
 
     $this->actingAs($this->trainer)
-        ->postJson('/api/v1/customer-credits/' . $credit->id . '/use')
+        ->postJson('/api/v1/customer-credits/'.$credit->id.'/use')
         ->assertOk()
         ->assertJsonPath('data.remainingCredits', 0)
         ->assertJsonPath('data.status', 'used');
@@ -263,7 +263,7 @@ test('cannot use credit when no credits remaining', function () {
     ]);
 
     $this->actingAs($this->trainer)
-        ->postJson('/api/v1/customer-credits/' . $credit->id . '/use')
+        ->postJson('/api/v1/customer-credits/'.$credit->id.'/use')
         ->assertUnprocessable()
         ->assertJsonPath('message', 'Keine Einheiten mehr verfügbar.');
 });
@@ -275,7 +275,7 @@ test('admin can delete unused credit', function () {
     ]);
 
     $this->actingAs($this->admin)
-        ->deleteJson('/api/v1/customer-credits/' . $credit->id)
+        ->deleteJson('/api/v1/customer-credits/'.$credit->id)
         ->assertNoContent();
 
     expect(CustomerCredit::find($credit->id))->toBeNull();
@@ -288,7 +288,7 @@ test('cannot delete partially used credit', function () {
     ]);
 
     $this->actingAs($this->admin)
-        ->deleteJson('/api/v1/customer-credits/' . $credit->id)
+        ->deleteJson('/api/v1/customer-credits/'.$credit->id)
         ->assertUnprocessable()
         ->assertJsonPath('message', 'Guthaben kann nicht gelöscht werden, da bereits Einheiten verwendet wurden.');
 });
@@ -297,6 +297,6 @@ test('trainer cannot delete credit', function () {
     $credit = CustomerCredit::factory()->create();
 
     $this->actingAs($this->trainer)
-        ->deleteJson('/api/v1/customer-credits/' . $credit->id)
+        ->deleteJson('/api/v1/customer-credits/'.$credit->id)
         ->assertForbidden();
 });

@@ -16,11 +16,11 @@ beforeEach(function () {
     $this->trainer = User::factory()->trainer()->create();
     $this->customer = User::factory()->customer()->create();
     $this->otherCustomer = User::factory()->customer()->create();
-    
+
     // Create customers for the users
     $customerRecord = Customer::factory()->create(['user_id' => $this->customer->id]);
     $otherCustomerRecord = Customer::factory()->create(['user_id' => $this->otherCustomer->id]);
-    
+
     $this->dog = Dog::factory()->create(['customer_id' => $customerRecord->id]);
     $this->otherDog = Dog::factory()->create(['customer_id' => $otherCustomerRecord->id]);
 });
@@ -31,20 +31,20 @@ beforeEach(function () {
 
 test('admin can list all training logs', function () {
     TrainingLog::factory()->count(5)->create();
-    
+
     $response = $this->actingAs($this->admin)
         ->getJson('/api/v1/training-logs');
-    
+
     $response->assertOk()
         ->assertJsonCount(5, 'data');
 });
 
 test('trainer can list all training logs', function () {
     TrainingLog::factory()->count(5)->create();
-    
+
     $response = $this->actingAs($this->trainer)
         ->getJson('/api/v1/training-logs');
-    
+
     $response->assertOk()
         ->assertJsonCount(5, 'data');
 });
@@ -52,10 +52,10 @@ test('trainer can list all training logs', function () {
 test('customer can only list training logs for their own dogs', function () {
     TrainingLog::factory()->count(3)->create(['dog_id' => $this->dog->id]);
     TrainingLog::factory()->count(2)->create(['dog_id' => $this->otherDog->id]);
-    
+
     $response = $this->actingAs($this->customer)
         ->getJson('/api/v1/training-logs');
-    
+
     $response->assertOk()
         ->assertJsonCount(3, 'data')
         ->assertJsonPath('data.0.dogId', $this->dog->id);
@@ -64,36 +64,36 @@ test('customer can only list training logs for their own dogs', function () {
 test('can filter training logs by dog', function () {
     TrainingLog::factory()->count(3)->create(['dog_id' => $this->dog->id]);
     TrainingLog::factory()->count(2)->create(['dog_id' => $this->otherDog->id]);
-    
+
     $response = $this->actingAs($this->admin)
-        ->getJson('/api/v1/training-logs?dogId=' . $this->dog->id);
-    
+        ->getJson('/api/v1/training-logs?dogId='.$this->dog->id);
+
     $response->assertOk()
         ->assertJsonCount(3, 'data');
 });
 
 test('can filter training logs by trainer', function () {
     $otherTrainer = User::factory()->trainer()->create();
-    
+
     TrainingLog::factory()->count(3)->create(['trainer_id' => $this->trainer->id]);
     TrainingLog::factory()->count(2)->create(['trainer_id' => $otherTrainer->id]);
-    
+
     $response = $this->actingAs($this->admin)
-        ->getJson('/api/v1/training-logs?trainerId=' . $this->trainer->id);
-    
+        ->getJson('/api/v1/training-logs?trainerId='.$this->trainer->id);
+
     $response->assertOk()
         ->assertJsonCount(3, 'data');
 });
 
 test('can filter training logs by training session', function () {
     $session = TrainingSession::factory()->create();
-    
+
     TrainingLog::factory()->count(3)->create(['training_session_id' => $session->id]);
     TrainingLog::factory()->count(2)->create(['training_session_id' => null]);
-    
+
     $response = $this->actingAs($this->admin)
-        ->getJson('/api/v1/training-logs?trainingSessionId=' . $session->id);
-    
+        ->getJson('/api/v1/training-logs?trainingSessionId='.$session->id);
+
     $response->assertOk()
         ->assertJsonCount(3, 'data');
 });
@@ -101,10 +101,10 @@ test('can filter training logs by training session', function () {
 test('can filter training logs by date range', function () {
     $oldLog = TrainingLog::factory()->create(['created_at' => now()->subDays(10)]);
     $recentLog = TrainingLog::factory()->create(['created_at' => now()->subDays(2)]);
-    
+
     $response = $this->actingAs($this->admin)
-        ->getJson('/api/v1/training-logs?startDate=' . now()->subDays(5)->toDateString());
-    
+        ->getJson('/api/v1/training-logs?startDate='.now()->subDays(5)->toDateString());
+
     $response->assertOk()
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $recentLog->id);
@@ -112,10 +112,10 @@ test('can filter training logs by date range', function () {
 
 test('training logs are paginated', function () {
     TrainingLog::factory()->count(20)->create();
-    
+
     $response = $this->actingAs($this->admin)
         ->getJson('/api/v1/training-logs');
-    
+
     $response->assertOk()
         ->assertJsonCount(15, 'data')
         ->assertJsonStructure(['data', 'links', 'meta']);
@@ -123,10 +123,10 @@ test('training logs are paginated', function () {
 
 test('training logs include relationships when loaded', function () {
     $log = TrainingLog::factory()->create();
-    
+
     $response = $this->actingAs($this->admin)
         ->getJson('/api/v1/training-logs');
-    
+
     $response->assertOk()
         ->assertJsonStructure([
             'data' => [
@@ -155,49 +155,49 @@ test('training logs include relationships when loaded', function () {
 
 test('admin can view any training log', function () {
     $log = TrainingLog::factory()->create();
-    
+
     $response = $this->actingAs($this->admin)
-        ->getJson('/api/v1/training-logs/' . $log->id);
-    
+        ->getJson('/api/v1/training-logs/'.$log->id);
+
     $response->assertOk()
         ->assertJsonPath('data.id', $log->id);
 });
 
 test('trainer can view any training log', function () {
     $log = TrainingLog::factory()->create();
-    
+
     $response = $this->actingAs($this->trainer)
-        ->getJson('/api/v1/training-logs/' . $log->id);
-    
+        ->getJson('/api/v1/training-logs/'.$log->id);
+
     $response->assertOk()
         ->assertJsonPath('data.id', $log->id);
 });
 
 test('customer can view training logs for their own dogs', function () {
     $log = TrainingLog::factory()->create(['dog_id' => $this->dog->id]);
-    
+
     $response = $this->actingAs($this->customer)
-        ->getJson('/api/v1/training-logs/' . $log->id);
-    
+        ->getJson('/api/v1/training-logs/'.$log->id);
+
     $response->assertOk()
         ->assertJsonPath('data.dogId', $this->dog->id);
 });
 
 test('customer cannot view training logs for other customers dogs', function () {
     $log = TrainingLog::factory()->create(['dog_id' => $this->otherDog->id]);
-    
+
     $response = $this->actingAs($this->customer)
-        ->getJson('/api/v1/training-logs/' . $log->id);
-    
+        ->getJson('/api/v1/training-logs/'.$log->id);
+
     $response->assertForbidden();
 });
 
 test('show includes all relationships', function () {
     $log = TrainingLog::factory()->create();
-    
+
     $response = $this->actingAs($this->admin)
-        ->getJson('/api/v1/training-logs/' . $log->id);
-    
+        ->getJson('/api/v1/training-logs/'.$log->id);
+
     $response->assertOk()
         ->assertJsonStructure([
             'data' => [
@@ -221,15 +221,15 @@ test('trainer can create training log', function () {
         'behaviorNotes' => 'Responded well to commands',
         'homework' => 'Practice sit and stay',
     ];
-    
+
     $response = $this->actingAs($this->trainer)
         ->postJson('/api/v1/training-logs', $data);
-    
+
     $response->assertCreated()
         ->assertJsonPath('data.progressNotes', 'Good progress today')
         ->assertJsonPath('data.behaviorNotes', 'Responded well to commands')
         ->assertJsonPath('data.homework', 'Practice sit and stay');
-    
+
     $this->assertDatabaseHas('training_logs', [
         'dog_id' => $this->dog->id,
         'trainer_id' => $this->trainer->id,
@@ -243,10 +243,10 @@ test('admin can create training log', function () {
         'trainerId' => $this->trainer->id,
         'progressNotes' => 'Test notes',
     ];
-    
+
     $response = $this->actingAs($this->admin)
         ->postJson('/api/v1/training-logs', $data);
-    
+
     $response->assertCreated();
 });
 
@@ -256,26 +256,26 @@ test('customer cannot create training log', function () {
         'trainerId' => $this->trainer->id,
         'progressNotes' => 'Test notes',
     ];
-    
+
     $response = $this->actingAs($this->customer)
         ->postJson('/api/v1/training-logs', $data);
-    
+
     $response->assertForbidden();
 });
 
 test('can create training log with training session', function () {
     $session = TrainingSession::factory()->create();
-    
+
     $data = [
         'dogId' => $this->dog->id,
         'trainerId' => $this->trainer->id,
         'trainingSessionId' => $session->id,
         'progressNotes' => 'Session notes',
     ];
-    
+
     $response = $this->actingAs($this->trainer)
         ->postJson('/api/v1/training-logs', $data);
-    
+
     $response->assertCreated()
         ->assertJsonPath('data.trainingSessionId', $session->id);
 });
@@ -285,10 +285,10 @@ test('can create training log without optional fields', function () {
         'dogId' => $this->dog->id,
         'trainerId' => $this->trainer->id,
     ];
-    
+
     $response = $this->actingAs($this->trainer)
         ->postJson('/api/v1/training-logs', $data);
-    
+
     $response->assertCreated()
         ->assertJsonPath('data.progressNotes', null)
         ->assertJsonPath('data.behaviorNotes', null)
@@ -300,10 +300,10 @@ test('dog is required when creating training log', function () {
         'trainerId' => $this->trainer->id,
         'progressNotes' => 'Test notes',
     ];
-    
+
     $response = $this->actingAs($this->trainer)
         ->postJson('/api/v1/training-logs', $data);
-    
+
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['dogId']);
 });
@@ -313,10 +313,10 @@ test('trainer is required when creating training log', function () {
         'dogId' => $this->dog->id,
         'progressNotes' => 'Test notes',
     ];
-    
+
     $response = $this->actingAs($this->trainer)
         ->postJson('/api/v1/training-logs', $data);
-    
+
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['trainerId']);
 });
@@ -327,10 +327,10 @@ test('dog must exist when creating training log', function () {
         'trainerId' => $this->trainer->id,
         'progressNotes' => 'Test notes',
     ];
-    
+
     $response = $this->actingAs($this->trainer)
         ->postJson('/api/v1/training-logs', $data);
-    
+
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['dogId']);
 });
@@ -341,10 +341,10 @@ test('trainer must exist when creating training log', function () {
         'trainerId' => 99999,
         'progressNotes' => 'Test notes',
     ];
-    
+
     $response = $this->actingAs($this->trainer)
         ->postJson('/api/v1/training-logs', $data);
-    
+
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['trainerId']);
 });
@@ -355,19 +355,19 @@ test('trainer must exist when creating training log', function () {
 
 test('trainer can update their own training log', function () {
     $log = TrainingLog::factory()->create(['trainer_id' => $this->trainer->id]);
-    
+
     $data = [
         'progressNotes' => 'Updated progress notes',
         'behaviorNotes' => 'Updated behavior notes',
     ];
-    
+
     $response = $this->actingAs($this->trainer)
-        ->putJson('/api/v1/training-logs/' . $log->id, $data);
-    
+        ->putJson('/api/v1/training-logs/'.$log->id, $data);
+
     $response->assertOk()
         ->assertJsonPath('data.progressNotes', 'Updated progress notes')
         ->assertJsonPath('data.behaviorNotes', 'Updated behavior notes');
-    
+
     $this->assertDatabaseHas('training_logs', [
         'id' => $log->id,
         'progress_notes' => 'Updated progress notes',
@@ -377,35 +377,35 @@ test('trainer can update their own training log', function () {
 test('trainer cannot update other trainers training logs', function () {
     $otherTrainer = User::factory()->trainer()->create();
     $log = TrainingLog::factory()->create(['trainer_id' => $otherTrainer->id]);
-    
+
     $data = ['progressNotes' => 'Updated notes'];
-    
+
     $response = $this->actingAs($this->trainer)
-        ->putJson('/api/v1/training-logs/' . $log->id, $data);
-    
+        ->putJson('/api/v1/training-logs/'.$log->id, $data);
+
     $response->assertForbidden();
 });
 
 test('admin can update any training log', function () {
     $log = TrainingLog::factory()->create(['trainer_id' => $this->trainer->id]);
-    
+
     $data = ['progressNotes' => 'Admin updated notes'];
-    
+
     $response = $this->actingAs($this->admin)
-        ->putJson('/api/v1/training-logs/' . $log->id, $data);
-    
+        ->putJson('/api/v1/training-logs/'.$log->id, $data);
+
     $response->assertOk()
         ->assertJsonPath('data.progressNotes', 'Admin updated notes');
 });
 
 test('customer cannot update training log', function () {
     $log = TrainingLog::factory()->create(['dog_id' => $this->dog->id]);
-    
+
     $data = ['progressNotes' => 'Customer update'];
-    
+
     $response = $this->actingAs($this->customer)
-        ->putJson('/api/v1/training-logs/' . $log->id, $data);
-    
+        ->putJson('/api/v1/training-logs/'.$log->id, $data);
+
     $response->assertForbidden();
 });
 
@@ -415,12 +415,12 @@ test('can update training log with partial data', function () {
         'progress_notes' => 'Original progress',
         'behavior_notes' => 'Original behavior',
     ]);
-    
+
     $data = ['progressNotes' => 'Updated progress only'];
-    
+
     $response = $this->actingAs($this->trainer)
-        ->putJson('/api/v1/training-logs/' . $log->id, $data);
-    
+        ->putJson('/api/v1/training-logs/'.$log->id, $data);
+
     $response->assertOk()
         ->assertJsonPath('data.progressNotes', 'Updated progress only')
         ->assertJsonPath('data.behaviorNotes', 'Original behavior');
@@ -428,12 +428,12 @@ test('can update training log with partial data', function () {
 
 test('dog must exist when updating training log', function () {
     $log = TrainingLog::factory()->create(['trainer_id' => $this->trainer->id]);
-    
+
     $data = ['dogId' => 99999];
-    
+
     $response = $this->actingAs($this->trainer)
-        ->putJson('/api/v1/training-logs/' . $log->id, $data);
-    
+        ->putJson('/api/v1/training-logs/'.$log->id, $data);
+
     $response->assertUnprocessable()
         ->assertJsonValidationErrors(['dogId']);
 });
@@ -444,30 +444,30 @@ test('dog must exist when updating training log', function () {
 
 test('admin can delete training log', function () {
     $log = TrainingLog::factory()->create();
-    
+
     $response = $this->actingAs($this->admin)
-        ->deleteJson('/api/v1/training-logs/' . $log->id);
-    
+        ->deleteJson('/api/v1/training-logs/'.$log->id);
+
     $response->assertNoContent();
-    
+
     $this->assertDatabaseMissing('training_logs', ['id' => $log->id]);
 });
 
 test('trainer cannot delete training log', function () {
     $log = TrainingLog::factory()->create(['trainer_id' => $this->trainer->id]);
-    
+
     $response = $this->actingAs($this->trainer)
-        ->deleteJson('/api/v1/training-logs/' . $log->id);
-    
+        ->deleteJson('/api/v1/training-logs/'.$log->id);
+
     $response->assertForbidden();
 });
 
 test('customer cannot delete training log', function () {
     $log = TrainingLog::factory()->create(['dog_id' => $this->dog->id]);
-    
+
     $response = $this->actingAs($this->customer)
-        ->deleteJson('/api/v1/training-logs/' . $log->id);
-    
+        ->deleteJson('/api/v1/training-logs/'.$log->id);
+
     $response->assertForbidden();
 });
 
@@ -478,9 +478,9 @@ test('customer cannot delete training log', function () {
 test('unauthenticated user cannot access training logs', function () {
     $this->getJson('/api/v1/training-logs')->assertUnauthorized();
     $this->postJson('/api/v1/training-logs', [])->assertUnauthorized();
-    
+
     $log = TrainingLog::factory()->create();
-    $this->getJson('/api/v1/training-logs/' . $log->id)->assertUnauthorized();
-    $this->putJson('/api/v1/training-logs/' . $log->id, [])->assertUnauthorized();
-    $this->deleteJson('/api/v1/training-logs/' . $log->id)->assertUnauthorized();
+    $this->getJson('/api/v1/training-logs/'.$log->id)->assertUnauthorized();
+    $this->putJson('/api/v1/training-logs/'.$log->id, [])->assertUnauthorized();
+    $this->deleteJson('/api/v1/training-logs/'.$log->id)->assertUnauthorized();
 });

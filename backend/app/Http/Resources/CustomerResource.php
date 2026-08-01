@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -12,7 +13,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *
  * Transforms customer model into a consistent JSON response format.
  *
- * @mixin \App\Models\Customer
+ * @mixin Customer
  */
 class CustomerResource extends JsonResource
 {
@@ -41,7 +42,7 @@ class CustomerResource extends JsonResource
             'fullAddress' => $this->full_address,
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
-            
+
             // Conditional relationships
             'user' => new UserResource($this->whenLoaded('user')),
             'trainer' => new UserResource($this->whenLoaded('trainer')),
@@ -49,15 +50,15 @@ class CustomerResource extends JsonResource
             'bookings' => BookingResource::collection($this->whenLoaded('bookings')),
             'credits' => CustomerCreditResource::collection($this->whenLoaded('credits')),
             'invoices' => InvoiceResource::collection($this->whenLoaded('invoices')),
-            
+
             // Counts
             'dogsCount' => $this->when(
                 $this->relationLoaded('dogs'),
-                fn() => $this->dogs->count()
+                fn () => $this->dogs->count()
             ),
             'bookingsCount' => $this->when(
                 $this->relationLoaded('bookings'),
-                fn() => $this->bookings->count()
+                fn () => $this->bookings->count()
             ),
         ];
     }

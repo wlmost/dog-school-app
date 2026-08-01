@@ -18,6 +18,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
@@ -37,15 +38,12 @@ class DogRegistrationRequestController extends Controller
      *
      * Admins see all requests with optional ?status= filter.
      * Customers see only their own requests.
-     *
-     * @param Request $request
-     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
         $this->authorize('viewAny', DogRegistrationRequest::class);
 
-        $user  = $request->user();
+        $user = $request->user();
         $query = DogRegistrationRequest::query()->with(['customer.user']);
 
         if ($user->isCustomer()) {
@@ -72,11 +70,8 @@ class DogRegistrationRequestController extends Controller
      * Store a new pending dog registration request submitted by a customer.
      *
      * After creation, all admin users are notified by email.
-     *
-     * @param StoreDogRegistrationRequest $request
-     * @return JsonResponse|\Illuminate\Http\Response
      */
-    public function store(StoreDogRegistrationRequest $request): JsonResponse|\Illuminate\Http\Response
+    public function store(StoreDogRegistrationRequest $request): JsonResponse|Response
     {
         $this->authorize('create', DogRegistrationRequest::class);
 
@@ -90,7 +85,7 @@ class DogRegistrationRequestController extends Controller
 
         $data = $request->validatedSnakeCase();
         $data['customer_id'] = $customer->id;
-        $data['status']      = 'pending';
+        $data['status'] = 'pending';
 
         $registrationRequest = DogRegistrationRequest::create($data);
         $registrationRequest->load('customer.user');
@@ -109,9 +104,6 @@ class DogRegistrationRequestController extends Controller
 
     /**
      * Display the specified dog registration request.
-     *
-     * @param DogRegistrationRequest $dogRegistrationRequest
-     * @return DogRegistrationRequestResource
      */
     public function show(DogRegistrationRequest $dogRegistrationRequest): DogRegistrationRequestResource
     {
@@ -127,12 +119,8 @@ class DogRegistrationRequestController extends Controller
      *
      * Creates the corresponding Dog record, marks the request as approved,
      * and sends a confirmation email to the customer.
-     *
-     * @param Request              $request
-     * @param DogRegistrationRequest $dogRegistrationRequest
-     * @return JsonResponse|\Illuminate\Http\Response
      */
-    public function approve(Request $request, DogRegistrationRequest $dogRegistrationRequest): JsonResponse|\Illuminate\Http\Response
+    public function approve(Request $request, DogRegistrationRequest $dogRegistrationRequest): JsonResponse|Response
     {
         $this->authorize('approve', $dogRegistrationRequest);
 
@@ -145,22 +133,22 @@ class DogRegistrationRequestController extends Controller
         $dog = DB::transaction(function () use ($request, $dogRegistrationRequest): Dog {
             // Create the actual Dog record from the request data
             $dog = Dog::create([
-                'customer_id'        => $dogRegistrationRequest->customer_id,
-                'name'               => $dogRegistrationRequest->name,
-                'breed'              => $dogRegistrationRequest->breed,
-                'gender'             => $dogRegistrationRequest->gender,
-                'date_of_birth'      => $dogRegistrationRequest->date_of_birth,
-                'neutered'           => $dogRegistrationRequest->neutered,
-                'chip_number'        => $dogRegistrationRequest->chip_number,
-                'owner_since'        => $dogRegistrationRequest->owner_since,
+                'customer_id' => $dogRegistrationRequest->customer_id,
+                'name' => $dogRegistrationRequest->name,
+                'breed' => $dogRegistrationRequest->breed,
+                'gender' => $dogRegistrationRequest->gender,
+                'date_of_birth' => $dogRegistrationRequest->date_of_birth,
+                'neutered' => $dogRegistrationRequest->neutered,
+                'chip_number' => $dogRegistrationRequest->chip_number,
+                'owner_since' => $dogRegistrationRequest->owner_since,
                 'age_at_acquisition' => $dogRegistrationRequest->age_at_acquisition,
-                'origin'             => $dogRegistrationRequest->origin,
-                'is_active'          => true,
+                'origin' => $dogRegistrationRequest->origin,
+                'is_active' => true,
             ]);
 
             // Mark the request as approved
             $dogRegistrationRequest->update([
-                'status'      => 'approved',
+                'status' => 'approved',
                 'reviewed_by' => $request->user()->id,
                 'reviewed_at' => now(),
             ]);
@@ -182,10 +170,6 @@ class DogRegistrationRequestController extends Controller
 
     /**
      * Reject a pending dog registration request.
-     *
-     * @param Request              $request
-     * @param DogRegistrationRequest $dogRegistrationRequest
-     * @return JsonResponse|DogRegistrationRequestResource
      */
     public function reject(Request $request, DogRegistrationRequest $dogRegistrationRequest): JsonResponse|DogRegistrationRequestResource
     {
@@ -198,7 +182,7 @@ class DogRegistrationRequestController extends Controller
         }
 
         $dogRegistrationRequest->update([
-            'status'      => 'rejected',
+            'status' => 'rejected',
             'reviewed_by' => $request->user()->id,
             'reviewed_at' => now(),
         ]);

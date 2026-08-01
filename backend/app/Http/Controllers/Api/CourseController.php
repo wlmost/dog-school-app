@@ -13,6 +13,7 @@ use App\Http\Requests\UpdateCourseSessionRequest;
 use App\Http\Resources\CourseResource;
 use App\Http\Resources\CourseRunResource;
 use App\Http\Resources\TrainingSessionResource;
+use App\Models\Booking;
 use App\Models\Course;
 use App\Models\TrainingSession;
 use App\Services\CourseSessionService;
@@ -32,15 +33,10 @@ class CourseController extends Controller
 {
     use AuthorizesRequests;
 
-    public function __construct(private readonly CourseSessionService $sessionService)
-    {
-    }
+    public function __construct(private readonly CourseSessionService $sessionService) {}
 
     /**
      * Display a listing of courses with optional filtering.
-     *
-     * @param Request $request
-     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -88,7 +84,7 @@ class CourseController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
-                  ->orWhere('description', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
+                    ->orWhere('description', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
             });
         }
 
@@ -100,9 +96,6 @@ class CourseController extends Controller
 
     /**
      * Store a newly created course.
-     *
-     * @param StoreCourseRequest $request
-     * @return CourseResource
      */
     public function store(StoreCourseRequest $request): CourseResource
     {
@@ -114,7 +107,7 @@ class CourseController extends Controller
             $course = Course::create($request->validatedSnakeCase());
 
             $sessionsPayload = $request->getSessionsPayload();
-            $recurrenceRule  = $request->getRecurrenceRule();
+            $recurrenceRule = $request->getRecurrenceRule();
 
             if ($sessionsPayload !== null) {
                 $normalized = $this->normalizeSessionKeys($sessionsPayload);
@@ -137,7 +130,7 @@ class CourseController extends Controller
 
         $resource = new CourseResource($course->load(['trainer', 'sessions']));
 
-        if (!empty($warnings)) {
+        if (! empty($warnings)) {
             $resource->additional(['meta' => ['warnings' => $warnings]]);
         }
 
@@ -146,9 +139,6 @@ class CourseController extends Controller
 
     /**
      * Display the specified course.
-     *
-     * @param Course $course
-     * @return CourseResource
      */
     public function show(Course $course): CourseResource
     {
@@ -159,10 +149,6 @@ class CourseController extends Controller
 
     /**
      * Update the specified course.
-     *
-     * @param UpdateCourseRequest $request
-     * @param Course $course
-     * @return CourseResource
      */
     public function update(UpdateCourseRequest $request, Course $course): CourseResource
     {
@@ -174,7 +160,7 @@ class CourseController extends Controller
             $course->update($request->validatedSnakeCase());
 
             $sessionsPayload = $request->getSessionsPayload();
-            $recurrenceRule  = $request->getRecurrenceRule();
+            $recurrenceRule = $request->getRecurrenceRule();
 
             if ($sessionsPayload !== null) {
                 $normalized = $this->normalizeSessionKeys($sessionsPayload);
@@ -195,7 +181,7 @@ class CourseController extends Controller
 
         $resource = new CourseResource($course->fresh(['trainer', 'sessions']));
 
-        if (!empty($warnings)) {
+        if (! empty($warnings)) {
             $resource->additional(['meta' => ['warnings' => $warnings]]);
         }
 
@@ -204,9 +190,6 @@ class CourseController extends Controller
 
     /**
      * Remove the specified course.
-     *
-     * @param Course $course
-     * @return JsonResponse
      */
     public function destroy(Course $course): JsonResponse
     {
@@ -226,9 +209,6 @@ class CourseController extends Controller
 
     /**
      * Get all sessions for the specified course.
-     *
-     * @param Course $course
-     * @return AnonymousResourceCollection
      */
     public function sessions(Course $course): AnonymousResourceCollection
     {
@@ -245,10 +225,6 @@ class CourseController extends Controller
 
     /**
      * Store a new training session for the specified course.
-     *
-     * @param StoreCourseSessionRequest $request
-     * @param Course $course
-     * @return JsonResponse
      */
     public function storeSession(StoreCourseSessionRequest $request, Course $course): JsonResponse
     {
@@ -257,15 +233,15 @@ class CourseController extends Controller
         $validated = $request->validated();
 
         $session = TrainingSession::create([
-            'course_id'        => $course->id,
-            'trainer_id'       => $course->trainer_id,
-            'session_date'     => $validated['sessionDate'],
-            'start_time'       => $validated['startTime'],
-            'end_time'         => $validated['endTime'],
-            'location'         => $validated['location'] ?? null,
+            'course_id' => $course->id,
+            'trainer_id' => $course->trainer_id,
+            'session_date' => $validated['sessionDate'],
+            'start_time' => $validated['startTime'],
+            'end_time' => $validated['endTime'],
+            'location' => $validated['location'] ?? null,
             'max_participants' => $validated['maxParticipants'] ?? $course->max_participants,
-            'status'           => $validated['status'] ?? 'scheduled',
-            'notes'            => $validated['notes'] ?? null,
+            'status' => $validated['status'] ?? 'scheduled',
+            'notes' => $validated['notes'] ?? null,
         ]);
 
         return (new TrainingSessionResource($session->fresh()))
@@ -278,11 +254,6 @@ class CourseController extends Controller
      *
      * If the session has active bookings the update still proceeds, but a
      * warnings entry is included in the response to inform the caller.
-     *
-     * @param UpdateCourseSessionRequest $request
-     * @param Course $course
-     * @param TrainingSession $session
-     * @return JsonResponse
      */
     public function updateSession(
         UpdateCourseSessionRequest $request,
@@ -298,13 +269,13 @@ class CourseController extends Controller
         $validated = $request->validated();
 
         $attributeMap = [
-            'sessionDate'     => 'session_date',
-            'startTime'       => 'start_time',
-            'endTime'         => 'end_time',
-            'location'        => 'location',
+            'sessionDate' => 'session_date',
+            'startTime' => 'start_time',
+            'endTime' => 'end_time',
+            'location' => 'location',
             'maxParticipants' => 'max_participants',
-            'status'          => 'status',
-            'notes'           => 'notes',
+            'status' => 'status',
+            'notes' => 'notes',
         ];
 
         $updateData = [];
@@ -324,8 +295,8 @@ class CourseController extends Controller
                 'meta' => [
                     'warnings' => [
                         [
-                            'type'         => 'booking_conflict',
-                            'message'      => "Diese Einheit hat {$bookingCount} aktive Buchungen.",
+                            'type' => 'booking_conflict',
+                            'message' => "Diese Einheit hat {$bookingCount} aktive Buchungen.",
                             'bookingCount' => $bookingCount,
                         ],
                     ],
@@ -342,10 +313,6 @@ class CourseController extends Controller
      * If the session has bookings the session (and its bookings via cascade)
      * is still deleted, but the response is HTTP 200 with a warnings payload
      * instead of HTTP 204.
-     *
-     * @param Course $course
-     * @param TrainingSession $session
-     * @return JsonResponse
      */
     public function destroySession(Course $course, TrainingSession $session): JsonResponse
     {
@@ -361,11 +328,11 @@ class CourseController extends Controller
 
         if ($bookingCount > 0) {
             return response()->json([
-                'deleted'  => true,
+                'deleted' => true,
                 'warnings' => [
                     [
-                        'type'         => 'booking_conflict',
-                        'message'      => "Diese Einheit hatte {$bookingCount} aktive Buchungen. Die Buchungen wurden storniert.",
+                        'type' => 'booking_conflict',
+                        'message' => "Diese Einheit hatte {$bookingCount} aktive Buchungen. Die Buchungen wurden storniert.",
                         'bookingCount' => $bookingCount,
                     ],
                 ],
@@ -379,45 +346,42 @@ class CourseController extends Controller
      * Display a course without requiring authentication.
      *
      * Sessions are eager-loaded and ordered ascending by session_date.
-     *
-     * @param Course $course
-     * @return JsonResponse
      */
     public function publicShow(Course $course): JsonResponse
     {
         $course->load([
             'trainer',
             'sessions' => fn ($query) => $query->orderBy('session_date'),
-            'runs'     => fn ($query) => $query->where('status', 'active')->orderBy('start_date'),
+            'runs' => fn ($query) => $query->where('status', 'active')->orderBy('start_date'),
             'runs.sessions' => fn ($query) => $query->orderBy('session_date'),
         ]);
 
         return response()->json([
             'data' => [
-                'id'              => $course->id,
-                'name'            => $course->name,
-                'description'     => $course->description,
-                'courseType'      => $course->course_type,
-                'level'           => $course->level,
+                'id' => $course->id,
+                'name' => $course->name,
+                'description' => $course->description,
+                'courseType' => $course->course_type,
+                'level' => $course->level,
                 'maxParticipants' => $course->max_participants,
-                'startDate'       => $course->start_date?->toDateString(),
-                'endDate'         => $course->end_date?->toDateString(),
-                'status'          => $course->status,
-                'trainer'         => $course->trainer ? [
-                    'id'        => $course->trainer->id,
+                'startDate' => $course->start_date?->toDateString(),
+                'endDate' => $course->end_date?->toDateString(),
+                'status' => $course->status,
+                'trainer' => $course->trainer ? [
+                    'id' => $course->trainer->id,
                     'firstName' => $course->trainer->first_name,
-                    'lastName'  => $course->trainer->last_name,
+                    'lastName' => $course->trainer->last_name,
                 ] : null,
                 'sessions' => $course->sessions->map(fn (TrainingSession $s) => [
-                    'id'             => $s->id,
-                    'sessionDate'    => $s->session_date instanceof \DateTimeInterface
+                    'id' => $s->id,
+                    'sessionDate' => $s->session_date instanceof \DateTimeInterface
                         ? $s->session_date->toDateString()
                         : $s->session_date,
-                    'startTime'      => $s->start_time,
-                    'endTime'        => $s->end_time,
-                    'location'       => $s->location,
-                    'maxParticipants'=> $s->max_participants,
-                    'status'         => $s->status,
+                    'startTime' => $s->start_time,
+                    'endTime' => $s->end_time,
+                    'location' => $s->location,
+                    'maxParticipants' => $s->max_participants,
+                    'status' => $s->status,
                 ]),
                 'runs' => CourseRunResource::collection($course->runs),
             ],
@@ -426,16 +390,13 @@ class CourseController extends Controller
 
     /**
      * Get participant statistics for the specified course.
-     *
-     * @param Course $course
-     * @return JsonResponse
      */
     public function participants(Course $course): JsonResponse
     {
         $this->authorize('view', $course);
 
         // Get all confirmed bookings for this course's sessions
-        $confirmedBookings = \App\Models\Booking::whereIn(
+        $confirmedBookings = Booking::whereIn(
             'training_session_id',
             $course->sessions()->pluck('id')
         )->where('status', 'confirmed')->count();
@@ -444,7 +405,7 @@ class CourseController extends Controller
         $totalCapacity = (int) $course->sessions()->sum('max_participants');
 
         // Get unique participants (customers)
-        $uniqueParticipants = \App\Models\Booking::whereIn(
+        $uniqueParticipants = Booking::whereIn(
             'training_session_id',
             $course->sessions()->pluck('id')
         )
@@ -466,7 +427,7 @@ class CourseController extends Controller
      * Normalises camelCase keys from getSessionsPayload() to snake_case
      * for CourseSessionService::syncSessions().
      *
-     * @param array<int, array<string, mixed>> $sessions
+     * @param  array<int, array<string, mixed>>  $sessions
      * @return array<int, array<string, mixed>>
      */
     private function normalizeSessionKeys(array $sessions): array
@@ -476,6 +437,7 @@ class CourseController extends Controller
             foreach ($session as $key => $value) {
                 $normalized[Str::snake($key)] = $value;
             }
+
             return $normalized;
         }, $sessions);
     }
@@ -484,7 +446,7 @@ class CourseController extends Controller
      * Converts snake_case keys from getRecurrenceRule() back to camelCase
      * for CourseSessionService::generateFromRecurrence(), which expects camelCase.
      *
-     * @param array<string, mixed> $rule
+     * @param  array<string, mixed>  $rule
      * @return array<string, mixed>
      */
     private function camelizeRuleKeys(array $rule): array
@@ -493,6 +455,7 @@ class CourseController extends Controller
         foreach ($rule as $key => $value) {
             $camelized[Str::camel($key)] = $value;
         }
+
         return $camelized;
     }
 }

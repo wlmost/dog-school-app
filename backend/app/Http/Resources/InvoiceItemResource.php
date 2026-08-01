@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\InvoiceItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Invoice Item Resource
  *
- * @mixin \App\Models\InvoiceItem
+ * @mixin InvoiceItem
  */
 class InvoiceItemResource extends JsonResource
 {

@@ -31,15 +31,15 @@ class DogDeletionRequestController extends Controller
             return response()->json(['message' => 'Anfrage wurde bereits bearbeitet.'], 422);
         }
 
-        $dog      = $dogDeletionRequest->dog;
+        $dog = $dogDeletionRequest->dog;
         $customer = $dogDeletionRequest->customer()->with('user')->first();
-        $dogName  = $dogDeletionRequest->dog_name;
+        $dogName = $dogDeletionRequest->dog_name;
 
         // Delete dog if it still exists
         $dog?->delete();
 
         $dogDeletionRequest->update([
-            'status'      => 'approved',
+            'status' => 'approved',
             'reviewed_by' => auth()->id(),
             'reviewed_at' => now(),
         ]);
@@ -67,7 +67,7 @@ class DogDeletionRequestController extends Controller
         }
 
         $dogDeletionRequest->update([
-            'status'      => 'rejected',
+            'status' => 'rejected',
             'reviewed_by' => auth()->id(),
             'reviewed_at' => now(),
         ]);

@@ -21,6 +21,7 @@ return new class extends Migration
             $this->recreateTableSqlite(
                 ['pending', 'confirmed', 'cancelled', 'cancellation_requested']
             );
+
             return;
         }
 
@@ -30,6 +31,7 @@ return new class extends Migration
             $prefix = DB::getTablePrefix();
             DB::statement("ALTER TABLE \"{$prefix}bookings\" DROP CONSTRAINT IF EXISTS {$prefix}bookings_status_check");
             DB::statement("ALTER TABLE \"{$prefix}bookings\" ADD CONSTRAINT {$prefix}bookings_status_check CHECK (status IN ('pending','confirmed','cancelled','cancellation_requested'))");
+
             return;
         }
 
@@ -58,6 +60,7 @@ return new class extends Migration
             $this->recreateTableSqlite(
                 ['pending', 'confirmed', 'cancelled']
             );
+
             return;
         }
 
@@ -68,6 +71,7 @@ return new class extends Migration
             $prefix = DB::getTablePrefix();
             DB::statement("ALTER TABLE \"{$prefix}bookings\" DROP CONSTRAINT IF EXISTS {$prefix}bookings_status_check");
             DB::statement("ALTER TABLE \"{$prefix}bookings\" ADD CONSTRAINT {$prefix}bookings_status_check CHECK (status IN ('pending','confirmed','cancelled'))");
+
             return;
         }
 
@@ -90,7 +94,7 @@ return new class extends Migration
      * SQLite does not support ALTER COLUMN, so we create a temporary table,
      * copy the data, drop the original, and rename the temp table.
      *
-     * @param list<string> $statusValues
+     * @param  list<string>  $statusValues
      */
     private function recreateTableSqlite(array $statusValues): void
     {

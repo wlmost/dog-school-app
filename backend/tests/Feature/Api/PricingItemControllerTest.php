@@ -129,8 +129,8 @@ it('liefert eine flache liste aller pricing-items für admins', function () {
 it('weist das erstellen zurück wenn kein token vorhanden ist', function () {
     $response = $this->postJson('/api/v1/admin/pricing-items', [
         'category' => 'Welpenkurs',
-        'title'    => 'Test',
-        'price'    => 99.00,
+        'title' => 'Test',
+        'price' => 99.00,
     ]);
 
     $response->assertUnauthorized();
@@ -138,10 +138,10 @@ it('weist das erstellen zurück wenn kein token vorhanden ist', function () {
 
 it('erstellt ein pricing-item als admin mit validen daten', function () {
     $payload = [
-        'category'    => 'Welpenkurs',
-        'title'       => 'Welpenkurs Grundkurs',
-        'price'       => 129.50,
-        'unit'        => 'je Kurs',
+        'category' => 'Welpenkurs',
+        'title' => 'Welpenkurs Grundkurs',
+        'price' => 129.50,
+        'unit' => 'je Kurs',
         'description' => 'Grundlagen für Welpen',
         'isFromPrice' => false,
     ];
@@ -166,7 +166,7 @@ it('erstellt ein pricing-item als admin mit validen daten', function () {
 
     $this->assertDatabaseHas('pricing_items', [
         'category' => 'Welpenkurs',
-        'title'    => 'Welpenkurs Grundkurs',
+        'title' => 'Welpenkurs Grundkurs',
     ]);
 });
 
@@ -186,22 +186,22 @@ it('lehnt das erstellen ab wenn pflichtfelder fehlen', function () {
 it('aktualisiert ein pricing-item als admin', function () {
     $item = PricingItem::factory()->create([
         'category' => 'Welpenkurs',
-        'title'    => 'Alter Titel',
-        'price'    => 100.00,
+        'title' => 'Alter Titel',
+        'price' => 100.00,
     ]);
 
     $response = $this->actingAs($this->admin)
         ->putJson("/api/v1/admin/pricing-items/{$item->id}", [
             'category' => 'Welpenkurs',
-            'title'    => 'Neuer Titel',
-            'price'    => 120.00,
+            'title' => 'Neuer Titel',
+            'price' => 120.00,
         ]);
 
     $response->assertOk()
         ->assertJsonPath('data.title', 'Neuer Titel');
 
     $this->assertDatabaseHas('pricing_items', [
-        'id'    => $item->id,
+        'id' => $item->id,
         'title' => 'Neuer Titel',
     ]);
 });

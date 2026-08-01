@@ -92,7 +92,7 @@ jobs:
             dog-school-php-${{ matrix.db }} \
             php artisan key:generate
 
-      - name: Run backend tests
+      - name: Run backend QA (lint, stan, compat-check, test)
         run: |
           docker run --rm \
             --network=host \
@@ -109,7 +109,7 @@ jobs:
             -e SESSION_DRIVER=array \
             -e QUEUE_CONNECTION=sync \
             dog-school-php-${{ matrix.db }} \
-            ./vendor/bin/pest --no-coverage
+            composer qa
 
       - name: Upload logs on failure
         if: failure()
@@ -141,6 +141,10 @@ jobs:
       - name: Run frontend tests
         working-directory: frontend
         run: npm run test
+
+      - name: Run frontend lint
+        working-directory: frontend
+        run: npm run lint
 
   deploy-workflow-lint:
     name: Deploy workflow – storage symlink safeguard

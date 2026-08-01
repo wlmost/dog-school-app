@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\CourseRun;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -12,7 +13,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  *
  * Transforms a CourseRun model into a consistent JSON response.
  *
- * @mixin \App\Models\CourseRun
+ * @mixin CourseRun
  */
 class CourseRunResource extends JsonResource
 {
@@ -24,14 +25,14 @@ class CourseRunResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id'        => $this->id,
-            'courseId'  => $this->course_id,
+            'id' => $this->id,
+            'courseId' => $this->course_id,
             'startDate' => $this->start_date?->toDateString(),
-            'endDate'   => $this->end_date?->toDateString(),
-            'status'    => $this->status,
+            'endDate' => $this->end_date?->toDateString(),
+            'status' => $this->status,
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
-            'sessions'  => TrainingSessionResource::collection($this->whenLoaded('sessions')),
+            'sessions' => TrainingSessionResource::collection($this->whenLoaded('sessions')),
         ];
     }
 }

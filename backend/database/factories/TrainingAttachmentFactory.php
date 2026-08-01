@@ -7,16 +7,17 @@ namespace Database\Factories;
 use App\Models\TrainingAttachment;
 use App\Models\TrainingLog;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Model;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\TrainingAttachment>
+ * @extends Factory<TrainingAttachment>
  */
 class TrainingAttachmentFactory extends Factory
 {
     /**
      * The name of the factory's corresponding model.
      *
-     * @var class-string<\Illuminate\Database\Eloquent\Model>
+     * @var class-string<Model>
      */
     protected $model = TrainingAttachment::class;
 
@@ -28,7 +29,7 @@ class TrainingAttachmentFactory extends Factory
     public function definition(): array
     {
         $fileType = $this->faker->randomElement(['image', 'video', 'document']);
-        
+
         $extensions = [
             'image' => ['jpg', 'png', 'jpeg'],
             'video' => ['mp4', 'mov', 'avi'],
@@ -36,12 +37,12 @@ class TrainingAttachmentFactory extends Factory
         ];
 
         $extension = $this->faker->randomElement($extensions[$fileType]);
-        $fileName = $this->faker->word() . '.' . $extension;
+        $fileName = $this->faker->word().'.'.$extension;
 
         return [
             'training_log_id' => TrainingLog::factory(),
             'file_type' => $fileType,
-            'file_path' => 'training_attachments/' . $fileName,
+            'file_path' => 'training_attachments/'.$fileName,
             'file_name' => $fileName,
             'uploaded_at' => $this->faker->dateTimeBetween('-1 month', 'now'),
         ];
@@ -54,8 +55,8 @@ class TrainingAttachmentFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'file_type' => 'image',
-            'file_path' => 'training_attachments/' . $this->faker->word() . '.jpg',
-            'file_name' => $this->faker->word() . '.jpg',
+            'file_path' => 'training_attachments/'.$this->faker->word().'.jpg',
+            'file_name' => $this->faker->word().'.jpg',
         ]);
     }
 
@@ -66,8 +67,8 @@ class TrainingAttachmentFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'file_type' => 'video',
-            'file_path' => 'training_attachments/' . $this->faker->word() . '.mp4',
-            'file_name' => $this->faker->word() . '.mp4',
+            'file_path' => 'training_attachments/'.$this->faker->word().'.mp4',
+            'file_name' => $this->faker->word().'.mp4',
         ]);
     }
 
@@ -78,8 +79,8 @@ class TrainingAttachmentFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'file_type' => 'document',
-            'file_path' => 'training_attachments/' . $this->faker->word() . '.pdf',
-            'file_name' => $this->faker->word() . '.pdf',
+            'file_path' => 'training_attachments/'.$this->faker->word().'.pdf',
+            'file_name' => $this->faker->word().'.pdf',
         ]);
     }
 }

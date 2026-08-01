@@ -12,28 +12,28 @@ uses()->group('api', 'course');
 
 beforeEach(function () {
     $this->trainer = User::factory()->trainer()->create();
-    $this->admin   = User::factory()->admin()->create();
+    $this->admin = User::factory()->admin()->create();
 
     $this->baseData = [
-        'name'            => 'Welpen Grundkurs',
-        'description'     => 'Grundlagen für Welpen',
-        'trainerId'       => $this->trainer->id,
-        'courseType'      => 'group',
+        'name' => 'Welpen Grundkurs',
+        'description' => 'Grundlagen für Welpen',
+        'trainerId' => $this->trainer->id,
+        'courseType' => 'group',
         'maxParticipants' => 10,
         'durationMinutes' => 60,
         'pricePerSession' => 25.00,
-        'totalSessions'   => 8,
-        'startDate'       => '2025-06-01',
-        'endDate'         => '2025-08-01',
+        'totalSessions' => 8,
+        'startDate' => '2025-06-01',
+        'endDate' => '2025-08-01',
     ];
 
     $this->validRecurrenceRule = [
-        'type'      => 'weekly',
-        'weekday'   => 1,
+        'type' => 'weekly',
+        'weekday' => 1,
         'startTime' => '09:00',
-        'endTime'   => '10:00',
+        'endTime' => '10:00',
         'startDate' => '2025-06-02',
-        'count'     => 8,
+        'count' => 8,
     ];
 });
 
@@ -60,7 +60,7 @@ it('akzeptiert eine anfrage ohne sessionsMode zur abwärtskompatibilität', func
 
 it('weist die anfrage zurück wenn recurrenceRule.count größer als 52 ist', function () {
     $data = array_merge($this->baseData, [
-        'sessionsMode'   => 'recurrence',
+        'sessionsMode' => 'recurrence',
         'recurrenceRule' => array_merge($this->validRecurrenceRule, ['count' => 53]),
     ]);
 
@@ -74,7 +74,7 @@ it('weist die anfrage zurück wenn recurrenceRule.count größer als 52 ist', fu
 
 it('speichert recurrence_rule in der datenbank wenn sessionsMode recurrence ist', function () {
     $data = array_merge($this->baseData, [
-        'sessionsMode'   => 'recurrence',
+        'sessionsMode' => 'recurrence',
         'recurrenceRule' => $this->validRecurrenceRule,
     ]);
 
@@ -100,11 +100,11 @@ it('weist die anfrage zurück wenn sessionsMode recurrence ist aber recurrenceRu
 it('akzeptiert einen request mit sessionsMode manual und vollständigen sessions', function () {
     $data = array_merge($this->baseData, [
         'sessionsMode' => 'manual',
-        'sessions'     => [
+        'sessions' => [
             [
                 'sessionDate' => '2025-06-02',
-                'startTime'   => '09:00',
-                'endTime'     => '10:00',
+                'startTime' => '09:00',
+                'endTime' => '10:00',
             ],
         ],
     ]);
@@ -116,7 +116,7 @@ it('akzeptiert einen request mit sessionsMode manual und vollständigen sessions
 
 it('akzeptiert einen request mit sessionsMode recurrence und vollständiger recurrenceRule', function () {
     $data = array_merge($this->baseData, [
-        'sessionsMode'   => 'recurrence',
+        'sessionsMode' => 'recurrence',
         'recurrenceRule' => $this->validRecurrenceRule,
     ]);
 
@@ -130,7 +130,7 @@ it('weist die anfrage zurück wenn recurrenceRule.weekday bei type weekly fehlt'
     unset($rule['weekday']);
 
     $data = array_merge($this->baseData, [
-        'sessionsMode'   => 'recurrence',
+        'sessionsMode' => 'recurrence',
         'recurrenceRule' => $rule,
     ]);
 
@@ -145,7 +145,7 @@ it('weist die anfrage zurück wenn recurrenceRule.dayOfMonth bei type monthly fe
     unset($rule['weekday']);
 
     $data = array_merge($this->baseData, [
-        'sessionsMode'   => 'recurrence',
+        'sessionsMode' => 'recurrence',
         'recurrenceRule' => $rule,
     ]);
 
@@ -164,8 +164,8 @@ it('konvertiert recurrenceRule-keys von camelCase zu snake_case', function () {
         '/api/v1/courses',
         'POST',
         array_merge($this->baseData, [
-            'trainerId'      => $user->id,
-            'sessionsMode'   => 'recurrence',
+            'trainerId' => $user->id,
+            'sessionsMode' => 'recurrence',
             'recurrenceRule' => $this->validRecurrenceRule,
         ])
     );
@@ -223,11 +223,11 @@ it('weist den update-request zurück wenn ein session-item ohne sessionDate gese
     $course = Course::factory()->create(['trainer_id' => $this->trainer->id]);
 
     $this->actingAs($this->trainer)
-        ->putJson('/api/v1/courses/' . $course->id, [
+        ->putJson('/api/v1/courses/'.$course->id, [
             'sessions' => [
                 [
                     'startTime' => '09:00',
-                    'endTime'   => '10:00',
+                    'endTime' => '10:00',
                     // sessionDate fehlt absichtlich
                 ],
             ],
@@ -240,7 +240,7 @@ it('weist den update-request zurück wenn ein session-item ohne startTime gesend
     $course = Course::factory()->create(['trainer_id' => $this->trainer->id]);
 
     $this->actingAs($this->trainer)
-        ->putJson('/api/v1/courses/' . $course->id, [
+        ->putJson('/api/v1/courses/'.$course->id, [
             'sessions' => [
                 [
                     'sessionDate' => '2025-06-02',
@@ -257,7 +257,7 @@ it('akzeptiert einen update-request ohne sessions-feld zur abwärtskompatibilit�
     $course = Course::factory()->create(['trainer_id' => $this->trainer->id]);
 
     $this->actingAs($this->trainer)
-        ->putJson('/api/v1/courses/' . $course->id, [
+        ->putJson('/api/v1/courses/'.$course->id, [
             'name' => 'Aktualisierter Kursname',
         ])
         ->assertOk();
@@ -267,14 +267,14 @@ it('weist den update-request zurück wenn recurrenceRule.type fehlt', function (
     $course = Course::factory()->create(['trainer_id' => $this->trainer->id]);
 
     $this->actingAs($this->trainer)
-        ->putJson('/api/v1/courses/' . $course->id, [
+        ->putJson('/api/v1/courses/'.$course->id, [
             'recurrenceRule' => [
                 // type fehlt absichtlich
-                'weekday'   => 1,
+                'weekday' => 1,
                 'startTime' => '09:00',
-                'endTime'   => '10:00',
+                'endTime' => '10:00',
                 'startDate' => '2025-06-02',
-                'count'     => 8,
+                'count' => 8,
             ],
         ])
         ->assertUnprocessable()

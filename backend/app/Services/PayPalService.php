@@ -6,20 +6,21 @@ use App\Models\Invoice;
 use App\Models\Payment;
 use Exception;
 use Illuminate\Support\Facades\Log;
-use PaypalServerSdkLib\PaypalServerSdkClient;
-use PaypalServerSdkLib\PaypalServerSdkClientBuilder;
+use PaypalServerSdkLib\Authentication\ClientCredentialsAuthCredentialsBuilder;
 use PaypalServerSdkLib\Controllers\OrdersController;
+use PaypalServerSdkLib\Environment;
+use PaypalServerSdkLib\Models\AmountWithBreakdown;
+use PaypalServerSdkLib\Models\ApplicationContext;
+use PaypalServerSdkLib\Models\CheckoutPaymentIntent;
 use PaypalServerSdkLib\Models\OrderRequest;
 use PaypalServerSdkLib\Models\PurchaseUnitRequest;
-use PaypalServerSdkLib\Models\AmountWithBreakdown;
-use PaypalServerSdkLib\Models\CheckoutPaymentIntent;
-use PaypalServerSdkLib\Models\ApplicationContext;
-use PaypalServerSdkLib\Authentication\ClientCredentialsAuthCredentialsBuilder;
-use PaypalServerSdkLib\Environment;
+use PaypalServerSdkLib\PaypalServerSdkClient;
+use PaypalServerSdkLib\PaypalServerSdkClientBuilder;
 
 class PayPalService
 {
     private PaypalServerSdkClient $client;
+
     private OrdersController $ordersController;
 
     public function __construct()
@@ -40,8 +41,6 @@ class PayPalService
     /**
      * Create a PayPal order for an invoice
      *
-     * @param Invoice $invoice
-     * @return array
      * @throws Exception
      */
     public function createOrder(Invoice $invoice): array
@@ -49,23 +48,23 @@ class PayPalService
         try {
             $amount = (string) number_format($invoice->remaining_balance, 2, '.', '');
 
-            $request = new OrderRequest();
+            $request = new OrderRequest;
             $request->intent = CheckoutPaymentIntent::CAPTURE;
-            
-            $purchaseUnit = new PurchaseUnitRequest();
+
+            $purchaseUnit = new PurchaseUnitRequest;
             $purchaseUnit->referenceId = $invoice->invoice_number;
             $purchaseUnit->description = "Rechnung #{$invoice->invoice_number}";
-            
-            $amountWithBreakdown = new AmountWithBreakdown();
+
+            $amountWithBreakdown = new AmountWithBreakdown;
             $amountWithBreakdown->currencyCode = config('paypal.currency');
             $amountWithBreakdown->value = $amount;
-            
+
             $purchaseUnit->amount = $amountWithBreakdown;
             $request->purchaseUnits = [$purchaseUnit];
 
-            $applicationContext = new ApplicationContext();
-            $applicationContext->returnUrl = config('paypal.return_url') . '?invoice_id=' . $invoice->id;
-            $applicationContext->cancelUrl = config('paypal.cancel_url') . '?invoice_id=' . $invoice->id;
+            $applicationContext = new ApplicationContext;
+            $applicationContext->returnUrl = config('paypal.return_url').'?invoice_id='.$invoice->id;
+            $applicationContext->cancelUrl = config('paypal.cancel_url').'?invoice_id='.$invoice->id;
             $applicationContext->brandName = config('app.name');
             $request->applicationContext = $applicationContext;
 
@@ -96,9 +95,6 @@ class PayPalService
     /**
      * Capture a PayPal order payment
      *
-     * @param string $orderId
-     * @param Invoice $invoice
-     * @return Payment
      * @throws Exception
      */
     public function captureOrder(string $orderId, Invoice $invoice): Payment
@@ -109,7 +105,7 @@ class PayPalService
 
             $captureDetails = $order->getPurchaseUnits()[0]->getPayments()->getCaptures()[0] ?? null;
 
-            if (!$captureDetails) {
+            if (! $captureDetails) {
                 throw new Exception('No capture details found in PayPal response');
             }
 
@@ -152,8 +148,6 @@ class PayPalService
     /**
      * Get details of a PayPal order
      *
-     * @param string $orderId
-     * @return array
      * @throws Exception
      */
     public function getOrderDetails(string $orderId): array

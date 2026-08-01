@@ -21,10 +21,10 @@ beforeEach(function () {
     $this->admin = User::factory()->create(['role' => 'admin']);
 
     $this->customerUser = User::factory()->create(['role' => 'customer']);
-    $this->customer     = Customer::factory()->create(['user_id' => $this->customerUser->id]);
+    $this->customer = Customer::factory()->create(['user_id' => $this->customerUser->id]);
 
     $this->otherCustomerUser = User::factory()->create(['role' => 'customer']);
-    $this->otherCustomer     = Customer::factory()->create(['user_id' => $this->otherCustomerUser->id]);
+    $this->otherCustomer = Customer::factory()->create(['user_id' => $this->otherCustomerUser->id]);
 
     Mail::fake();
 });
@@ -46,7 +46,7 @@ test('admin can list all dog registration requests', function () {
 test('admin can filter requests by status', function () {
     DogRegistrationRequest::factory()->count(3)->create([
         'customer_id' => $this->customer->id,
-        'status'      => 'pending',
+        'status' => 'pending',
     ]);
     DogRegistrationRequest::factory()->approved()->create(['customer_id' => $this->customer->id]);
 
@@ -79,13 +79,13 @@ test('unauthenticated user cannot list requests', function () {
 
 test('customer can submit a dog registration request', function () {
     $payload = [
-        'name'        => 'Buddy',
-        'breed'       => 'Golden Retriever',
-        'gender'      => 'male',
+        'name' => 'Buddy',
+        'breed' => 'Golden Retriever',
+        'gender' => 'male',
         'dateOfBirth' => '2021-05-10',
-        'neutered'    => false,
-        'chipNumber'  => '123456789',
-        'notes'       => 'Sehr verspielt',
+        'neutered' => false,
+        'chipNumber' => '123456789',
+        'notes' => 'Sehr verspielt',
     ];
 
     $response = $this->actingAs($this->customerUser)
@@ -97,8 +97,8 @@ test('customer can submit a dog registration request', function () {
 
     $this->assertDatabaseHas('dog_registration_requests', [
         'customer_id' => $this->customer->id,
-        'name'        => 'Buddy',
-        'status'      => 'pending',
+        'name' => 'Buddy',
+        'status' => 'pending',
     ]);
 });
 
@@ -128,7 +128,7 @@ test('store request validates required name', function () {
 test('store request validates gender enum', function () {
     $this->actingAs($this->customerUser)
         ->postJson('/api/v1/dog-registration-requests', [
-            'name'   => 'Rex',
+            'name' => 'Rex',
             'gender' => 'unknown',
         ])
         ->assertUnprocessable()
@@ -138,7 +138,7 @@ test('store request validates gender enum', function () {
 test('store request validates dateOfBirth is not in the future', function () {
     $this->actingAs($this->customerUser)
         ->postJson('/api/v1/dog-registration-requests', [
-            'name'        => 'Rex',
+            'name' => 'Rex',
             'dateOfBirth' => now()->addDay()->toDateString(),
         ])
         ->assertUnprocessable()
@@ -147,13 +147,13 @@ test('store request validates dateOfBirth is not in the future', function () {
 
 it('erstellt eine anfrage mit den drei herkunfts-/übernahmefeldern', function () {
     $payload = [
-        'name'              => 'Buddy',
-        'breed'             => 'Golden Retriever',
-        'gender'            => 'male',
-        'dateOfBirth'       => '2021-05-10',
-        'ownerSince'        => '2023-03-01',
-        'ageAtAcquisition'  => 'ca. 1 Jahr',
-        'origin'            => 'private',
+        'name' => 'Buddy',
+        'breed' => 'Golden Retriever',
+        'gender' => 'male',
+        'dateOfBirth' => '2021-05-10',
+        'ownerSince' => '2023-03-01',
+        'ageAtAcquisition' => 'ca. 1 Jahr',
+        'origin' => 'private',
     ];
 
     $response = $this->actingAs($this->customerUser)
@@ -164,10 +164,10 @@ it('erstellt eine anfrage mit den drei herkunfts-/übernahmefeldern', function (
         ->assertJsonPath('data.origin', 'private');
 
     $this->assertDatabaseHas('dog_registration_requests', [
-        'customer_id'        => $this->customer->id,
-        'name'               => 'Buddy',
+        'customer_id' => $this->customer->id,
+        'name' => 'Buddy',
         'age_at_acquisition' => 'ca. 1 Jahr',
-        'origin'             => 'private',
+        'origin' => 'private',
     ]);
 
     $createdRequest = DogRegistrationRequest::where('name', 'Buddy')->firstOrFail();
@@ -177,8 +177,8 @@ it('erstellt eine anfrage mit den drei herkunfts-/übernahmefeldern', function (
 it('weist eine anfrage mit ownerSince in der zukunft mit 422 zurück', function () {
     $this->actingAs($this->customerUser)
         ->postJson('/api/v1/dog-registration-requests', [
-            'name'        => 'Rex',
-            'ownerSince'  => now()->addDay()->toDateString(),
+            'name' => 'Rex',
+            'ownerSince' => now()->addDay()->toDateString(),
         ])
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['ownerSince']);
@@ -187,14 +187,14 @@ it('weist eine anfrage mit ownerSince in der zukunft mit 422 zurück', function 
 it('behandelt einen leeren string als origin bei einer anfrage wie null (globale ConvertEmptyStringsToNull-Middleware)', function () {
     $this->actingAs($this->customerUser)
         ->postJson('/api/v1/dog-registration-requests', [
-            'name'   => 'Rex',
+            'name' => 'Rex',
             'origin' => '',
         ])
         ->assertCreated()
         ->assertJsonPath('data.origin', null);
 
     $this->assertDatabaseHas('dog_registration_requests', [
-        'name'   => 'Rex',
+        'name' => 'Rex',
         'origin' => null,
     ]);
 });
@@ -214,10 +214,10 @@ test('admin can view any registration request', function () {
 
 it('liefert die drei herkunfts-/übernahmefelder beim anzeigen und auflisten von anfragen', function () {
     $req = DogRegistrationRequest::factory()->create([
-        'customer_id'        => $this->customer->id,
-        'owner_since'        => '2021-07-01',
+        'customer_id' => $this->customer->id,
+        'owner_since' => '2021-07-01',
         'age_at_acquisition' => 'ca. 5 Jahre',
-        'origin'             => 'unknown',
+        'origin' => 'unknown',
     ]);
 
     $this->actingAs($this->admin)
@@ -260,10 +260,10 @@ test('customer cannot view another customer request', function () {
 test('admin can approve a pending request and a dog is created', function () {
     $req = DogRegistrationRequest::factory()->create([
         'customer_id' => $this->customer->id,
-        'name'        => 'Bella',
-        'breed'       => 'Labrador',
-        'gender'      => 'female',
-        'neutered'    => true,
+        'name' => 'Bella',
+        'breed' => 'Labrador',
+        'gender' => 'female',
+        'neutered' => true,
     ]);
 
     $response = $this->actingAs($this->admin)
@@ -274,14 +274,14 @@ test('admin can approve a pending request and a dog is created', function () {
     // Dog was created
     $this->assertDatabaseHas('dogs', [
         'customer_id' => $this->customer->id,
-        'name'        => 'Bella',
-        'is_active'   => true,
+        'name' => 'Bella',
+        'is_active' => true,
     ]);
 
     // Request is marked approved
     $this->assertDatabaseHas('dog_registration_requests', [
-        'id'          => $req->id,
-        'status'      => 'approved',
+        'id' => $req->id,
+        'status' => 'approved',
         'reviewed_by' => $this->admin->id,
     ]);
 });
@@ -324,13 +324,13 @@ test('customer cannot approve a request', function () {
 
 it('übernimmt die drei herkunfts-/übernahmefelder beim genehmigen in den neuen hund', function () {
     $req = DogRegistrationRequest::factory()->create([
-        'customer_id'        => $this->customer->id,
-        'name'               => 'Bella',
-        'breed'              => 'Labrador',
-        'gender'             => 'female',
-        'owner_since'        => '2022-11-20',
+        'customer_id' => $this->customer->id,
+        'name' => 'Bella',
+        'breed' => 'Labrador',
+        'gender' => 'female',
+        'owner_since' => '2022-11-20',
         'age_at_acquisition' => 'ca. 3 Jahre',
-        'origin'             => 'shelter',
+        'origin' => 'shelter',
     ]);
 
     $this->actingAs($this->admin)
@@ -339,10 +339,10 @@ it('übernimmt die drei herkunfts-/übernahmefelder beim genehmigen in den neuen
         ->assertJsonPath('data.name', 'Bella');
 
     $this->assertDatabaseHas('dogs', [
-        'customer_id'        => $this->customer->id,
-        'name'               => 'Bella',
+        'customer_id' => $this->customer->id,
+        'name' => 'Bella',
         'age_at_acquisition' => 'ca. 3 Jahre',
-        'origin'             => 'shelter',
+        'origin' => 'shelter',
     ]);
 
     $createdDog = Dog::where('name', 'Bella')->firstOrFail();
@@ -351,13 +351,13 @@ it('übernimmt die drei herkunfts-/übernahmefelder beim genehmigen in den neuen
 
 it('erzeugt beim genehmigen einen hund mit null in allen drei herkunfts-/übernahmefeldern wenn die anfrage sie nicht gesetzt hat', function () {
     $req = DogRegistrationRequest::factory()->create([
-        'customer_id'        => $this->customer->id,
-        'name'               => 'Bella',
-        'breed'              => 'Labrador',
-        'gender'             => 'female',
-        'owner_since'        => null,
+        'customer_id' => $this->customer->id,
+        'name' => 'Bella',
+        'breed' => 'Labrador',
+        'gender' => 'female',
+        'owner_since' => null,
         'age_at_acquisition' => null,
-        'origin'             => null,
+        'origin' => null,
     ]);
 
     $this->actingAs($this->admin)
@@ -384,8 +384,8 @@ test('admin can reject a pending request', function () {
         ->assertJsonPath('data.status', 'rejected');
 
     $this->assertDatabaseHas('dog_registration_requests', [
-        'id'          => $req->id,
-        'status'      => 'rejected',
+        'id' => $req->id,
+        'status' => 'rejected',
         'reviewed_by' => $this->admin->id,
     ]);
 

@@ -34,8 +34,6 @@ class SendPaymentReminders extends Command
 
     /**
      * Execute the console command.
-     *
-     * @return int
      */
     public function handle(): int
     {
@@ -54,6 +52,7 @@ class SendPaymentReminders extends Command
 
         if ($overdueInvoices->isEmpty()) {
             $this->info('✅ No overdue invoices found.');
+
             return self::SUCCESS;
         }
 
@@ -65,7 +64,7 @@ class SendPaymentReminders extends Command
         foreach ($overdueInvoices as $invoice) {
             $daysOverdueForInvoice = $invoice->due_date->diffInDays(now());
             $email = $invoice->customer->user->email;
-            
+
             $this->line(sprintf(
                 '  • Invoice %s: %s (€ %.2f) - %d days overdue - Customer: %s',
                 $invoice->invoice_number,
@@ -75,7 +74,7 @@ class SendPaymentReminders extends Command
                 $email
             ));
 
-            if (!$dryRun) {
+            if (! $dryRun) {
                 Mail::to($email)->queue(new PaymentReminder($invoice));
                 $remindersSent++;
             }

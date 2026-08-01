@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTrainingAttachmentRequest;
 use App\Http\Resources\TrainingAttachmentResource;
 use App\Models\TrainingAttachment;
-use App\Models\TrainingLog;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -27,9 +26,6 @@ class TrainingAttachmentController extends Controller
 
     /**
      * Display a listing of attachments for a training log.
-     *
-     * @param Request $request
-     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -62,9 +58,6 @@ class TrainingAttachmentController extends Controller
 
     /**
      * Store a newly uploaded attachment.
-     *
-     * @param StoreTrainingAttachmentRequest $request
-     * @return JsonResponse
      */
     public function store(StoreTrainingAttachmentRequest $request): JsonResponse
     {
@@ -80,21 +73,21 @@ class TrainingAttachmentController extends Controller
         // Generate unique filename with additional security
         $originalName = $file->getClientOriginalName();
         $extension = $file->getClientOriginalExtension();
-        
+
         // Validate extension against allowed list
         $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'mov', 'avi', 'pdf', 'doc', 'docx'];
-        if (!in_array(strtolower($extension), $allowedExtensions)) {
+        if (! in_array(strtolower($extension), $allowedExtensions)) {
             abort(422, 'Invalid file extension');
         }
-        
+
         $filename = pathinfo($originalName, PATHINFO_FILENAME);
         $filename = preg_replace('/[^A-Za-z0-9_-]/', '_', $filename);
         $filename = substr($filename, 0, 100); // Limit filename length
-        $uniqueFilename = $filename . '_' . uniqid() . '_' . time() . '.' . strtolower($extension);
+        $uniqueFilename = $filename.'_'.uniqid().'_'.time().'.'.strtolower($extension);
 
         // Store file
         $path = $file->storeAs(
-            'training-attachments/' . $validated['training_log_id'],
+            'training-attachments/'.$validated['training_log_id'],
             $uniqueFilename,
             'public'
         );
@@ -117,9 +110,6 @@ class TrainingAttachmentController extends Controller
 
     /**
      * Display the specified attachment.
-     *
-     * @param TrainingAttachment $trainingAttachment
-     * @return TrainingAttachmentResource
      */
     public function show(TrainingAttachment $trainingAttachment): TrainingAttachmentResource
     {
@@ -132,15 +122,12 @@ class TrainingAttachmentController extends Controller
 
     /**
      * Download the specified attachment.
-     *
-     * @param TrainingAttachment $trainingAttachment
-     * @return StreamedResponse
      */
     public function download(TrainingAttachment $trainingAttachment): StreamedResponse
     {
         $this->authorize('view', $trainingAttachment);
 
-        if (!Storage::disk('public')->exists($trainingAttachment->file_path)) {
+        if (! Storage::disk('public')->exists($trainingAttachment->file_path)) {
             abort(404, 'File not found');
         }
 
@@ -152,9 +139,6 @@ class TrainingAttachmentController extends Controller
 
     /**
      * Remove the specified attachment.
-     *
-     * @param TrainingAttachment $trainingAttachment
-     * @return JsonResponse
      */
     public function destroy(TrainingAttachment $trainingAttachment): JsonResponse
     {
@@ -172,9 +156,6 @@ class TrainingAttachmentController extends Controller
 
     /**
      * Get file type from MIME type.
-     *
-     * @param string $mimeType
-     * @return string
      */
     private function getFileTypeFromMime(string $mimeType): string
     {

@@ -25,14 +25,13 @@ class DogDeletedMail extends Mailable
     use SerializesModels;
 
     /**
-     * @param string $customerFirstName  Customer's first name for salutation.
-     * @param string $dogName            Name of the deleted dog.
+     * @param  string  $customerFirstName  Customer's first name for salutation.
+     * @param  string  $dogName  Name of the deleted dog.
      */
     public function __construct(
         public readonly string $customerFirstName,
         public readonly string $dogName,
-    ) {
-    }
+    ) {}
 
     public function envelope(): Envelope
     {
@@ -47,7 +46,7 @@ class DogDeletedMail extends Mailable
                 $settings['company_email'] ?? config('mail.from.address', 'info@hundeschule.de'),
                 $settings['company_name'] ?? config('mail.from.name', 'Hundeschule'),
             ),
-            subject: 'Ihr Hund wurde aus dem System entfernt - ' . $this->dogName,
+            subject: 'Ihr Hund wurde aus dem System entfernt - '.$this->dogName,
         );
     }
 

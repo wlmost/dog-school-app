@@ -8,10 +8,11 @@ use App\Http\Requests\StoreAnamnesisResponseRequest;
 use App\Http\Requests\UpdateAnamnesisResponseRequest;
 use App\Http\Resources\AnamnesisResponseResource;
 use App\Models\AnamnesisResponse;
+use App\Models\Customer;
 use App\Models\Dog;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
@@ -66,7 +67,7 @@ class AnamnesisResponseController extends Controller
             });
         } elseif ($user->isCustomer()) {
             // Customer sees only their own dogs' responses
-            $customer = \App\Models\Customer::where('user_id', $user->id)->first();
+            $customer = Customer::where('user_id', $user->id)->first();
             if ($customer) {
                 $query->whereHas('dog', function ($q) use ($customer) {
                     $q->where('customer_id', $customer->id);
@@ -101,7 +102,7 @@ class AnamnesisResponseController extends Controller
             $response = AnamnesisResponse::create($data);
 
             // Create answers if provided
-            if (!empty($answers)) {
+            if (! empty($answers)) {
                 foreach ($answers as $answerData) {
                     $answerData['response_id'] = $response->id;
                     $response->answers()->create($answerData);
@@ -129,7 +130,7 @@ class AnamnesisResponseController extends Controller
             'dog.customer',
             'template.questions',
             'completedBy',
-            'answers.question'
+            'answers.question',
         ]);
 
         return new AnamnesisResponseResource($anamnesisResponse);
@@ -148,7 +149,7 @@ class AnamnesisResponseController extends Controller
 
         DB::transaction(function () use ($anamnesisResponse, $data) {
             // Update answers if provided
-            if (!empty($data['answers'])) {
+            if (! empty($data['answers'])) {
                 foreach ($data['answers'] as $answerData) {
                     $anamnesisResponse->answers()->updateOrCreate(
                         ['question_id' => $answerData['question_id']],
@@ -193,9 +194,6 @@ class AnamnesisResponseController extends Controller
 
     /**
      * Generate and download anamnesis response as PDF.
-     *
-     * @param AnamnesisResponse $anamnesisResponse
-     * @return Response
      */
     public function downloadPdf(AnamnesisResponse $anamnesisResponse): Response
     {
@@ -204,9 +202,9 @@ class AnamnesisResponseController extends Controller
             'dog.customer.user',
             'template.questions',
             'completedBy',
-            'answers.question'
+            'answers.question',
         ]);
-        
+
         $this->authorize('view', $anamnesisResponse);
 
         // Generate PDF
@@ -216,8 +214,8 @@ class AnamnesisResponseController extends Controller
             ->setOption('isRemoteEnabled', true);
 
         // Return PDF download
-        $filename = 'anamnesis-' . $anamnesisResponse->dog->name . '-' . $anamnesisResponse->id . '.pdf';
-        
+        $filename = 'anamnesis-'.$anamnesisResponse->dog->name.'-'.$anamnesisResponse->id.'.pdf';
+
         return $pdf->download($filename);
     }
 }

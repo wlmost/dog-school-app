@@ -28,8 +28,8 @@ test('can list anamnesis templates', function () {
         ->assertJsonCount(3, 'data')
         ->assertJsonStructure([
             'data' => [
-                '*' => ['id', 'trainerId', 'name', 'description', 'isDefault', 'createdAt', 'updatedAt', 'questionsCount']
-            ]
+                '*' => ['id', 'trainerId', 'name', 'description', 'isDefault', 'createdAt', 'updatedAt', 'questionsCount'],
+            ],
         ]);
 });
 
@@ -63,7 +63,7 @@ test('can filter templates by trainer', function () {
     AnamnesisTemplate::factory()->create(['trainer_id' => $this->anotherTrainer->id]);
 
     $response = $this->actingAs($this->trainer)
-        ->getJson('/api/v1/anamnesis-templates?trainerId=' . $this->trainer->id);
+        ->getJson('/api/v1/anamnesis-templates?trainerId='.$this->trainer->id);
 
     $response->assertOk()
         ->assertJsonCount(1, 'data')
@@ -174,9 +174,9 @@ test('can view template details with questions', function () {
                 'trainerId',
                 'name',
                 'questions' => [
-                    '*' => ['id', 'questionText', 'questionType', 'isRequired', 'order']
-                ]
-            ]
+                    '*' => ['id', 'questionText', 'questionType', 'isRequired', 'order'],
+                ],
+            ],
         ]);
 });
 

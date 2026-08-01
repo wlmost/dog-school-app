@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\AnamnesisQuestion;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Anamnesis Question Resource
  *
- * @mixin \App\Models\AnamnesisQuestion
+ * @mixin AnamnesisQuestion
  */
 class AnamnesisQuestionResource extends JsonResource
 {

@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Resources;
 
+use App\Models\Course;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * Course Resource
  *
- * @mixin \App\Models\Course
+ * @mixin Course
  */
 class CourseResource extends JsonResource
 {
@@ -37,7 +38,7 @@ class CourseResource extends JsonResource
             'isFull' => $this->isFull(),
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
-            
+
             'trainer' => new UserResource($this->whenLoaded('trainer')),
             'sessions' => TrainingSessionResource::collection($this->whenLoaded('sessions')),
             'runs' => CourseRunResource::collection($this->whenLoaded('runs')),

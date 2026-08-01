@@ -30,7 +30,7 @@ class SendInvoiceCreatedEmail implements ShouldQueue
         // Load necessary relationships
         $event->invoice->load([
             'customer.user',
-            'items'
+            'items',
         ]);
 
         // Queue invoice created email to customer

@@ -9,6 +9,7 @@ use App\Models\Setting;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
@@ -48,7 +49,7 @@ class BookingCancellationApproved extends Mailable
                 $settings['company_email'] ?? env('MAIL_FROM_ADDRESS', 'info@hundeschule.de'),
                 $settings['company_name'] ?? env('MAIL_FROM_NAME', 'Hundeschule')
             ),
-            subject: 'Stornierung bestätigt – ' . ($this->booking->trainingSession?->course?->name ?? 'Kurs'),
+            subject: 'Stornierung bestätigt – '.($this->booking->trainingSession?->course?->name ?? 'Kurs'),
         );
     }
 
@@ -70,7 +71,7 @@ class BookingCancellationApproved extends Mailable
     /**
      * Get the attachments for the message.
      *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
+     * @return array<int, Attachment>
      */
     public function attachments(): array
     {

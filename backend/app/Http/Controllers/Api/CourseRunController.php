@@ -32,9 +32,6 @@ class CourseRunController extends Controller
      * List all runs for a course.
      *
      * Public action — no authentication required.
-     *
-     * @param Course $course
-     * @return AnonymousResourceCollection
      */
     public function index(Course $course): AnonymousResourceCollection
     {
@@ -50,10 +47,6 @@ class CourseRunController extends Controller
      * Create a new run for a course.
      *
      * Only the owning trainer or an admin may create runs.
-     *
-     * @param StoreCourseRunRequest $request
-     * @param Course                $course
-     * @return JsonResponse
      */
     public function store(StoreCourseRunRequest $request, Course $course): JsonResponse
     {
@@ -63,8 +56,8 @@ class CourseRunController extends Controller
 
         $run = $course->runs()->create([
             'start_date' => $validated['startDate'],
-            'end_date'   => $validated['endDate'] ?? null,
-            'status'     => $validated['status'] ?? 'active',
+            'end_date' => $validated['endDate'] ?? null,
+            'status' => $validated['status'] ?? 'active',
         ]);
 
         return (new CourseRunResource($run->load('sessions')))->response()->setStatusCode(201);
@@ -79,10 +72,6 @@ class CourseRunController extends Controller
      *
      * HTTP 201: at least one booking was created (data array + optional skipped list).
      * HTTP 422: run has no bookable sessions, or all sessions were skipped.
-     *
-     * @param BookCourseRunRequest $request
-     * @param CourseRun            $courseRun
-     * @return JsonResponse
      */
     public function book(BookCourseRunRequest $request, CourseRun $courseRun): JsonResponse
     {
@@ -119,7 +108,8 @@ class CourseRunController extends Controller
                 ->count();
 
             if ($currentBookings >= $session->max_participants) {
-                $skipped[] = $session->session_date->toDateString() . ' (ausgebucht)';
+                $skipped[] = $session->session_date->toDateString().' (ausgebucht)';
+
                 continue;
             }
 
@@ -130,18 +120,19 @@ class CourseRunController extends Controller
                 ->exists();
 
             if ($alreadyBooked) {
-                $skipped[] = $session->session_date->toDateString() . ' (bereits gebucht)';
+                $skipped[] = $session->session_date->toDateString().' (bereits gebucht)';
+
                 continue;
             }
 
             $booking = Booking::create([
                 'training_session_id' => $session->id,
-                'customer_id'         => $data['customer_id'],
-                'dog_id'              => $data['dog_id'],
-                'course_run_id'       => $courseRun->id,
-                'notes'               => $data['notes'] ?? null,
-                'booking_date'        => now(),
-                'status'              => 'pending',
+                'customer_id' => $data['customer_id'],
+                'dog_id' => $data['dog_id'],
+                'course_run_id' => $courseRun->id,
+                'notes' => $data['notes'] ?? null,
+                'booking_date' => now(),
+                'status' => 'pending',
             ]);
 
             $booking->load(['trainingSession.course', 'customer.user', 'dog']);
@@ -156,7 +147,7 @@ class CourseRunController extends Controller
         }
 
         return response()->json([
-            'data'    => $created,
+            'data' => $created,
             'skipped' => $skipped,
         ], 201);
     }

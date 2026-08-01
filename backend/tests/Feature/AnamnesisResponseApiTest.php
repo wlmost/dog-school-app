@@ -32,8 +32,8 @@ test('can list anamnesis responses', function () {
         ->assertJsonCount(3, 'data')
         ->assertJsonStructure([
             'data' => [
-                '*' => ['id', 'dogId', 'templateId', 'completedAt', 'completedBy', 'createdAt']
-            ]
+                '*' => ['id', 'dogId', 'templateId', 'completedAt', 'completedBy', 'createdAt'],
+            ],
         ]);
 });
 
@@ -234,9 +234,9 @@ test('can view response details', function () {
                 'dog',
                 'template',
                 'answers' => [
-                    '*' => ['id', 'questionId', 'answerValue', 'question']
-                ]
-            ]
+                    '*' => ['id', 'questionId', 'answerValue', 'question'],
+                ],
+            ],
         ]);
 });
 

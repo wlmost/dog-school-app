@@ -32,7 +32,7 @@ test('course is full when max participants reached', function () {
         'max_participants' => 2,
         'status' => 'scheduled',
     ]);
-    
+
     Booking::factory()->count(2)->create([
         'training_session_id' => $session->id,
         'status' => 'confirmed',
@@ -44,7 +44,7 @@ test('course is full when max participants reached', function () {
 
 test('training session is full when bookings equal max participants', function () {
     $session = TrainingSession::factory()->create(['max_participants' => 3]);
-    
+
     Booking::factory()->count(3)->create([
         'training_session_id' => $session->id,
         'status' => 'confirmed',
@@ -55,7 +55,7 @@ test('training session is full when bookings equal max participants', function (
 
 test('training session is not full when spots available', function () {
     $session = TrainingSession::factory()->create(['max_participants' => 5]);
-    
+
     Booking::factory()->count(2)->create([
         'training_session_id' => $session->id,
         'status' => 'confirmed',
@@ -125,7 +125,7 @@ test('invoice is overdue when due date passed and not paid', function () {
 
 test('invoice remaining balance is calculated correctly', function () {
     $invoice = Invoice::factory()->create(['total_amount' => 100.00]);
-    
+
     Payment::factory()->create([
         'invoice_id' => $invoice->id,
         'amount' => 60.00,

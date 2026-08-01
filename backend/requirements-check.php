@@ -1,18 +1,18 @@
 <?php
 /**
  * HomoCanis Server Requirements Check
- * 
+ *
  * USAGE:
  * 1. Upload this file to your server's backend/ directory
  * 2. Access via browser: https://your-domain.com/requirements-check.php
  * 3. Review all validation results
  * 4. Fix any issues reported
  * 5. DELETE THIS FILE after successful installation
- * 
+ *
  * SECURITY WARNING:
  * This script reveals system information. DELETE or RESTRICT ACCESS after use.
  * Consider IP whitelist for production servers.
- * 
+ *
  * Version: 1.0.0
  * Date: 2026-02-15
  * Required PHP: 8.4.x
@@ -30,7 +30,7 @@ $results = [
     'php_version' => [],
     'extensions' => [],
     'permissions' => [],
-    'database' => []
+    'database' => [],
 ];
 
 $overall_status = 'pass'; // Can be: pass, warning, fail
@@ -39,22 +39,23 @@ $overall_status = 'pass'; // Can be: pass, warning, fail
 // PHP VERSION CHECK
 // =============================================================================
 
-function checkPhpVersion() {
+function checkPhpVersion()
+{
     global $results, $overall_status;
-    
+
     $version = PHP_VERSION;
     $parts = explode('.', $version);
-    $major = (int)$parts[0];
-    $minor = (int)$parts[1];
-    $patch = isset($parts[2]) ? (int)$parts[2] : 0;
-    
+    $major = (int) $parts[0];
+    $minor = (int) $parts[1];
+    $patch = isset($parts[2]) ? (int) $parts[2] : 0;
+
     $results['php_version'] = [
         'version' => $version,
         'major' => $major,
         'minor' => $minor,
-        'patch' => $patch
+        'patch' => $patch,
     ];
-    
+
     if ($major < 8 || ($major == 8 && $minor < 4)) {
         $results['php_version']['status'] = 'fail';
         $results['php_version']['message'] = 'PHP 8.4.0 or higher is required';
@@ -62,7 +63,9 @@ function checkPhpVersion() {
     } elseif ($major > 8 || ($major == 8 && $minor > 4)) {
         $results['php_version']['status'] = 'warning';
         $results['php_version']['message'] = 'PHP version is untested (8.4.x recommended)';
-        if ($overall_status === 'pass') $overall_status = 'warning';
+        if ($overall_status === 'pass') {
+            $overall_status = 'warning';
+        }
     } else {
         $results['php_version']['status'] = 'pass';
         $results['php_version']['message'] = 'PHP version is compatible';
@@ -73,9 +76,10 @@ function checkPhpVersion() {
 // PHP EXTENSIONS CHECK
 // =============================================================================
 
-function checkExtensions() {
+function checkExtensions()
+{
     global $results, $overall_status;
-    
+
     // Define required extensions
     $required = [
         'json' => 'JSON parsing',
@@ -90,53 +94,55 @@ function checkExtensions() {
         'filter' => 'Input filtering',
         'hash' => 'Hash functions',
         'curl' => 'HTTP requests (PayPal SDK)',
-        'zip' => 'Archive handling (dompdf)'
+        'zip' => 'Archive handling (dompdf)',
     ];
-    
+
     // Define recommended extensions
     $recommended = [
         'bcmath' => 'Arbitrary precision mathematics',
         'gd' => 'Image processing (alternative: imagick)',
-        'imagick' => 'Image processing (alternative: gd)'
+        'imagick' => 'Image processing (alternative: gd)',
     ];
-    
+
     $results['extensions']['required'] = [];
     $results['extensions']['recommended'] = [];
     $results['extensions']['missing_required'] = [];
     $results['extensions']['missing_recommended'] = [];
-    
+
     // Check required extensions
     foreach ($required as $ext => $description) {
         $loaded = extension_loaded($ext);
         $results['extensions']['required'][$ext] = [
             'loaded' => $loaded,
-            'description' => $description
+            'description' => $description,
         ];
-        
-        if (!$loaded) {
+
+        if (! $loaded) {
             $results['extensions']['missing_required'][] = $ext;
             $overall_status = 'fail';
         }
     }
-    
+
     // Check recommended extensions
     foreach ($recommended as $ext => $description) {
         $loaded = extension_loaded($ext);
         $results['extensions']['recommended'][$ext] = [
             'loaded' => $loaded,
-            'description' => $description
+            'description' => $description,
         ];
-        
-        if (!$loaded) {
+
+        if (! $loaded) {
             $results['extensions']['missing_recommended'][] = $ext;
         }
     }
-    
+
     // Special handling for gd/imagick - at least one should be present
-    if (!extension_loaded('gd') && !extension_loaded('imagick')) {
-        if ($overall_status === 'pass') $overall_status = 'warning';
+    if (! extension_loaded('gd') && ! extension_loaded('imagick')) {
+        if ($overall_status === 'pass') {
+            $overall_status = 'warning';
+        }
     }
-    
+
     $results['extensions']['status'] = empty($results['extensions']['missing_required']) ? 'pass' : 'fail';
 }
 
@@ -144,42 +150,43 @@ function checkExtensions() {
 // FILE PERMISSIONS CHECK
 // =============================================================================
 
-function checkPermissions() {
+function checkPermissions()
+{
     global $results, $overall_status;
-    
+
     $base_dir = __DIR__;
-    
+
     // Define directories that need to be writable
     $directories = [
-        'storage' => $base_dir . '/storage',
-        'bootstrap/cache' => $base_dir . '/bootstrap/cache',
-        'public/storage' => $base_dir . '/public/storage'
+        'storage' => $base_dir.'/storage',
+        'bootstrap/cache' => $base_dir.'/bootstrap/cache',
+        'public/storage' => $base_dir.'/public/storage',
     ];
-    
+
     $results['permissions']['checks'] = [];
-    
+
     foreach ($directories as $name => $path) {
         $check = [
             'path' => $path,
-            'name' => $name
+            'name' => $name,
         ];
-        
-        if (!file_exists($path)) {
+
+        if (! file_exists($path)) {
             $check['status'] = 'fail';
             $check['message'] = 'Directory does not exist';
             $check['exists'] = false;
             $overall_status = 'fail';
         } else {
             $check['exists'] = true;
-            
+
             // Get current permissions
             $perms = fileperms($path);
             $check['current_perms'] = substr(sprintf('%o', $perms), -4);
-            
+
             // Test write permission
-            $test_file = $path . '/.requirements-test-' . uniqid();
+            $test_file = $path.'/.requirements-test-'.uniqid();
             $writable = @file_put_contents($test_file, 'test');
-            
+
             if ($writable !== false) {
                 @unlink($test_file);
                 $check['status'] = 'pass';
@@ -193,10 +200,10 @@ function checkPermissions() {
                 $overall_status = 'fail';
             }
         }
-        
+
         $results['permissions']['checks'][$name] = $check;
     }
-    
+
     $results['permissions']['status'] = ($overall_status === 'fail') ? 'fail' : 'pass';
 }
 
@@ -204,16 +211,17 @@ function checkPermissions() {
 // DATABASE CHECK
 // =============================================================================
 
-function checkDatabase() {
+function checkDatabase()
+{
     global $results, $overall_status;
-    
+
     $db_host = null;
     $db_port = '3306';
     $db_name = null;
     $db_user = null;
     $db_pass = null;
     $test_requested = false;
-    
+
     // Check for form submission
     if (isset($_SERVER['REQUEST_METHOD']) && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['test_database'])) {
         $test_requested = true;
@@ -224,15 +232,17 @@ function checkDatabase() {
         $db_pass = $_POST['db_pass'] ?? '';
     } else {
         // Try to read from .env file
-        $env_file = __DIR__ . '/.env';
+        $env_file = __DIR__.'/.env';
         if (file_exists($env_file) && is_readable($env_file)) {
             $env_content = file_get_contents($env_file);
             $env_lines = explode("\n", $env_content);
-            
+
             foreach ($env_lines as $line) {
                 $line = trim($line);
-                if (empty($line) || strpos($line, '#') === 0) continue;
-                
+                if (empty($line) || strpos($line, '#') === 0) {
+                    continue;
+                }
+
                 if (preg_match('/^DB_HOST=(.*)$/', $line, $matches)) {
                     $db_host = trim($matches[1], '"\'');
                 } elseif (preg_match('/^DB_PORT=(.*)$/', $line, $matches)) {
@@ -245,59 +255,62 @@ function checkDatabase() {
                     $db_pass = trim($matches[1], '"\'');
                 }
             }
-            
+
             if ($db_host && $db_name && $db_user) {
                 $test_requested = true;
             }
         }
     }
-    
+
     $results['database']['tested'] = $test_requested;
-    
-    if (!$test_requested) {
+
+    if (! $test_requested) {
         $results['database']['status'] = 'skipped';
         $results['database']['message'] = 'Database test not performed (no credentials provided)';
+
         return;
     }
-    
+
     // Sanitize inputs
     $db_host = htmlspecialchars(strip_tags($db_host));
     $db_port = htmlspecialchars(strip_tags($db_port));
     $db_name = htmlspecialchars(strip_tags($db_name));
     $db_user = htmlspecialchars(strip_tags($db_user));
-    
+
     try {
         $dsn = "mysql:host={$db_host};port={$db_port};dbname={$db_name};charset=utf8mb4";
         $pdo = new PDO($dsn, $db_user, $db_pass, [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_TIMEOUT => 5
+            PDO::ATTR_TIMEOUT => 5,
         ]);
-        
+
         // Get MySQL version
         $version_query = $pdo->query('SELECT VERSION()');
         $mysql_version = $version_query->fetchColumn();
-        
+
         $results['database']['connected'] = true;
         $results['database']['version'] = $mysql_version;
-        
+
         // Parse version
         preg_match('/^(\d+)\.(\d+)\.(\d+)/', $mysql_version, $version_parts);
-        $major = isset($version_parts[1]) ? (int)$version_parts[1] : 0;
-        $minor = isset($version_parts[2]) ? (int)$version_parts[2] : 0;
-        
+        $major = isset($version_parts[1]) ? (int) $version_parts[1] : 0;
+        $minor = isset($version_parts[2]) ? (int) $version_parts[2] : 0;
+
         if ($major >= 8) {
             $results['database']['status'] = 'pass';
             $results['database']['message'] = 'MySQL version is compatible';
         } elseif ($major == 5 && $minor >= 7) {
             $results['database']['status'] = 'warning';
             $results['database']['message'] = 'MySQL 8.0+ is recommended (5.7 is acceptable)';
-            if ($overall_status === 'pass') $overall_status = 'warning';
+            if ($overall_status === 'pass') {
+                $overall_status = 'warning';
+            }
         } else {
             $results['database']['status'] = 'fail';
             $results['database']['message'] = 'MySQL version is too old (minimum 5.7 required)';
             $overall_status = 'fail';
         }
-        
+
     } catch (PDOException $e) {
         $results['database']['connected'] = false;
         $results['database']['status'] = 'fail';
@@ -629,7 +642,7 @@ $results['timestamp'] = date('Y-m-d H:i:s');
         <div class="summary">
             <h2>Overall Status</h2>
             <div class="status-badge status-<?php echo $overall_status; ?>">
-                <?php 
+                <?php
                 if ($overall_status === 'pass') {
                     echo '✓ ALL CHECKS PASSED';
                 } elseif ($overall_status === 'warning') {
@@ -637,7 +650,7 @@ $results['timestamp'] = date('Y-m-d H:i:s');
                 } else {
                     echo '✗ CHECKS FAILED';
                 }
-                ?>
+?>
             </div>
         </div>
         
@@ -655,17 +668,17 @@ $results['timestamp'] = date('Y-m-d H:i:s');
                     <?php echo $results['php_version']['message']; ?>
                 </div>
                 
-                <?php if ($results['php_version']['status'] !== 'pass'): ?>
+                <?php if ($results['php_version']['status'] !== 'pass') { ?>
                 <div class="remediation">
                     <strong>How to fix:</strong>
-                    <?php if ($results['php_version']['status'] === 'fail'): ?>
+                    <?php if ($results['php_version']['status'] === 'fail') { ?>
                         <p>Contact your hosting provider to upgrade to PHP 8.4.x. Most control panels (cPanel, Plesk) allow PHP version selection.</p>
                         <p>Required: PHP 8.4.0 or higher</p>
-                    <?php else: ?>
+                    <?php } else { ?>
                         <p>Your PHP version (<?php echo $results['php_version']['version']; ?>) has not been tested with this application. PHP 8.4.x is recommended. The application may work, but proceed with caution.</p>
-                    <?php endif; ?>
+                    <?php } ?>
                 </div>
-                <?php endif; ?>
+                <?php } ?>
             </div>
         </div>
         
@@ -675,7 +688,7 @@ $results['timestamp'] = date('Y-m-d H:i:s');
             
             <h4 style="margin-top: 0;">Required Extensions</h4>
             <div class="extension-grid">
-                <?php foreach ($results['extensions']['required'] as $ext => $info): ?>
+                <?php foreach ($results['extensions']['required'] as $ext => $info) { ?>
                 <div class="extension-item check-item <?php echo $info['loaded'] ? 'pass' : 'fail'; ?>">
                     <span class="status-icon <?php echo $info['loaded'] ? 'pass' : 'fail'; ?>">
                         <?php echo $info['loaded'] ? '✓' : '✗'; ?>
@@ -685,17 +698,17 @@ $results['timestamp'] = date('Y-m-d H:i:s');
                         <small><?php echo $info['description']; ?></small>
                     </div>
                 </div>
-                <?php endforeach; ?>
+                <?php } ?>
             </div>
             
-            <?php if (!empty($results['extensions']['missing_required'])): ?>
+            <?php if (! empty($results['extensions']['missing_required'])) { ?>
             <div class="remediation" style="margin-left: 0; margin-top: 20px;">
                 <strong>Missing Required Extensions:</strong>
                 <p>The following extensions must be installed:</p>
                 <ul style="margin-left: 20px; margin-top: 10px;">
-                    <?php foreach ($results['extensions']['missing_required'] as $ext): ?>
+                    <?php foreach ($results['extensions']['missing_required'] as $ext) { ?>
                     <li><code><?php echo $ext; ?></code></li>
-                    <?php endforeach; ?>
+                    <?php } ?>
                 </ul>
                 <p style="margin-top: 15px;"><strong>How to fix:</strong></p>
                 <ul style="margin-left: 20px;">
@@ -704,11 +717,11 @@ $results['timestamp'] = date('Y-m-d H:i:s');
                     <li>On VPS/dedicated servers, use package manager (e.g., <code>apt install php8.4-{extension}</code>)</li>
                 </ul>
             </div>
-            <?php endif; ?>
+            <?php } ?>
             
             <h4 style="margin-top: 25px;">Recommended Extensions</h4>
             <div class="extension-grid">
-                <?php foreach ($results['extensions']['recommended'] as $ext => $info): ?>
+                <?php foreach ($results['extensions']['recommended'] as $ext => $info) { ?>
                 <div class="extension-item check-item <?php echo $info['loaded'] ? 'pass' : 'warning'; ?>">
                     <span class="status-icon <?php echo $info['loaded'] ? 'pass' : 'warning'; ?>">
                         <?php echo $info['loaded'] ? '✓' : '⚠'; ?>
@@ -718,22 +731,22 @@ $results['timestamp'] = date('Y-m-d H:i:s');
                         <small><?php echo $info['description']; ?></small>
                     </div>
                 </div>
-                <?php endforeach; ?>
+                <?php } ?>
             </div>
             
-            <?php if (!empty($results['extensions']['missing_recommended'])): ?>
+            <?php if (! empty($results['extensions']['missing_recommended'])) { ?>
             <div class="remediation" style="margin-left: 0; margin-top: 15px; background: #fffef0;">
                 <strong>Note:</strong>
                 <p>Recommended extensions are optional but enhance functionality. At least one image processing extension (GD or Imagick) is recommended.</p>
             </div>
-            <?php endif; ?>
+            <?php } ?>
         </div>
         
         <!-- FILE PERMISSIONS -->
         <div class="section">
             <h3>File Permissions</h3>
             
-            <?php foreach ($results['permissions']['checks'] as $check): ?>
+            <?php foreach ($results['permissions']['checks'] as $check) { ?>
             <div class="check-item <?php echo $check['status']; ?>">
                 <div class="check-item-header">
                     <span class="status-icon <?php echo $check['status']; ?>">
@@ -743,34 +756,34 @@ $results['timestamp'] = date('Y-m-d H:i:s');
                 </div>
                 <div class="check-item-description">
                     <?php echo $check['message']; ?>
-                    <?php if (isset($check['current_perms'])): ?>
+                    <?php if (isset($check['current_perms'])) { ?>
                         (Current: <?php echo $check['current_perms']; ?>)
-                    <?php endif; ?>
+                    <?php } ?>
                 </div>
                 
-                <?php if ($check['status'] === 'fail'): ?>
+                <?php if ($check['status'] === 'fail') { ?>
                 <div class="remediation">
                     <strong>How to fix:</strong>
-                    <?php if (!$check['exists']): ?>
+                    <?php if (! $check['exists']) { ?>
                         <p>Create the directory:</p>
                         <code>mkdir -p <?php echo $check['path']; ?></code>
-                    <?php else: ?>
+                    <?php } else { ?>
                         <p>Make the directory writable:</p>
                         <code>chmod 775 <?php echo $check['path']; ?></code>
                         <p style="margin-top: 10px;">Or via FTP client, set permissions to 775 or 777</p>
                         <p style="margin-top: 10px;">Note: Path is relative to: <code><?php echo __DIR__; ?></code></p>
-                    <?php endif; ?>
+                    <?php } ?>
                 </div>
-                <?php endif; ?>
+                <?php } ?>
             </div>
-            <?php endforeach; ?>
+            <?php } ?>
         </div>
         
         <!-- DATABASE -->
         <div class="section">
             <h3>Database Connectivity</h3>
             
-            <?php if ($results['database']['tested']): ?>
+            <?php if ($results['database']['tested']) { ?>
                 <div class="check-item <?php echo $results['database']['status']; ?>">
                     <div class="check-item-header">
                         <span class="status-icon <?php echo $results['database']['status']; ?>">
@@ -779,18 +792,18 @@ $results['timestamp'] = date('Y-m-d H:i:s');
                         <span class="check-item-title">MySQL Connection</span>
                     </div>
                     <div class="check-item-description">
-                        <?php if ($results['database']['connected']): ?>
+                        <?php if ($results['database']['connected']) { ?>
                             Connected successfully. Version: <?php echo $results['database']['version']; ?>
                             <br><?php echo $results['database']['message']; ?>
-                        <?php else: ?>
+                        <?php } else { ?>
                             Connection failed: <?php echo htmlspecialchars($results['database']['error']); ?>
-                        <?php endif; ?>
+                        <?php } ?>
                     </div>
                     
-                    <?php if ($results['database']['status'] !== 'pass'): ?>
+                    <?php if ($results['database']['status'] !== 'pass') { ?>
                     <div class="remediation">
                         <strong>How to fix:</strong>
-                        <?php if (!$results['database']['connected']): ?>
+                        <?php if (! $results['database']['connected']) { ?>
                             <ul style="margin-left: 20px;">
                                 <li>Verify database credentials are correct</li>
                                 <li>Ensure MySQL server is running</li>
@@ -798,19 +811,19 @@ $results['timestamp'] = date('Y-m-d H:i:s');
                                 <li>Verify firewall allows connection on port 3306</li>
                                 <li>Contact hosting provider if issue persists</li>
                             </ul>
-                        <?php else: ?>
+                        <?php } else { ?>
                             <p>MySQL 8.0 or higher is recommended for best performance and security. Contact your hosting provider to upgrade.</p>
-                        <?php endif; ?>
+                        <?php } ?>
                     </div>
-                    <?php endif; ?>
+                    <?php } ?>
                 </div>
-            <?php else: ?>
+            <?php } else { ?>
                 <p style="color: #718096; margin-bottom: 20px;">
                     Database connectivity test was not performed. Enter credentials below to test your MySQL connection.
                 </p>
-            <?php endif; ?>
+            <?php } ?>
             
-            <details <?php echo !$results['database']['tested'] ? 'open' : ''; ?>>
+            <details <?php echo ! $results['database']['tested'] ? 'open' : ''; ?>>
                 <summary>Test Database Connection</summary>
                 <div class="db-form">
                     <h4>Enter Database Credentials</h4>

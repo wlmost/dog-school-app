@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -24,17 +25,17 @@ class StorePricingItemRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            'category'     => ['required', 'string', 'max:100'],
-            'title'        => ['required', 'string', 'max:200'],
-            'price'        => ['required', 'numeric', 'min:0', 'max:999999.99'],
-            'unit'         => ['nullable', 'string', 'max:100'],
-            'description'  => ['nullable', 'string', 'max:500'],
-            'isFromPrice'  => ['nullable', 'boolean'],
+            'category' => ['required', 'string', 'max:100'],
+            'title' => ['required', 'string', 'max:200'],
+            'price' => ['required', 'numeric', 'min:0', 'max:999999.99'],
+            'unit' => ['nullable', 'string', 'max:100'],
+            'description' => ['nullable', 'string', 'max:500'],
+            'isFromPrice' => ['nullable', 'boolean'],
         ];
     }
 
@@ -48,11 +49,11 @@ class StorePricingItemRequest extends FormRequest
         $validated = $this->validated();
 
         return [
-            'category'      => $validated['category'],
-            'title'         => $validated['title'],
-            'price'         => $validated['price'],
-            'unit'          => $validated['unit'] ?? null,
-            'description'   => $validated['description'] ?? null,
+            'category' => $validated['category'],
+            'title' => $validated['title'],
+            'price' => $validated['price'],
+            'unit' => $validated['unit'] ?? null,
+            'description' => $validated['description'] ?? null,
             'is_from_price' => $validated['isFromPrice'] ?? false,
         ];
     }

@@ -27,10 +27,10 @@ class CourseRunFactory extends Factory
         $start = fake()->dateTimeBetween('now', '+3 months');
 
         return [
-            'course_id'  => Course::factory(),
+            'course_id' => Course::factory(),
             'start_date' => $start->format('Y-m-d'),
-            'end_date'   => (clone $start)->modify('+4 weeks')->format('Y-m-d'),
-            'status'     => 'active',
+            'end_date' => (clone $start)->modify('+4 weeks')->format('Y-m-d'),
+            'status' => 'active',
         ];
     }
 

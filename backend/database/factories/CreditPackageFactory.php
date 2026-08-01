@@ -8,7 +8,7 @@ use App\Models\CreditPackage;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\CreditPackage>
+ * @extends Factory<CreditPackage>
  */
 class CreditPackageFactory extends Factory
 {
@@ -24,6 +24,4 @@ class CreditPackageFactory extends Factory
             'validity_days' => fake()->randomElement([90, 180, 365]),
         ];
     }
-
-
 }

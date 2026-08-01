@@ -29,8 +29,8 @@ class TrainerController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('first_name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
-                  ->orWhere('last_name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
-                  ->orWhere('email', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
+                    ->orWhere('last_name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
+                    ->orWhere('email', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
             });
         }
 
@@ -59,7 +59,7 @@ class TrainerController extends Controller
         ]);
 
         $password = $validated['password'];
-        
+
         $trainer = User::create([
             'first_name' => $validated['firstName'],
             'last_name' => $validated['lastName'],
@@ -106,7 +106,7 @@ class TrainerController extends Controller
         $validated = $request->validate([
             'firstName' => ['sometimes', 'required', 'string', 'max:255'],
             'lastName' => ['sometimes', 'required', 'string', 'max:255'],
-            'email' => ['sometimes', 'required', 'string', 'email', 'max:255', 'unique:users,email,' . $trainer->id],
+            'email' => ['sometimes', 'required', 'string', 'email', 'max:255', 'unique:users,email,'.$trainer->id],
             'password' => ['sometimes', 'nullable', Password::defaults()],
             'phone' => ['nullable', 'string', 'max:50'],
             'street' => ['nullable', 'string', 'max:255'],

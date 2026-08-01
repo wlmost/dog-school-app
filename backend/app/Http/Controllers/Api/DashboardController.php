@@ -57,12 +57,12 @@ class DashboardController extends Controller
     private function getAdminDashboard(): JsonResponse
     {
         $stats = [
-            'customers'                  => Customer::count(),
-            'dogs'                       => Dog::count(),
-            'courses'                    => Course::where('status', 'active')->count(),
-            'invoices'                   => Invoice::whereIn('status', ['draft', 'sent', 'overdue'])->count(),
-            'bookings'                   => Booking::whereIn('status', ['pending', 'confirmed'])->count(),
-            'pendingDogRequests'         => DogRegistrationRequest::where('status', 'pending')->count(),
+            'customers' => Customer::count(),
+            'dogs' => Dog::count(),
+            'courses' => Course::where('status', 'active')->count(),
+            'invoices' => Invoice::whereIn('status', ['draft', 'sent', 'overdue'])->count(),
+            'bookings' => Booking::whereIn('status', ['pending', 'confirmed'])->count(),
+            'pendingDogRequests' => DogRegistrationRequest::where('status', 'pending')->count(),
             'pendingDogDeletionRequests' => DogDeletionRequest::where('status', 'pending')->count(),
             'pendingCancellationRequests' => Booking::where('status', 'cancellation_requested')->count(),
         ];
@@ -98,21 +98,21 @@ class DashboardController extends Controller
             });
 
         return response()->json([
-            'stats'                      => $stats,
-            'upcomingSessions'           => $upcomingSessions,
-            'recentBookings'             => $recentBookings,
-            'pendingDogRegistrations'    => DogRegistrationRequest::with('customer.user')
+            'stats' => $stats,
+            'upcomingSessions' => $upcomingSessions,
+            'recentBookings' => $recentBookings,
+            'pendingDogRegistrations' => DogRegistrationRequest::with('customer.user')
                 ->where('status', 'pending')
                 ->orderBy('created_at', 'desc')
                 ->limit(5)
                 ->get()
                 ->map(fn (DogRegistrationRequest $r) => [
-                    'id'           => $r->id,
+                    'id' => $r->id,
                     'customerName' => $r->customer->user->full_name ?? 'Unbekannt',
-                    'dogName'      => $r->name,
-                    'breed'        => $r->breed,
-                    'gender'       => $r->gender,
-                    'createdAt'    => $r->created_at?->toISOString(),
+                    'dogName' => $r->name,
+                    'breed' => $r->breed,
+                    'gender' => $r->gender,
+                    'createdAt' => $r->created_at?->toISOString(),
                 ]),
             'pendingDogDeletionRequests' => DogDeletionRequest::with('customer.user')
                 ->where('status', 'pending')
@@ -120,10 +120,10 @@ class DashboardController extends Controller
                 ->limit(5)
                 ->get()
                 ->map(fn (DogDeletionRequest $r) => [
-                    'id'           => $r->id,
+                    'id' => $r->id,
                     'customerName' => $r->customer->user->full_name ?? 'Unbekannt',
-                    'dogName'      => $r->dog_name,
-                    'createdAt'    => $r->created_at?->toISOString(),
+                    'dogName' => $r->dog_name,
+                    'createdAt' => $r->created_at?->toISOString(),
                 ]),
             'pendingCancellationRequests' => Booking::with(['customer.user', 'dog', 'trainingSession.course'])
                 ->where('status', 'cancellation_requested')
@@ -131,13 +131,13 @@ class DashboardController extends Controller
                 ->limit(5)
                 ->get()
                 ->map(fn (Booking $b) => [
-                    'id'                 => $b->id,
-                    'customerName'       => $b->customer?->user?->full_name ?? 'Unbekannt',
-                    'dogName'            => $b->dog?->name ?? 'Unbekannt',
-                    'courseName'         => $b->trainingSession?->course?->name ?? 'Unbekannt',
-                    'sessionDate'        => $b->trainingSession?->session_date?->format('d.m.Y') ?? '-',
+                    'id' => $b->id,
+                    'customerName' => $b->customer?->user?->full_name ?? 'Unbekannt',
+                    'dogName' => $b->dog?->name ?? 'Unbekannt',
+                    'courseName' => $b->trainingSession?->course?->name ?? 'Unbekannt',
+                    'sessionDate' => $b->trainingSession?->session_date?->format('d.m.Y') ?? '-',
                     'cancellationReason' => $b->cancellation_reason,
-                    'updatedAt'          => $b->updated_at?->toISOString(),
+                    'updatedAt' => $b->updated_at?->toISOString(),
                 ]),
         ]);
     }
@@ -235,8 +235,8 @@ class DashboardController extends Controller
     {
         // Get customer record for this user
         $customer = Customer::where('user_id', $userId)->first();
-        
-        if (!$customer) {
+
+        if (! $customer) {
             return response()->json([
                 'stats' => [
                     'dogs' => 0,
@@ -285,7 +285,7 @@ class DashboardController extends Controller
             ->map(function ($session) use ($dogIds) {
                 // Get the dog booked for this session
                 $booking = $session->bookings()->whereIn('dog_id', $dogIds)->first();
-                
+
                 return [
                     'id' => $session->id,
                     'course' => $session->course->name ?? 'Unbekannt',

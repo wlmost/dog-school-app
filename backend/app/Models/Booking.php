@@ -20,12 +20,12 @@ use Illuminate\Support\Carbon;
  * @property int $dog_id
  * @property int|null $course_run_id
  * @property string $status
- * @property \Illuminate\Support\Carbon $booking_date
+ * @property Carbon $booking_date
  * @property bool|null $attended
  * @property string|null $notes
  * @property string|null $cancellation_reason
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read TrainingSession $session
  * @property-read Customer $customer
  * @property-read Dog $dog
@@ -157,7 +157,7 @@ class Booking extends Model
         // default – the deadline will then be `deadlineHours` before midnight of
         // the session date, which is stricter (earlier) than the actual session start.
         $sessionStart = Carbon::parse(
-            $session->session_date->format('Y-m-d') . ' ' . ($session->start_time ?? '00:00:00')
+            $session->session_date->format('Y-m-d').' '.($session->start_time ?? '00:00:00')
         );
 
         return $sessionStart->subHours($deadlineHours);

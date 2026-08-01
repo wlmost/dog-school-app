@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * Customer Model
@@ -28,13 +30,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $bank_account_holder
  * @property string|null $bank_iban
  * @property string|null $bank_bic
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read User $user
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Dog> $dogs
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Booking> $bookings
- * @property-read \Illuminate\Database\Eloquent\Collection<int, CustomerCredit> $credits
- * @property-read \Illuminate\Database\Eloquent\Collection<int, Invoice> $invoices
+ * @property-read Collection<int, Dog> $dogs
+ * @property-read Collection<int, Booking> $bookings
+ * @property-read Collection<int, CustomerCredit> $credits
+ * @property-read Collection<int, Invoice> $invoices
  */
 class Customer extends Model
 {
@@ -134,7 +136,7 @@ class Customer extends Model
             $this->country,
         ]);
 
-        return !empty($parts) ? implode(', ', $parts) : null;
+        return ! empty($parts) ? implode(', ', $parts) : null;
     }
 
     /**
@@ -144,7 +146,7 @@ class Customer extends Model
     {
         return $query->whereHas('credits', function ($q) {
             $q->where('status', 'active')
-              ->where('remaining_credits', '>', 0);
+                ->where('remaining_credits', '>', 0);
         });
     }
 }

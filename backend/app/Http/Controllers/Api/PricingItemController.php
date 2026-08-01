@@ -21,8 +21,6 @@ class PricingItemController extends Controller
 {
     /**
      * Public endpoint: return all pricing items grouped by category.
-     *
-     * @return JsonResponse
      */
     public function publicIndex(): JsonResponse
     {
@@ -34,7 +32,7 @@ class PricingItemController extends Controller
         $grouped = $items->groupBy('category')->map(function ($group, $category) {
             return [
                 'category' => $category,
-                'items'    => PricingItemResource::collection($group)->resolve(),
+                'items' => PricingItemResource::collection($group)->resolve(),
             ];
         })->values();
 
@@ -43,8 +41,6 @@ class PricingItemController extends Controller
 
     /**
      * Admin endpoint: return a flat list of all pricing items.
-     *
-     * @return AnonymousResourceCollection
      */
     public function index(): AnonymousResourceCollection
     {
@@ -55,9 +51,6 @@ class PricingItemController extends Controller
 
     /**
      * Store a newly created pricing item.
-     *
-     * @param StorePricingItemRequest $request
-     * @return JsonResponse
      */
     public function store(StorePricingItemRequest $request): JsonResponse
     {
@@ -70,10 +63,6 @@ class PricingItemController extends Controller
 
     /**
      * Update the specified pricing item.
-     *
-     * @param UpdatePricingItemRequest $request
-     * @param PricingItem $pricingItem
-     * @return PricingItemResource
      */
     public function update(UpdatePricingItemRequest $request, PricingItem $pricingItem): PricingItemResource
     {
@@ -84,9 +73,6 @@ class PricingItemController extends Controller
 
     /**
      * Delete the specified pricing item.
-     *
-     * @param PricingItem $pricingItem
-     * @return JsonResponse
      */
     public function destroy(PricingItem $pricingItem): JsonResponse
     {

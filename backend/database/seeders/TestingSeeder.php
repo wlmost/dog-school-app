@@ -37,36 +37,36 @@ class TestingSeeder extends Seeder
         $password = Hash::make('secret');
 
         User::factory()->admin()->create([
-            'first_name'         => 'Test',
-            'last_name'          => 'Admin',
-            'email'              => 'admin@test.local',
-            'password'           => $password,
-            'email_verified_at'  => now(),
+            'first_name' => 'Test',
+            'last_name' => 'Admin',
+            'email' => 'admin@test.local',
+            'password' => $password,
+            'email_verified_at' => now(),
         ]);
 
         User::factory()->trainer()->create([
-            'first_name'         => 'Test',
-            'last_name'          => 'Trainer',
-            'email'              => 'trainer@test.local',
-            'password'           => $password,
-            'email_verified_at'  => now(),
+            'first_name' => 'Test',
+            'last_name' => 'Trainer',
+            'email' => 'trainer@test.local',
+            'password' => $password,
+            'email_verified_at' => now(),
         ]);
 
         /** @var User $customerUser */
         $customerUser = User::factory()->customer()->create([
-            'first_name'         => 'Test',
-            'last_name'          => 'Customer',
-            'email'              => 'customer@test.local',
-            'password'           => $password,
-            'email_verified_at'  => now(),
+            'first_name' => 'Test',
+            'last_name' => 'Customer',
+            'email' => 'customer@test.local',
+            'password' => $password,
+            'email_verified_at' => now(),
         ]);
 
         // ── Customer profile linked to the base customer user ─────────────────
         Customer::factory()->for($customerUser, 'user')->create([
             'address_line1' => 'Musterstraße 1',
-            'postal_code'   => '12345',
-            'city'          => 'Musterstadt',
-            'country'       => 'Deutschland',
+            'postal_code' => '12345',
+            'city' => 'Musterstadt',
+            'country' => 'Deutschland',
         ]);
     }
 }

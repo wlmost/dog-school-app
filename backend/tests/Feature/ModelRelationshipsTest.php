@@ -60,9 +60,9 @@ test('dog age accessor calculates correctly', function () {
 
 test('dog soft deletes work correctly', function () {
     $dog = Dog::factory()->create();
-    
+
     $dog->delete();
-    
+
     expect($dog->trashed())->toBeTrue();
     $this->assertDatabaseHas('dogs', [
         'id' => $dog->id,
@@ -95,7 +95,7 @@ test('training session belongs to course', function () {
 
 test('training session can calculate available spots', function () {
     $session = TrainingSession::factory()->create(['max_participants' => 5]);
-    
+
     Booking::factory()->count(2)->create([
         'training_session_id' => $session->id,
         'status' => 'confirmed',
@@ -108,7 +108,7 @@ test('booking belongs to session customer and dog', function () {
     $session = TrainingSession::factory()->create();
     $customer = Customer::factory()->create();
     $dog = Dog::factory()->create(['customer_id' => $customer->id]);
-    
+
     $booking = Booking::factory()->create([
         'training_session_id' => $session->id,
         'customer_id' => $customer->id,

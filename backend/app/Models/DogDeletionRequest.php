@@ -7,6 +7,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
 /**
  * DogDeletionRequest Model
@@ -19,11 +20,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $dog_id
  * @property int $customer_id
  * @property string $dog_name
- * @property string $status  pending|approved|rejected
+ * @property string $status pending|approved|rejected
  * @property int|null $reviewed_by
- * @property \Illuminate\Support\Carbon|null $reviewed_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property Carbon|null $reviewed_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
  * @property-read Dog $dog
  * @property-read Customer $customer
  * @property-read User|null $reviewer
@@ -45,8 +46,8 @@ class DogDeletionRequest extends Model
     {
         return [
             'reviewed_at' => 'datetime',
-            'created_at'  => 'datetime',
-            'updated_at'  => 'datetime',
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
         ];
     }
 

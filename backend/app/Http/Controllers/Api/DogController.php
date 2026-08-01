@@ -35,9 +35,6 @@ class DogController extends Controller
 
     /**
      * Display a listing of dogs with optional filtering.
-     *
-     * @param Request $request
-     * @return AnonymousResourceCollection
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -55,7 +52,7 @@ class DogController extends Controller
             });
         } elseif ($user->isCustomer()) {
             // Customer sees only their own dogs
-            $customer = \App\Models\Customer::where('user_id', $user->id)->first();
+            $customer = Customer::where('user_id', $user->id)->first();
             if ($customer) {
                 $query->where('customer_id', $customer->id);
             } else {
@@ -75,8 +72,8 @@ class DogController extends Controller
             $search = $request->input('search');
             $query->where(function ($q) use ($search) {
                 $q->where('name', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
-                  ->orWhere('breed', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
-                  ->orWhere('chip_number', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
+                    ->orWhere('breed', DatabaseHelper::caseInsensitiveLike(), "%{$search}%")
+                    ->orWhere('chip_number', DatabaseHelper::caseInsensitiveLike(), "%{$search}%");
             });
         }
 
@@ -98,9 +95,6 @@ class DogController extends Controller
 
     /**
      * Store a newly created dog.
-     *
-     * @param StoreDogRequest $request
-     * @return DogResource
      */
     public function store(StoreDogRequest $request): DogResource
     {
@@ -111,9 +105,6 @@ class DogController extends Controller
 
     /**
      * Display the specified dog.
-     *
-     * @param Dog $dog
-     * @return DogResource
      */
     public function show(Dog $dog): DogResource
     {
@@ -124,10 +115,6 @@ class DogController extends Controller
 
     /**
      * Update the specified dog.
-     *
-     * @param UpdateDogRequest $request
-     * @param Dog $dog
-     * @return DogResource
      */
     public function update(UpdateDogRequest $request, Dog $dog): DogResource
     {
@@ -140,9 +127,6 @@ class DogController extends Controller
 
     /**
      * Remove the specified dog (admin only). Sends email notification to customer.
-     *
-     * @param Dog $dog
-     * @return JsonResponse
      */
     public function destroy(Dog $dog): JsonResponse
     {
@@ -157,7 +141,7 @@ class DogController extends Controller
 
         // Cache customer info before deletion
         $customer = $dog->customer()->with('user')->first();
-        $dogName  = $dog->name;
+        $dogName = $dog->name;
 
         $dog->delete();
 
@@ -172,10 +156,6 @@ class DogController extends Controller
 
     /**
      * Upload a profile image for the specified dog.
-     *
-     * @param Request $request
-     * @param Dog $dog
-     * @return DogResource
      */
     public function uploadImage(Request $request, Dog $dog): DogResource
     {
@@ -193,7 +173,7 @@ class DogController extends Controller
             Storage::disk('public')->delete($dog->profile_image);
         }
 
-        $filename = 'dog_' . $dog->id . '_' . Str::uuid() . '.' . $extension;
+        $filename = 'dog_'.$dog->id.'_'.Str::uuid().'.'.$extension;
         $path = $file->storeAs('dog-images', $filename, 'public');
 
         $dog->update(['profile_image' => $path]);
@@ -204,10 +184,6 @@ class DogController extends Controller
     /**
      * Customer requests deletion of their own dog.
      * Admin reviews the request on the dashboard.
-     *
-     * @param Dog $dog
-     * @param Request $request
-     * @return JsonResponse
      */
     public function requestDeletion(Dog $dog, Request $request): JsonResponse
     {
@@ -230,10 +206,10 @@ class DogController extends Controller
         }
 
         DogDeletionRequest::create([
-            'dog_id'      => $dog->id,
+            'dog_id' => $dog->id,
             'customer_id' => $customer->id,
-            'dog_name'    => $dog->name,
-            'status'      => 'pending',
+            'dog_name' => $dog->name,
+            'status' => 'pending',
         ]);
 
         return response()->json(['message' => 'Löschanfrage wurde weitergeleitet.'], 201);
@@ -241,9 +217,6 @@ class DogController extends Controller
 
     /**
      * Get vaccinations for the specified dog.
-     *
-     * @param Dog $dog
-     * @return AnonymousResourceCollection
      */
     public function vaccinations(Dog $dog): AnonymousResourceCollection
     {
@@ -258,9 +231,6 @@ class DogController extends Controller
 
     /**
      * Get training logs for the specified dog.
-     *
-     * @param Dog $dog
-     * @return AnonymousResourceCollection
      */
     public function trainingLogs(Dog $dog): AnonymousResourceCollection
     {
@@ -276,9 +246,6 @@ class DogController extends Controller
 
     /**
      * Get bookings for the specified dog.
-     *
-     * @param Dog $dog
-     * @return AnonymousResourceCollection
      */
     public function bookings(Dog $dog): AnonymousResourceCollection
     {

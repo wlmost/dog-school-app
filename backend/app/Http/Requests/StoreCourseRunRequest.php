@@ -37,7 +37,7 @@ class StoreCourseRunRequest extends FormRequest
     {
         return [
             'startDate' => ['required', 'date'],
-            'endDate'   => [
+            'endDate' => [
                 'nullable',
                 'date',
                 function (string $attribute, mixed $value, \Closure $fail): void {
@@ -60,8 +60,8 @@ class StoreCourseRunRequest extends FormRequest
     {
         return [
             'startDate' => 'Startdatum',
-            'endDate'   => 'Enddatum',
-            'status'    => 'Status',
+            'endDate' => 'Enddatum',
+            'status' => 'Status',
         ];
     }
 }

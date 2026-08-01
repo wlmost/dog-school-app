@@ -16,23 +16,22 @@ class PayPalWebhookValidator
 {
     /**
      * Validate PayPal webhook signature
-     *
-     * @param Request $request
-     * @return bool
      */
     public function validate(Request $request): bool
     {
         // Skip validation in local environment for easier testing
         if (app()->environment('local')) {
             Log::info('PayPal webhook validation skipped in local environment');
+
             return true;
         }
 
         $webhookId = config('paypal.webhook_id');
-        
+
         // If no webhook ID is configured, log warning and allow (for initial setup)
         if (empty($webhookId)) {
             Log::warning('PayPal webhook ID not configured - validation skipped');
+
             return true;
         }
 
@@ -44,20 +43,22 @@ class PayPalWebhookValidator
         $authAlgo = $request->header('PAYPAL-AUTH-ALGO');
 
         // Validate required headers are present
-        if (!$transmissionId || !$transmissionTime || !$transmissionSig || !$certUrl || !$authAlgo) {
+        if (! $transmissionId || ! $transmissionTime || ! $transmissionSig || ! $certUrl || ! $authAlgo) {
             Log::warning('PayPal webhook missing required headers', [
                 'transmission_id' => $transmissionId,
                 'transmission_time' => $transmissionTime,
             ]);
+
             return false;
         }
 
         // Verify certificate URL is from PayPal
-        if (!str_starts_with($certUrl, 'https://api.paypal.com/') && 
-            !str_starts_with($certUrl, 'https://api.sandbox.paypal.com/')) {
+        if (! str_starts_with($certUrl, 'https://api.paypal.com/') &&
+            ! str_starts_with($certUrl, 'https://api.sandbox.paypal.com/')) {
             Log::error('PayPal webhook certificate URL is not from PayPal', [
                 'cert_url' => $certUrl,
             ]);
+
             return false;
         }
 
@@ -72,15 +73,17 @@ class PayPalWebhookValidator
 
             // Download PayPal certificate
             $cert = file_get_contents($certUrl);
-            if (!$cert) {
+            if (! $cert) {
                 Log::error('Failed to download PayPal certificate', ['cert_url' => $certUrl]);
+
                 return false;
             }
 
             // Verify signature
             $publicKey = openssl_pkey_get_public($cert);
-            if (!$publicKey) {
+            if (! $publicKey) {
                 Log::error('Failed to extract public key from certificate');
+
                 return false;
             }
 
@@ -93,12 +96,14 @@ class PayPalWebhookValidator
 
             if ($result === 1) {
                 Log::info('PayPal webhook signature validated successfully');
+
                 return true;
             } else {
                 Log::error('PayPal webhook signature validation failed', [
                     'result' => $result,
                     'transmission_id' => $transmissionId,
                 ]);
+
                 return false;
             }
 
@@ -107,18 +112,13 @@ class PayPalWebhookValidator
                 'error' => $e->getMessage(),
                 'transmission_id' => $transmissionId,
             ]);
+
             return false;
         }
     }
 
     /**
      * Build the signature string for verification
-     *
-     * @param string $transmissionId
-     * @param string $transmissionTime
-     * @param string $webhookId
-     * @param string $body
-     * @return string
      */
     private function buildSignatureString(
         string $transmissionId,
@@ -127,6 +127,7 @@ class PayPalWebhookValidator
         string $body
     ): string {
         $crc = crc32($body);
-        return $transmissionId . '|' . $transmissionTime . '|' . $webhookId . '|' . $crc;
+
+        return $transmissionId.'|'.$transmissionTime.'|'.$webhookId.'|'.$crc;
     }
 }
