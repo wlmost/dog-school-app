@@ -155,7 +155,7 @@
                     <div class="email-footer">
                         <p><strong>{{ $settings['company_name'] ?? 'Hundeschule Mustermann' }}</strong></p>
                         <p>
-                            {{ $settings['company_address'] ?? 'Musterstraße 123' }}<br>
+                            {{ $settings['company_street'] ?? 'Musterstraße 123' }}<br>
                             {{ $settings['company_zip'] ?? '12345' }} {{ $settings['company_city'] ?? 'Musterstadt' }}
                         </p>
                         <p>
