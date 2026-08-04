@@ -148,7 +148,7 @@
             </h2>
             <p class="text-lg text-gray-600 dark:text-gray-300 mb-4">
               Die Hundeschule HomoCanis steht für professionelles, modernes Hundetraining auf wissenschaftlicher Basis. 
-              Wir arbeiten mit positiver Verstärkung und legen großen Wert auf eine respektvolle Kommunikation zwischen Mensch und Hund.
+              Ich arbeite mit positiver Verstärkung und lege großen Wert auf eine respektvolle Kommunikation zwischen Mensch und Hund.
             </p>
             <p class="text-lg text-gray-600 dark:text-gray-300 mb-4">
               Das Team besteht aus einem erfahrenen, zertifizierten Hundetrainer, der sich kontinuierlich weiterbildet 
@@ -177,7 +177,7 @@
           Bereit für den ersten Schritt?
         </h2>
         <p class="text-xl mb-8 max-w-2xl mx-auto">
-          Nehmen Sie Kontakt mit uns auf und lassen Sie uns gemeinsam an einer harmonischen Beziehung zu Ihrem Hund arbeiten
+          Nehmen Sie Kontakt mit mir auf und lassen Sie uns gemeinsam an einer harmonischen Beziehung zu Ihrem Hund arbeiten
         </p>
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
           <RouterLink to="/contact" class="btn text-white hover:opacity-90 px-8 py-3 text-lg font-semibold" style="background-color: rgb(201, 150, 98);">
