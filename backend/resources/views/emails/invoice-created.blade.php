@@ -94,16 +94,27 @@
                     {{ $invoice->due_date->format('d.m.Y') }}
                 </div>
                 
+                <p>Bitte überweisen Sie den Betrag innerhalb von {{ $settings['company_payment_term_weeks'] ?? 2 }} Wochen auf folgendes Konto:</p>
+                <div class="info-row">
+                    <span class="info-label">Kontoinhaber:</span>
+                    {{ $settings['company_bank_account_holder'] ?? '' }}
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Bank:</span>
+                    {{ $settings['company_bank_name'] ?? '' }}
+                </div>
+
                 <div class="info-row">
                     <span class="info-label">IBAN:</span>
-                    DE89 3704 0044 0532 0130 00
+                    {{ $settings['company_bank_iban'] ?? '' }}
                 </div>
-                
+
                 <div class="info-row">
                     <span class="info-label">BIC:</span>
-                    COBADEFFXXX
+                    {{ $settings['company_bank_bic'] ?? '' }}
                 </div>
-                
+
                 <div class="info-row">
                     <span class="info-label">Verwendungszweck:</span>
                     {{ $invoice->invoice_number }}

@@ -69,17 +69,27 @@
                 <h3 style="margin-top: 0; color: #1e40af;">Zahlungsinformationen</h3>
                 
                 <p>Bitte überweisen Sie den offenen Betrag unter Angabe der Rechnungsnummer auf folgendes Konto:</p>
-                
+
+                <div class="info-row">
+                    <span class="info-label">Kontoinhaber:</span>
+                    {{ $settings['company_bank_account_holder'] ?? '' }}
+                </div>
+
+                <div class="info-row">
+                    <span class="info-label">Bank:</span>
+                    {{ $settings['company_bank_name'] ?? '' }}
+                </div>
+
                 <div class="info-row">
                     <span class="info-label">IBAN:</span>
-                    DE89 3704 0044 0532 0130 00
+                    {{ $settings['company_bank_iban'] ?? '' }}
                 </div>
-                
+
                 <div class="info-row">
                     <span class="info-label">BIC:</span>
-                    COBADEFFXXX
+                    {{ $settings['company_bank_bic'] ?? '' }}
                 </div>
-                
+
                 <div class="info-row">
                     <span class="info-label">Verwendungszweck:</span>
                     <strong>{{ $invoice->invoice_number }}</strong>

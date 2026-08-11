@@ -26,6 +26,11 @@ class SettingsSeeder extends Seeder
             ['key' => 'company_website', 'value' => 'https://www.hundeschule-beispiel.de', 'type' => 'string', 'description' => 'Webseite', 'group' => 'company'],
             ['key' => 'company_tax_id', 'value' => 'DE123456789', 'type' => 'string', 'description' => 'Steuernummer', 'group' => 'company'],
             ['key' => 'company_registration_number', 'value' => 'HRB 12345', 'type' => 'string', 'description' => 'Handelsregisternummer', 'group' => 'company'],
+            ['key' => 'company_bank_account_holder', 'value' => 'Hundeschule Beispiel', 'type' => 'string', 'description' => 'Kontoinhaber', 'group' => 'company'],
+            ['key' => 'company_bank_name', 'value' => 'Musterbank', 'type' => 'string', 'description' => 'Bankname', 'group' => 'company'],
+            ['key' => 'company_bank_iban', 'value' => 'DE89370400440532013000', 'type' => 'string', 'description' => 'IBAN', 'group' => 'company'],
+            ['key' => 'company_bank_bic', 'value' => 'COBADEFFXXX', 'type' => 'string', 'description' => 'BIC', 'group' => 'company'],
+            ['key' => 'company_payment_term_weeks', 'value' => '2', 'type' => 'integer', 'description' => 'Zahlungsziel in Wochen', 'group' => 'company'],
         ];
 
         // Email settings

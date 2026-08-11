@@ -89,6 +89,7 @@ class SettingsController extends Controller
         // Determine type
         $type = match (true) {
             $key === 'company_small_business' => 'boolean',
+            $key === 'company_payment_term_weeks' => 'integer',
             is_bool($value) => 'boolean',
             is_int($value) => 'integer',
             is_array($value) => 'json',

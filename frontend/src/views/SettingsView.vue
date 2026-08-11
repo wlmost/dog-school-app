@@ -157,6 +157,79 @@
             </div>
           </div>
 
+          <!-- Bank Details -->
+          <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Bankverbindung</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Bank Account Holder -->
+              <div>
+                <label for="company_bank_account_holder" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Kontoinhaber
+                </label>
+                <input
+                  id="company_bank_account_holder"
+                  v-model="formData.company_bank_account_holder"
+                  type="text"
+                  class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+
+              <!-- Bank Name -->
+              <div>
+                <label for="company_bank_name" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Bankname
+                </label>
+                <input
+                  id="company_bank_name"
+                  v-model="formData.company_bank_name"
+                  type="text"
+                  class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+
+              <!-- Bank IBAN -->
+              <div>
+                <label for="company_bank_iban" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  IBAN
+                </label>
+                <input
+                  id="company_bank_iban"
+                  v-model="formData.company_bank_iban"
+                  type="text"
+                  class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+
+              <!-- Bank BIC -->
+              <div>
+                <label for="company_bank_bic" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  BIC
+                </label>
+                <input
+                  id="company_bank_bic"
+                  v-model="formData.company_bank_bic"
+                  type="text"
+                  class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+
+              <!-- Payment Term Weeks -->
+              <div>
+                <label for="company_payment_term_weeks" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Zahlungsziel (Wochen)
+                </label>
+                <input
+                  id="company_payment_term_weeks"
+                  v-model.number="formData.company_payment_term_weeks"
+                  type="number"
+                  min="1"
+                  max="52"
+                  class="mt-1 block w-full rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                />
+              </div>
+            </div>
+          </div>
+
           <!-- Small Business Regulation -->
           <div class="flex items-start">
             <div class="flex items-center h-5">
@@ -535,6 +608,11 @@ const formData = ref({
   company_website: '',
   company_tax_id: '',
   company_registration_number: '',
+  company_bank_account_holder: '',
+  company_bank_name: '',
+  company_bank_iban: '',
+  company_bank_bic: '',
+  company_payment_term_weeks: 2 as number | string,
   company_small_business: false,
   company_logo: null as File | null,
   company_favicon: null as File | null,
