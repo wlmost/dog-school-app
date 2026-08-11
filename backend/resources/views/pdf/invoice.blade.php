@@ -126,6 +126,11 @@
 <body>
     @php
         $isSmallBusiness = \App\Models\Setting::get('company_small_business', false);
+        $bankAccountHolder = \App\Models\Setting::get('company_bank_account_holder', '');
+        $bankName = \App\Models\Setting::get('company_bank_name', '');
+        $bankIban = \App\Models\Setting::get('company_bank_iban', '');
+        $bankBic = \App\Models\Setting::get('company_bank_bic', '');
+        $paymentTermWeeks = \App\Models\Setting::get('company_payment_term_weeks', 2);
         $logoPath = public_path('images/HomoCanis.jpg');
         $logoSrc = file_exists($logoPath)
             ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($logoPath))
@@ -256,8 +261,13 @@
         <div class="payment-box">
             <h3>Zahlungsinformationen</h3>
             <p><strong>Zahlungsziel:</strong> {{ $invoice->due_date->format('d.m.Y') }}</p>
-            <p><strong>IBAN:</strong> DE89 3704 0044 0532 0130 00</p>
-            <p><strong>BIC:</strong> COBADEFFXXX</p>
+            <p>Bitte überweisen Sie den Betrag innerhalb von {{ $paymentTermWeeks }} Wochen auf folgendes Konto:</p>
+            <p>
+                <strong>Kontoinhaber:</strong> {{ $bankAccountHolder }}<br>
+                <strong>Bank:</strong> {{ $bankName }}<br>
+                <strong>IBAN:</strong> {{ $bankIban }}<br>
+                <strong>BIC:</strong> {{ $bankBic }}
+            </p>
             <p><strong>Verwendungszweck:</strong> {{ $invoice->invoice_number }}</p>
         </div>
     @else
