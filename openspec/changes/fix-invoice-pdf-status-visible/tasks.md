@@ -55,20 +55,20 @@
      13-26) erzeugt bereits `$this->invoice` mit Items — dieser Test
      nutzt dieselbe Fixture und muss keine eigene aufbauen.
 - **Akzeptanzkriterien:**
-  - [ ] `view('pdf.invoice', ['invoice' => $invoice])->render()` enthält
+  - [x] `view('pdf.invoice', ['invoice' => $invoice])->render()` enthält
     für keinen `status`-Wert (`draft`, `sent`, `paid`, `overdue`,
     `cancelled`) mehr die Strings "Status:" oder den in Großbuchstaben
     ausgegebenen Rohstatus (z. B. "DRAFT").
-  - [ ] Der neue Test aus Schritt 4 ist grün.
-  - [ ] Alle bestehenden Tests in `InvoicePdfTest.php` bleiben grün,
+  - [x] Der neue Test aus Schritt 4 ist grün.
+  - [x] Alle bestehenden Tests in `InvoicePdfTest.php` bleiben grün,
     insbesondere "PDF shows paid status correctly" und "PDF shows
     overdue status correctly" (Zeilen 116-144), ohne Anpassung ihrer
     bestehenden Assertions nötig zu sein.
-  - [ ] `invoice.blade.php:258` (`@if($invoice->status !== 'paid')`) ist
+  - [x] `invoice.blade.php:258` (`@if($invoice->status !== 'paid')`) ist
     im Diff nicht verändert; die Zahlungsinformationen-Box (Status
     ≠ `paid`) und die Zahlungsbestätigungs-Box (Status `paid`) rendern
     weiterhin wie vor der Änderung.
-  - [ ] Die CSS-Regel `.status-badge` kommt in `invoice.blade.php` nicht
+  - [x] Die CSS-Regel `.status-badge` kommt in `invoice.blade.php` nicht
     mehr vor; `pdf/anamnesis.blade.php` ist unverändert (Diff zeigt keine
     Änderung an dieser Datei).
-  - [ ] `composer qa` läuft grün (lint, stan, compat-check, pest).
+  - [x] `composer qa` läuft grün (lint, stan, compat-check, pest).
