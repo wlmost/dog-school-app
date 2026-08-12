@@ -48,6 +48,12 @@ class InvoiceResource extends JsonResource
             'notes' => $this->notes,
             'isPaid' => $this->isPaid(),
             'isOverdue' => $this->isOverdue(),
+            'remindedAt' => $this->reminded_at?->toDateString(),
+            'dunningLevel' => $this->dunning_level,
+            'originalInvoiceId' => $this->original_invoice_id,
+            'originalInvoiceNumber' => $this->whenLoaded('originalInvoice', fn () => $this->originalInvoice?->invoice_number),
+            'cancellationInvoiceId' => $this->whenLoaded('cancellationInvoice', fn () => $this->cancellationInvoice?->id),
+            'cancellationInvoiceNumber' => $this->whenLoaded('cancellationInvoice', fn () => $this->cancellationInvoice?->invoice_number),
             'createdAt' => $this->created_at?->toISOString(),
             'updatedAt' => $this->updated_at?->toISOString(),
 

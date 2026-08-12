@@ -180,6 +180,8 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::apiResource('invoices', InvoiceController::class);
     Route::get('/invoices/{invoice}/pdf', [InvoiceController::class, 'downloadPdf']);
     Route::post('/invoices/{invoice}/mark-paid', [InvoiceController::class, 'markAsPaid']);
+    Route::post('/invoices/{invoice}/finalize', [InvoiceController::class, 'finalize']);
+    Route::post('/invoices/{invoice}/cancel', [InvoiceController::class, 'cancel']);
     Route::get('/invoices/overdue/list', [InvoiceController::class, 'overdue']);
 
     // PayPal Integration

@@ -25,7 +25,6 @@ class UpdateInvoiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => ['sometimes', 'in:draft,sent,paid,overdue,cancelled'],
             'totalAmount' => ['sometimes', 'numeric', 'min:0', 'max:99999999.99'],
             'dueDate' => ['sometimes', 'date'],
             'paidDate' => ['nullable', 'date'],
@@ -41,7 +40,6 @@ class UpdateInvoiceRequest extends FormRequest
     public function attributes(): array
     {
         return [
-            'status' => 'Status',
             'totalAmount' => 'Gesamtbetrag',
             'dueDate' => 'Fälligkeitsdatum',
             'paidDate' => 'Bezahldatum',
@@ -59,9 +57,6 @@ class UpdateInvoiceRequest extends FormRequest
         $validated = $this->validated();
         $data = [];
 
-        if (isset($validated['status'])) {
-            $data['status'] = $validated['status'];
-        }
         if (isset($validated['totalAmount'])) {
             $data['total_amount'] = $validated['totalAmount'];
         }

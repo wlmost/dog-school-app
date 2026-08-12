@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Invoice;
 use Illuminate\Support\Facades\Schema;
 
 test('users table has correct structure', function () {
@@ -127,8 +128,26 @@ test('training_attachments table exists with required columns', function () {
 test('invoices table exists with required columns', function () {
     expect(Schema::hasTable('invoices'))->toBeTrue();
     expect(Schema::hasColumns('invoices', [
-        'id', 'customer_id', 'invoice_number', 'status', 'total_amount',
+        'id', 'customer_id', 'invoice_number', 'original_invoice_id', 'status', 'total_amount',
         'issue_date', 'due_date', 'paid_date', 'notes',
+    ]))->toBeTrue();
+});
+
+// add-invoice-status-lifecycle: invoice_number ist seit Migration M3 nullable
+// (Entwürfe erhalten erst bei finalize()/cancel() eine Nummer, siehe
+// design.md Decision D2/D5) — dieser Test dokumentiert den Schema-Vertrag
+// zusätzlich zur reinen Spalten-Existenzprüfung oben.
+test('invoice_number column on invoices table is nullable', function () {
+    $invoice = Invoice::factory()->create(['status' => 'draft', 'invoice_number' => null]);
+
+    expect($invoice->refresh()->invoice_number)->toBeNull();
+});
+
+// add-invoice-status-lifecycle T01 (M2): Mahnstufen-Datenmodell.
+test('invoice_dunnings table exists with required columns', function () {
+    expect(Schema::hasTable('invoice_dunnings'))->toBeTrue();
+    expect(Schema::hasColumns('invoice_dunnings', [
+        'id', 'invoice_id', 'level', 'dunning_date', 'fee_amount', 'created_at', 'updated_at',
     ]))->toBeTrue();
 });
 

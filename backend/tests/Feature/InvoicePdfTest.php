@@ -47,6 +47,9 @@ test('trainer can download invoice as PDF', function () {
 });
 
 test('customer can download their own invoice as PDF', function () {
+    // T06: customers may only view/download non-draft invoices.
+    $this->invoice->update(['status' => 'sent']);
+
     $response = $this->actingAs($this->customer)
         ->getJson('/api/v1/invoices/'.$this->invoice->id.'/pdf');
 
