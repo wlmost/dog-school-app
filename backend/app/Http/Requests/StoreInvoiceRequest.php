@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use App\Models\Invoice;
 use App\Models\Setting;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -30,7 +29,6 @@ class StoreInvoiceRequest extends FormRequest
             'customerId' => ['required', 'integer', 'exists:customers,id'],
             'issueDate' => ['required', 'date'],
             'dueDate' => ['required', 'date', 'after_or_equal:issueDate'],
-            'status' => ['sometimes', 'in:draft,sent,paid,overdue,cancelled'],
             'notes' => ['nullable', 'string', 'max:5000'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.description' => ['required', 'string', 'max:500'],
@@ -51,7 +49,6 @@ class StoreInvoiceRequest extends FormRequest
             'customerId' => 'Kunde',
             'issueDate' => 'Rechnungsdatum',
             'dueDate' => 'Fälligkeitsdatum',
-            'status' => 'Status',
             'notes' => 'Notizen',
             'items' => 'Rechnungspositionen',
         ];
@@ -81,39 +78,15 @@ class StoreInvoiceRequest extends FormRequest
         }
         $totalAmount = $subtotal + $taxAmount;
 
-        // Generate invoice number if not provided
-        $invoiceNumber = $this->generateInvoiceNumber();
-
         return [
             'customer_id' => $validated['customerId'],
-            'invoice_number' => $invoiceNumber,
             'issue_date' => $validated['issueDate'],
             'due_date' => $validated['dueDate'],
-            'status' => $validated['status'] ?? 'draft',
+            'status' => 'draft',
             'subtotal_amount' => round($subtotal, 2),
             'tax_amount' => round($taxAmount, 2),
             'total_amount' => round($totalAmount, 2),
             'notes' => $validated['notes'] ?? null,
         ];
-    }
-
-    /**
-     * Generate a unique invoice number.
-     */
-    private function generateInvoiceNumber(): string
-    {
-        $year = date('Y');
-        $lastInvoice = Invoice::where('invoice_number', 'like', "RE-{$year}-%")
-            ->orderBy('invoice_number', 'desc')
-            ->first();
-
-        if ($lastInvoice) {
-            $lastNumber = (int) substr($lastInvoice->invoice_number, -4);
-            $newNumber = $lastNumber + 1;
-        } else {
-            $newNumber = 1;
-        }
-
-        return sprintf('RE-%s-%04d', $year, $newNumber);
     }
 }

@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -18,7 +19,8 @@ use Illuminate\Support\Carbon;
  *
  * @property int $id
  * @property int $customer_id
- * @property string $invoice_number
+ * @property string|null $invoice_number
+ * @property int|null $original_invoice_id
  * @property Carbon $invoice_date
  * @property Carbon $due_date
  * @property float $subtotal
@@ -34,6 +36,9 @@ use Illuminate\Support\Carbon;
  * @property-read Customer $customer
  * @property-read Collection<int, InvoiceItem> $items
  * @property-read Collection<int, Payment> $payments
+ * @property-read Collection<int, InvoiceDunning> $dunnings
+ * @property-read Invoice|null $originalInvoice
+ * @property-read Invoice|null $cancellationInvoice
  */
 class Invoice extends Model
 {
@@ -47,6 +52,7 @@ class Invoice extends Model
     protected $fillable = [
         'customer_id',
         'invoice_number',
+        'original_invoice_id',
         'status',
         'total_amount',
         'issue_date',
@@ -97,6 +103,30 @@ class Invoice extends Model
     }
 
     /**
+     * Get all dunnings (reminder levels) for this invoice.
+     */
+    public function dunnings(): HasMany
+    {
+        return $this->hasMany(InvoiceDunning::class);
+    }
+
+    /**
+     * Get the invoice this invoice is a cancellation of, if any.
+     */
+    public function originalInvoice(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'original_invoice_id');
+    }
+
+    /**
+     * Get the cancellation invoice created for this invoice, if any.
+     */
+    public function cancellationInvoice(): HasOne
+    {
+        return $this->hasOne(self::class, 'original_invoice_id');
+    }
+
+    /**
      * Check if the invoice is paid.
      */
     public function isPaid(): bool
@@ -128,6 +158,24 @@ class Invoice extends Model
     public function getRemainingBalanceAttribute(): float
     {
         return max(0, (float) $this->total_amount - $this->total_paid);
+    }
+
+    /**
+     * Get the highest dunning level reached so far, or null if none exists.
+     */
+    public function getDunningLevelAttribute(): ?int
+    {
+        $highestLevel = $this->dunnings->max('level');
+
+        return $highestLevel !== null ? (int) $highestLevel : null;
+    }
+
+    /**
+     * Get the date of the most recent dunning, or null if none exists.
+     */
+    public function getRemindedAtAttribute(): ?Carbon
+    {
+        return $this->dunnings->sortByDesc('dunning_date')->first()?->dunning_date;
     }
 
     /**

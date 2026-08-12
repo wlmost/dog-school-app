@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Events\InvoiceWasCreated;
 use App\Helpers\DatabaseHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInvoiceRequest;
@@ -13,12 +12,15 @@ use App\Http\Resources\InvoiceResource;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Setting;
+use App\Services\InvoiceNumberGenerator;
 use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Invoice Controller
@@ -30,11 +32,28 @@ class InvoiceController extends Controller
     use AuthorizesRequests;
 
     /**
+     * Maximum number of attempts for {@see self::finalize()} to generate a
+     * fresh invoice number and persist it, before giving up on a repeated
+     * unique-constraint collision.
+     */
+    private const FINALIZE_MAX_ATTEMPTS = 3;
+
+    /**
+     * Maximum number of attempts for {@see self::cancel()} to generate a
+     * fresh invoice number and persist the cancellation invoice, before
+     * giving up on a repeated unique-constraint collision. Mirrors
+     * {@see self::FINALIZE_MAX_ATTEMPTS}.
+     */
+    private const CANCEL_MAX_ATTEMPTS = 3;
+
+    /**
      * Display a listing of invoices with optional filtering.
      */
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = Invoice::query()->with(['customer.user', 'items', 'payments']);
+        $query = Invoice::query()->with([
+            'customer.user', 'items', 'payments', 'originalInvoice', 'cancellationInvoice', 'dunnings',
+        ]);
 
         $user = $request->user();
 
@@ -48,7 +67,8 @@ class InvoiceController extends Controller
             // Customer sees only their own invoices
             $customer = Customer::where('user_id', $user->id)->first();
             if ($customer) {
-                $query->where('customer_id', $customer->id);
+                $query->where('customer_id', $customer->id)
+                    ->whereIn('status', ['sent', 'paid', 'overdue', 'reminded']);
             } else {
                 // No customer record means no invoices
                 $query->whereRaw('1 = 0');
@@ -136,9 +156,6 @@ class InvoiceController extends Controller
 
         $invoice->load(['customer.user', 'items', 'payments']);
 
-        // Dispatch event to send invoice email
-        InvoiceWasCreated::dispatch($invoice);
-
         return new InvoiceResource($invoice);
     }
 
@@ -148,7 +165,7 @@ class InvoiceController extends Controller
     public function show(Invoice $invoice): InvoiceResource
     {
         // Load customer for authorization check
-        $invoice->load(['customer.user', 'items', 'payments']);
+        $invoice->load(['customer.user', 'items', 'payments', 'originalInvoice', 'cancellationInvoice', 'dunnings']);
 
         $this->authorize('view', $invoice);
 
@@ -191,7 +208,13 @@ class InvoiceController extends Controller
      */
     public function markAsPaid(Invoice $invoice): InvoiceResource|JsonResponse
     {
-        $this->authorize('update', $invoice);
+        $this->authorize('markAsPaid', $invoice);
+
+        if ($invoice->status === 'draft') {
+            return response()->json([
+                'message' => 'Ein Entwurf muss zuerst freigegeben werden, bevor er als bezahlt markiert werden kann.',
+            ], 422);
+        }
 
         if ($invoice->isPaid()) {
             return response()->json([
@@ -205,6 +228,157 @@ class InvoiceController extends Controller
         ]);
 
         return new InvoiceResource($invoice->fresh(['customer.user', 'items', 'payments']));
+    }
+
+    /**
+     * Finalize a draft invoice: assigns the next invoice number and moves
+     * it to status "sent". No email is dispatched here (see Change 2).
+     *
+     * The number generation + persist step is retried up to
+     * {@see self::FINALIZE_MAX_ATTEMPTS} times if it collides with a
+     * concurrently assigned invoice number (unique constraint violation on
+     * `invoice_number`, {@see UniqueConstraintViolationException}). This
+     * covers a documented gap in {@see InvoiceNumberGenerator::generate()}'s
+     * locking strategy: an empty result set for the current year cannot be
+     * locked via `lockForUpdate()`, so two near-simultaneous calls can
+     * compute the same next number (see `task-T03.notes.md`). The retry is
+     * driver-agnostic: Laravel's connection layer maps unique-constraint
+     * errors from MySQL, PostgreSQL and SQLite alike to
+     * `UniqueConstraintViolationException` (see `MySqlConnection`,
+     * `PostgresConnection` and `SQLiteConnection::isUniqueConstraintError()`),
+     * so no driver-specific branching is needed here.
+     *
+     * Each retry attempt runs in its own **nested** `DB::transaction()`
+     * call, mirroring {@see self::cancel()}'s
+     * `createCancellationInvoiceWithRetry()`. Laravel maps a nested
+     * transaction to a SQL `SAVEPOINT`. This matters specifically when
+     * `finalize()` itself runs inside an outer transaction (e.g. the test
+     * suite's per-test transaction wrapper on PostgreSQL, or a future
+     * caller that wraps this call): PostgreSQL poisons the *entire*
+     * enclosing transaction on any failed statement ("current transaction
+     * is aborted"), so without a savepoint-scoped rollback, the retry
+     * attempt itself — and the `fresh()` reload below — would fail.
+     */
+    public function finalize(Invoice $invoice, InvoiceNumberGenerator $numberGenerator): InvoiceResource|JsonResponse
+    {
+        $this->authorize('finalize', $invoice);
+
+        if ($invoice->status !== 'draft') {
+            return response()->json([
+                'message' => 'Nur Entwürfe können freigegeben werden.',
+            ], 422);
+        }
+
+        $maxAttempts = self::FINALIZE_MAX_ATTEMPTS;
+
+        for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
+            try {
+                DB::transaction(function () use ($invoice, $numberGenerator): void {
+                    $invoice->update([
+                        'invoice_number' => $numberGenerator->generate(),
+                        'status' => 'sent',
+                    ]);
+                });
+
+                break;
+            } catch (UniqueConstraintViolationException $e) {
+                if ($attempt === $maxAttempts) {
+                    throw $e;
+                }
+            }
+        }
+
+        return new InvoiceResource($invoice->fresh([
+            'customer.user', 'items', 'payments', 'originalInvoice', 'cancellationInvoice', 'dunnings',
+        ]));
+    }
+
+    /**
+     * Cancel (storno) an invoice: creates a new cancellation invoice with
+     * negated amounts and marks the original invoice as cancelled. Both
+     * changes happen atomically inside a single DB transaction.
+     *
+     * The cancellation invoice's number generation + creation step is
+     * retried up to {@see self::CANCEL_MAX_ATTEMPTS} times on a
+     * `UniqueConstraintViolationException` (same documented race as
+     * {@see self::finalize()}, see `task-T03.notes.md` /
+     * `task-T04.notes.md`). Each retry attempt runs in its own **nested**
+     * `DB::transaction()` call. Laravel maps a nested transaction to a SQL
+     * `SAVEPOINT` (see `ManagesTransactions::createTransaction()` /
+     * `performRollBack()`, driver-agnostic — supported by MySQL,
+     * PostgreSQL and SQLite alike). This matters specifically for
+     * PostgreSQL: unlike MySQL, PostgreSQL poisons an *entire* transaction
+     * on any failed statement, so subsequent statements (e.g. the
+     * original invoice's status update further down) would fail with
+     * "current transaction is aborted" unless the failed attempt is
+     * rolled back to a savepoint instead of the outer transaction. Since
+     * `handleTransactionException()` calls `rollBack()` (which rolls back
+     * to the current nesting level, i.e. the savepoint) before rethrowing,
+     * only the failed attempt is undone — the outer transaction started
+     * in this method remains healthy for the retry and for the subsequent
+     * steps.
+     */
+    public function cancel(Invoice $invoice, InvoiceNumberGenerator $numberGenerator): InvoiceResource
+    {
+        $this->authorize('cancel', $invoice);
+
+        $cancellationInvoice = DB::transaction(function () use ($invoice, $numberGenerator) {
+            $cancellationInvoice = $this->createCancellationInvoiceWithRetry($invoice, $numberGenerator);
+
+            foreach ($invoice->items as $item) {
+                $cancellationInvoice->items()->create([
+                    'description' => $item->description,
+                    'quantity' => -$item->quantity,
+                    'unit_price' => $item->unit_price,
+                    'tax_rate' => $item->tax_rate,
+                    'amount' => -$item->amount,
+                ]);
+            }
+
+            $invoice->update(['status' => 'cancelled']);
+
+            return $cancellationInvoice;
+        });
+
+        return new InvoiceResource($cancellationInvoice->fresh([
+            'customer.user', 'items', 'payments', 'originalInvoice', 'cancellationInvoice', 'dunnings',
+        ]));
+    }
+
+    /**
+     * Creates the cancellation invoice header (without items) for
+     * {@see self::cancel()}, retrying on a unique-constraint collision of
+     * the generated invoice number. See {@see self::cancel()} for why each
+     * attempt runs in its own nested `DB::transaction()`.
+     */
+    private function createCancellationInvoiceWithRetry(Invoice $invoice, InvoiceNumberGenerator $numberGenerator): Invoice
+    {
+        $cancellationInvoice = null;
+
+        for ($attempt = 1; $attempt <= self::CANCEL_MAX_ATTEMPTS; $attempt++) {
+            try {
+                $cancellationInvoice = DB::transaction(function () use ($invoice, $numberGenerator): Invoice {
+                    return Invoice::create([
+                        'customer_id' => $invoice->customer_id,
+                        'invoice_number' => $numberGenerator->generate(),
+                        'original_invoice_id' => $invoice->id,
+                        'status' => 'sent',
+                        'total_amount' => -$invoice->total_amount,
+                        'issue_date' => today(),
+                        'due_date' => today(),
+                        'notes' => "Storno zu Rechnung {$invoice->invoice_number}",
+                    ]);
+                });
+
+                break;
+            } catch (UniqueConstraintViolationException $e) {
+                if ($attempt === self::CANCEL_MAX_ATTEMPTS) {
+                    throw $e;
+                }
+            }
+        }
+
+        return $cancellationInvoice;
     }
 
     /**

@@ -100,14 +100,13 @@ describe('Booking Confirmation Emails', function () {
 });
 
 describe('Invoice Creation Emails', function () {
-    it('sends email when creating an invoice', function () {
+    it('does not send email when creating an invoice', function () {
         $this->actingAs($this->trainer);
 
         $response = $this->postJson('/api/v1/invoices', [
             'customerId' => $this->customerModel->id,
             'issueDate' => now()->toDateString(),
             'dueDate' => now()->addDays(14)->toDateString(),
-            'status' => 'draft',
             'items' => [
                 [
                     'description' => 'Welpentraining',
@@ -120,35 +119,7 @@ describe('Invoice Creation Emails', function () {
 
         $response->assertCreated();
 
-        Mail::assertQueued(InvoiceCreated::class, function ($mail) {
-            return $mail->hasTo($this->customer->email);
-        });
-    });
-
-    it('includes correct invoice details in email', function () {
-        $this->actingAs($this->trainer);
-
-        $this->postJson('/api/v1/invoices', [
-            'customerId' => $this->customerModel->id,
-            'issueDate' => now()->toDateString(),
-            'dueDate' => now()->addDays(14)->toDateString(),
-            'status' => 'draft',
-            'items' => [
-                [
-                    'description' => 'Welpentraining',
-                    'quantity' => 1,
-                    'unitPrice' => 100.00,
-                    'taxRate' => 19,
-                ],
-            ],
-        ]);
-
-        Mail::assertQueued(InvoiceCreated::class, function ($mail) {
-            $invoice = Invoice::latest()->first();
-            expect($mail->invoice->id)->toBe($invoice->id);
-
-            return true;
-        });
+        Mail::assertNothingQueued();
     });
 
     it('does not send email when invoice creation fails', function () {
@@ -338,14 +309,13 @@ describe('Email Queue Configuration', function () {
         Mail::assertNotSent(BookingConfirmation::class);
     });
 
-    it('queues invoice email instead of sending immediately', function () {
+    it('does not queue an invoice email on creation', function () {
         $this->actingAs($this->trainer);
 
         $this->postJson('/api/v1/invoices', [
             'customerId' => $this->customerModel->id,
             'issueDate' => now()->toDateString(),
             'dueDate' => now()->addDays(14)->toDateString(),
-            'status' => 'draft',
             'items' => [
                 [
                     'description' => 'Welpentraining',
@@ -356,7 +326,7 @@ describe('Email Queue Configuration', function () {
             ],
         ]);
 
-        Mail::assertQueued(InvoiceCreated::class);
+        Mail::assertNothingQueued();
         Mail::assertNotSent(InvoiceCreated::class);
     });
 });

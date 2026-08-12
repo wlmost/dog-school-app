@@ -9,6 +9,7 @@
           <option value="sent">Versendet</option>
           <option value="paid">Bezahlt</option>
           <option value="overdue">Überfällig</option>
+          <option value="reminded">Gemahnt</option>
           <option value="cancelled">Storniert</option>
         </select>
       </div>
@@ -77,14 +78,28 @@
                 <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ formatCurrency(invoice.totalAmount) }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <span :class="invoiceStatusClass(invoice.status)" class="px-2 py-1 text-xs font-medium rounded-full">
-                  {{ invoiceStatusLabel(invoice.status) }}
-                </span>
+                <div class="flex flex-col items-start gap-1">
+                  <span :class="invoiceStatusClass(invoice.status)" class="px-2 py-1 text-xs font-medium rounded-full">
+                    {{ invoiceStatusLabel(invoice.status) }}
+                  </span>
+                  <span v-if="invoice.isOverdue" class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+                    Überfällig
+                  </span>
+                  <span v-if="invoice.status === 'paid'" class="text-xs text-gray-500 dark:text-gray-400">
+                    Bezahlt am {{ formatDate(invoice.paidDate) }}
+                  </span>
+                  <span v-if="invoice.status === 'reminded'" class="text-xs text-gray-500 dark:text-gray-400">
+                    Gemahnt am {{ formatDate(invoice.remindedAt) }}
+                  </span>
+                </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2" @click.stop>
                 <button @click="downloadPDF(invoice)" class="text-primary-600 dark:text-primary-400 hover:text-primary-900 dark:hover:text-primary-300">PDF</button>
-                <button v-if="!authStore.isCustomer && invoice.status === 'draft'" @click="editInvoice(invoice)" class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-900 dark:hover:text-yellow-300">Bearbeiten</button>
-                <button v-if="!authStore.isCustomer && (invoice.status === 'draft' || invoice.status === 'sent')" @click="markAsPaid(invoice)" class="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300">Bezahlt</button>
+                <button v-if="canEdit(invoice)" @click="editInvoice(invoice)" class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-900 dark:hover:text-yellow-300">Bearbeiten</button>
+                <button v-if="canDelete(invoice)" @click="deleteInvoice(invoice)" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">Löschen</button>
+                <button v-if="canFinalize(invoice)" @click="finalizeInvoice(invoice)" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">Freigeben</button>
+                <button v-if="canSend(invoice)" disabled title="Versand-Dialog folgt in einem späteren Update" class="text-gray-400 dark:text-gray-500 cursor-not-allowed">Senden</button>
+                <button v-if="canCancel(invoice)" @click="cancelInvoice(invoice)" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">Stornieren</button>
               </td>
             </tr>
           </tbody>
@@ -117,6 +132,9 @@
       @download="downloadPDF"
       @edit="editFromDetail"
       @mark-paid="markAsPaid"
+      @delete="deleteInvoice"
+      @finalize="finalizeInvoice"
+      @cancel="cancelInvoice"
     />
   </div>
 </template>
@@ -192,6 +210,46 @@ function openCreateModal() {
   showFormModal.value = true
 }
 
+// Statuswerte, für die der (deaktivierte) Senden-Button angezeigt wird.
+// Der persistierte Status `overdue` ist dabei nur der Vollständigkeit
+// halber enthalten (siehe design.md Decision D3) — die tatsächliche
+// "Überfällig"-Markierung erfolgt separat und ausschließlich anhand von
+// `invoice.isOverdue`.
+const SENDABLE_STATUSES = ['sent', 'reminded', 'overdue']
+
+// Statuswerte, für die der Stornieren-Button angezeigt wird. Muss exakt
+// InvoicePolicy::cancel() spiegeln (backend/app/Policies/InvoicePolicy.php),
+// die `overdue` bewusst NICHT zulässt: `overdue` wird laut design.md
+// Decision D3 nirgends mehr aktiv als Status geschrieben, ist also für
+// neue Rechnungen kein erreichbarer Wert. Eine überfällige Rechnung trägt
+// weiterhin den Status `sent`/`reminded` (`invoice.isOverdue` wird separat
+// zur Anzeigezeit berechnet), sodass diese Liste den Storno-Button für
+// überfällige Rechnungen bereits korrekt anzeigt — `overdue` hier
+// aufzunehmen würde nur zu einem serverseitigen 403 führen.
+const CANCELLABLE_STATUSES = ['sent', 'reminded', 'paid']
+
+function canEdit(invoice: any): boolean {
+  return !authStore.isCustomer && invoice.status === 'draft'
+}
+
+function canDelete(invoice: any): boolean {
+  return !authStore.isCustomer && invoice.status === 'draft'
+}
+
+function canFinalize(invoice: any): boolean {
+  return !authStore.isCustomer && invoice.status === 'draft'
+}
+
+function canSend(invoice: any): boolean {
+  return !authStore.isCustomer && SENDABLE_STATUSES.includes(invoice.status)
+}
+
+function canCancel(invoice: any): boolean {
+  return !authStore.isCustomer
+    && CANCELLABLE_STATUSES.includes(invoice.status)
+    && !invoice.originalInvoiceId
+}
+
 function editInvoice(invoice: any) {
   selectedInvoice.value = invoice
   showFormModal.value = true
@@ -260,6 +318,57 @@ async function markAsPaid(invoice: any) {
   }
 }
 
+async function deleteInvoice(invoice: any) {
+  if (!confirm('Diesen Rechnungsentwurf unwiderruflich löschen?')) {
+    return
+  }
+
+  try {
+    await apiClient.delete(`/api/v1/invoices/${invoice.id}`)
+    await loadInvoices()
+    if (showDetailModal.value) {
+      closeDetailModal()
+    }
+    showSuccess('Rechnung gelöscht', 'Der Entwurf wurde gelöscht')
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Löschen der Rechnung')
+  }
+}
+
+async function finalizeInvoice(invoice: any) {
+  if (!confirm('Rechnung freigeben? Es wird eine fortlaufende Rechnungsnummer vergeben, danach ist die Rechnung nicht mehr änderbar.')) {
+    return
+  }
+
+  try {
+    await apiClient.post(`/api/v1/invoices/${invoice.id}/finalize`)
+    await loadInvoices()
+    if (showDetailModal.value) {
+      closeDetailModal()
+    }
+    showSuccess('Rechnung freigegeben', 'Die Rechnung wurde freigegeben und hat eine Rechnungsnummer erhalten')
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Freigeben der Rechnung')
+  }
+}
+
+async function cancelInvoice(invoice: any) {
+  if (!confirm(`Rechnung ${invoice.invoiceNumber} stornieren? Es wird eine Stornorechnung erstellt, die diese Rechnung ausgleicht.`)) {
+    return
+  }
+
+  try {
+    await apiClient.post(`/api/v1/invoices/${invoice.id}/cancel`)
+    await loadInvoices()
+    if (showDetailModal.value) {
+      closeDetailModal()
+    }
+    showSuccess('Rechnung storniert', 'Die Rechnung wurde storniert')
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Stornieren der Rechnung')
+  }
+}
+
 function formatDate(date: string) {
   if (!date) return '-'
   return new Date(date).toLocaleDateString('de-DE')
@@ -276,6 +385,7 @@ function invoiceStatusClass(status: string) {
     sent: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
     paid: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
     overdue: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    reminded: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
     cancelled: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
   }
   return classes[status as keyof typeof classes] || classes.draft
@@ -287,6 +397,7 @@ function invoiceStatusLabel(status: string) {
     sent: 'Versendet',
     paid: 'Bezahlt',
     overdue: 'Überfällig',
+    reminded: 'Gemahnt',
     cancelled: 'Storniert'
   }
   return labels[status as keyof typeof labels] || status
