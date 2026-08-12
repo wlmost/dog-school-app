@@ -123,9 +123,7 @@
 <body>
     <!-- Company Header -->
     <div class="company-info">
-        <h1>Hundeschule Max Mustermann</h1>
-        <p>Musterstraße 123 • 12345 Musterstadt</p>
-        <p>Tel: +49 123 456789 • E-Mail: info@hundeschule-mustermann.de</p>
+        @include('pdf.partials.company-info')
     </div>
 
     <h2>ANAMNESE</h2>
@@ -269,8 +267,7 @@
 
     <!-- Footer -->
     <div class="footer">
-        <p>Hundeschule Max Mustermann • Musterstraße 123 • 12345 Musterstadt</p>
-        <p>USt-IdNr: DE123456789</p>
+        @include('pdf.partials.company-footer-lines')
         <p style="margin-top: 10px;">Erstellt am: {{ now()->format('d.m.Y H:i') }} Uhr</p>
     </div>
 </body>
