@@ -60,6 +60,14 @@
                           </span>
                         </p>
                       </div>
+                      <div v-if="invoice.originalInvoiceNumber">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Stornorechnung zu:</span>
+                        <p class="text-base text-gray-900 dark:text-gray-100">{{ invoice.originalInvoiceNumber }}</p>
+                      </div>
+                      <div v-if="invoice.cancellationInvoiceNumber">
+                        <span class="text-sm text-gray-600 dark:text-gray-400">Storniert durch:</span>
+                        <p class="text-base text-gray-900 dark:text-gray-100">{{ invoice.cancellationInvoiceNumber }}</p>
+                      </div>
                     </div>
                   </div>
 
@@ -152,8 +160,20 @@
                   <button v-if="!authStore.isCustomer && invoice.status === 'draft'" @click="$emit('edit', invoice)" class="btn bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-500 text-white">
                     Bearbeiten
                   </button>
-                  <button v-if="!authStore.isCustomer && (invoice.status === 'draft' || invoice.status === 'sent')" @click="$emit('mark-paid', invoice)" class="btn bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white">
+                  <button v-if="canMarkAsPaid(invoice)" @click="$emit('mark-paid', invoice)" class="btn bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white">
                     Als bezahlt markieren
+                  </button>
+                  <button v-if="canDelete(invoice)" @click="$emit('delete', invoice)" class="btn bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white">
+                    Löschen
+                  </button>
+                  <button v-if="canFinalize(invoice)" @click="$emit('finalize', invoice)" class="btn bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white">
+                    Freigeben
+                  </button>
+                  <button v-if="canSend(invoice)" disabled title="Versand-Dialog folgt in einem späteren Update" class="btn bg-gray-200 dark:bg-gray-600 text-gray-400 dark:text-gray-500 cursor-not-allowed">
+                    Senden
+                  </button>
+                  <button v-if="canCancel(invoice)" @click="$emit('cancel', invoice)" class="btn bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white">
+                    Stornieren
                   </button>
                 </div>
               </div>
@@ -183,9 +203,50 @@ defineEmits<{
   download: [invoice: any]
   edit: [invoice: any]
   'mark-paid': [invoice: any]
+  delete: [invoice: any]
+  finalize: [invoice: any]
+  cancel: [invoice: any]
 }>()
 
 const isSmallBusiness = ref(false)
+
+// Statuswerte, für die der (deaktivierte) Senden-Button angezeigt wird.
+// Siehe InvoicesView.vue für die identische Logik/Kommentierung
+// (design.md Decision D3).
+const SENDABLE_STATUSES = ['sent', 'reminded', 'overdue']
+
+// Statuswerte, für die der Stornieren-Button angezeigt wird. Muss exakt
+// InvoicePolicy::cancel() spiegeln, die `overdue` bewusst NICHT zulässt.
+// Siehe InvoicesView.vue für die identische Logik/Kommentierung.
+const CANCELLABLE_STATUSES = ['sent', 'reminded', 'paid']
+
+function canDelete(invoice: any): boolean {
+  return !authStore.isCustomer && invoice.status === 'draft'
+}
+
+function canFinalize(invoice: any): boolean {
+  return !authStore.isCustomer && invoice.status === 'draft'
+}
+
+// Muss `InvoiceController::markAsPaid()` spiegeln, das einen Entwurf
+// (`status === 'draft'`) mit HTTP 422 ablehnt ("Ein Entwurf muss zuerst
+// freigegeben werden, bevor er als bezahlt markiert werden kann."). Ein
+// Entwurf besitzt außerdem noch keine Rechnungsnummer (wird erst in
+// `finalize()` vergeben), daher darf der Button hierfür gar nicht erst
+// sichtbar sein.
+function canMarkAsPaid(invoice: any): boolean {
+  return !authStore.isCustomer && invoice.status === 'sent'
+}
+
+function canSend(invoice: any): boolean {
+  return !authStore.isCustomer && SENDABLE_STATUSES.includes(invoice.status)
+}
+
+function canCancel(invoice: any): boolean {
+  return !authStore.isCustomer
+    && CANCELLABLE_STATUSES.includes(invoice.status)
+    && !invoice.originalInvoiceId
+}
 
 onMounted(() => {
   loadSettings()
@@ -230,6 +291,7 @@ function getStatusClass(status: string) {
     'sent': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
     'paid': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
     'overdue': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    'reminded': 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
     'cancelled': 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
   }
   return classes[status] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
@@ -241,6 +303,7 @@ function getStatusLabel(status: string) {
     'sent': 'Versendet',
     'paid': 'Bezahlt',
     'overdue': 'Überfällig',
+    'reminded': 'Gemahnt',
     'cancelled': 'Storniert'
   }
   return labels[status] || status

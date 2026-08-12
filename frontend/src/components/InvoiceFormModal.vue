@@ -48,20 +48,10 @@
                   </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-4">
                   <div>
                     <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Fälligkeitsdatum *</label>
                     <input v-model="form.due_date" type="date" required class="input" />
-                  </div>
-
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
-                    <select v-model="form.status" class="input">
-                      <option value="draft">Entwurf</option>
-                      <option value="sent">Versendet</option>
-                      <option value="paid">Bezahlt</option>
-                      <option value="cancelled">Storniert</option>
-                    </select>
                   </div>
                 </div>
 
@@ -185,7 +175,6 @@ const form = ref({
   customer_id: '',
   invoice_date: new Date().toISOString().split('T')[0],
   due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-  status: 'draft',
   items: [
     { description: '', quantity: 1, unit_price: 0 }
   ],
@@ -203,7 +192,6 @@ watch(() => props.invoice, (newInvoice) => {
       customer_id: newInvoice.customerId,
       invoice_date: newInvoice.invoiceDate,
       due_date: newInvoice.dueDate,
-      status: newInvoice.status || 'draft',
       items: newInvoice.items?.length > 0 ? newInvoice.items.map((item: any) => ({
         description: item.description,
         quantity: item.quantity,
@@ -286,7 +274,6 @@ function resetForm() {
     customer_id: '',
     invoice_date: new Date().toISOString().split('T')[0],
     due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    status: 'draft',
     items: [{ description: '', quantity: 1, unit_price: 0 }],
     notes: ''
   }
@@ -300,7 +287,6 @@ async function handleSubmit() {
       customerId: form.value.customer_id,
       issueDate: form.value.invoice_date,
       dueDate: form.value.due_date,
-      status: form.value.status,
       items: form.value.items.map(item => ({
         description: item.description,
         quantity: item.quantity,
