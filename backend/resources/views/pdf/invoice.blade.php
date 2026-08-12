@@ -114,13 +114,6 @@
             text-align: center;
         }
         
-        .status-badge {
-            padding: 3px 10px;
-            background-color: #d1fae5;
-            color: #065f46;
-            font-weight: bold;
-            font-size: 8pt;
-        }
     </style>
 </head>
 <body>
@@ -172,14 +165,6 @@
         <p><strong>Rechnungsnummer:</strong> {{ $invoice->invoice_number }}</p>
         <p><strong>Rechnungsdatum:</strong> {{ $invoice->issue_date->format('d.m.Y') }}</p>
         <p><strong>Fälligkeitsdatum:</strong> {{ $invoice->due_date->format('d.m.Y') }}</p>
-        <p><strong>Status:</strong> 
-            <span class="status-badge">
-                @if($invoice->status === 'paid') BEZAHLT 
-                @elseif($invoice->status === 'overdue') ÜBERFÄLLIG
-                @else {{ strtoupper($invoice->status) }}
-                @endif
-            </span>
-        </p>
     </div>
 
     <!-- Invoice Items -->

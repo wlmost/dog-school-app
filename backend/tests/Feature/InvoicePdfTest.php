@@ -199,6 +199,34 @@ test('PDF calculates tax correctly', function () {
     expect($response->getContent())->not()->toBeEmpty();
 });
 
+it('zeigt keinen internen dokumentstatus im rechnungs-pdf', function () {
+    $this->invoice->update(['status' => 'draft']);
+    $this->invoice->load(['customer.user', 'items']);
+
+    $html = view('pdf.invoice', ['invoice' => $this->invoice])->render();
+
+    expect($html)->not->toContain('DRAFT');
+    expect($html)->not->toContain('Status:');
+    expect($html)->not->toContain('status-badge');
+});
+
+it('zeigt für keinen rechnungsstatus-wert einen internen dokumentstatus im rechnungs-pdf', function (string $status) {
+    $this->invoice->update(['status' => $status]);
+    $this->invoice->load(['customer.user', 'items']);
+
+    $html = view('pdf.invoice', ['invoice' => $this->invoice])->render();
+
+    expect($html)->not->toContain('Status:');
+    expect($html)->not->toContain('status-badge');
+    expect($html)->not->toContain(strtoupper($status));
+})->with([
+    'draft',
+    'sent',
+    'paid',
+    'overdue',
+    'cancelled',
+]);
+
 test('PDF filename uses invoice number', function () {
     $response = $this->actingAs($this->admin)
         ->getJson('/api/v1/invoices/'.$this->invoice->id.'/pdf');
