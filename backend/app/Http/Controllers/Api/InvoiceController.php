@@ -247,6 +247,17 @@ class InvoiceController extends Controller
      * `UniqueConstraintViolationException` (see `MySqlConnection`,
      * `PostgresConnection` and `SQLiteConnection::isUniqueConstraintError()`),
      * so no driver-specific branching is needed here.
+     *
+     * Each retry attempt runs in its own **nested** `DB::transaction()`
+     * call, mirroring {@see self::cancel()}'s
+     * `createCancellationInvoiceWithRetry()`. Laravel maps a nested
+     * transaction to a SQL `SAVEPOINT`. This matters specifically when
+     * `finalize()` itself runs inside an outer transaction (e.g. the test
+     * suite's per-test transaction wrapper on PostgreSQL, or a future
+     * caller that wraps this call): PostgreSQL poisons the *entire*
+     * enclosing transaction on any failed statement ("current transaction
+     * is aborted"), so without a savepoint-scoped rollback, the retry
+     * attempt itself — and the `fresh()` reload below — would fail.
      */
     public function finalize(Invoice $invoice, InvoiceNumberGenerator $numberGenerator): InvoiceResource|JsonResponse
     {
@@ -262,10 +273,12 @@ class InvoiceController extends Controller
 
         for ($attempt = 1; $attempt <= $maxAttempts; $attempt++) {
             try {
-                $invoice->update([
-                    'invoice_number' => $numberGenerator->generate(),
-                    'status' => 'sent',
-                ]);
+                DB::transaction(function () use ($invoice, $numberGenerator): void {
+                    $invoice->update([
+                        'invoice_number' => $numberGenerator->generate(),
+                        'status' => 'sent',
+                    ]);
+                });
 
                 break;
             } catch (UniqueConstraintViolationException $e) {
