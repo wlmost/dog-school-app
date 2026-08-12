@@ -62,11 +62,20 @@ it('enthält nicht mehr die alte hartkodierte platzhalter-iban und bic', functio
     expect($html)->not->toContain('<strong>BIC:</strong> COBADEFFXXX');
 });
 
-it('lässt company_name company_street company_city und company_tax_id unverändert hartkodiert', function () {
+it('zeigt firmenname firmenadresse und ust-idnr aus den einstellungen statt hartkodierter platzhalterwerte', function () {
+    Setting::set('company_name', 'Hundeschule Testfall', 'string', group: 'company');
+    Setting::set('company_street', 'Teststraße 42', 'string', group: 'company');
+    Setting::set('company_zip', '99999', 'string', group: 'company');
+    Setting::set('company_city', 'Teststadt', 'string', group: 'company');
+    Setting::set('company_tax_id', 'DE999999999', 'string', group: 'company');
+
     $html = view('pdf.invoice', ['invoice' => $this->invoice])->render();
 
-    expect($html)->toContain('Hundeschule Max Mustermann');
-    expect($html)->toContain('Musterstraße 123');
-    expect($html)->toContain('12345 Musterstadt');
-    expect($html)->toContain('USt-IdNr: DE123456789');
+    expect($html)->toContain('Hundeschule Testfall');
+    expect($html)->toContain('Teststraße 42');
+    expect($html)->toContain('99999 Teststadt');
+    expect($html)->toContain('USt-IdNr: DE999999999');
+    expect($html)->not->toContain('Hundeschule Max Mustermann');
+    expect($html)->not->toContain('Musterstraße 123');
+    expect($html)->not->toContain('DE123456789');
 });

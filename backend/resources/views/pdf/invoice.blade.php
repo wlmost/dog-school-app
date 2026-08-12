@@ -146,9 +146,7 @@
                 @endif
             </td>
             <td class="company-info" style="vertical-align: middle; border: none; padding: 0;">
-                <h1>Hundeschule Max Mustermann</h1>
-                <p>Musterstraße 123 • 12345 Musterstadt</p>
-                <p>Tel: +49 123 456789 • E-Mail: info@hundeschule-mustermann.de</p>
+                @include('pdf.partials.company-info')
             </td>
         </tr>
     </table>
@@ -287,8 +285,7 @@
 
     <!-- Footer -->
     <div class="footer">
-        <p>Hundeschule Max Mustermann • Musterstraße 123 • 12345 Musterstadt</p>
-        <p>USt-IdNr: DE123456789</p>
+        @include('pdf.partials.company-footer-lines')
     </div>
 </body>
 </html>
