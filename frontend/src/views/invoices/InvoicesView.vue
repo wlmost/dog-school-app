@@ -98,7 +98,7 @@
                 <button v-if="canEdit(invoice)" @click="editInvoice(invoice)" class="text-yellow-600 dark:text-yellow-400 hover:text-yellow-900 dark:hover:text-yellow-300">Bearbeiten</button>
                 <button v-if="canDelete(invoice)" @click="deleteInvoice(invoice)" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">Löschen</button>
                 <button v-if="canFinalize(invoice)" @click="finalizeInvoice(invoice)" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">Freigeben</button>
-                <button v-if="canSend(invoice)" disabled title="Versand-Dialog folgt in einem späteren Update" class="text-gray-400 dark:text-gray-500 cursor-not-allowed">Senden</button>
+                <button v-if="canSend(invoice)" @click="openSendDialog(invoice)" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">Senden</button>
                 <button v-if="canCancel(invoice)" @click="cancelInvoice(invoice)" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">Stornieren</button>
               </td>
             </tr>
@@ -135,6 +135,16 @@
       @delete="deleteInvoice"
       @finalize="finalizeInvoice"
       @cancel="cancelInvoice"
+      @send="openSendDialog"
+    />
+
+    <!-- Invoice Send Dialog -->
+    <InvoiceSendDialog
+      :is-open="showSendDialog"
+      :invoice="sendDialogInvoice"
+      @close="closeSendDialog"
+      @download="downloadPDF"
+      @send-email="sendInvoiceEmail"
     />
   </div>
 </template>
@@ -144,6 +154,7 @@ import { ref, onMounted } from 'vue'
 import apiClient from '@/api/client'
 import InvoiceFormModal from '@/components/InvoiceFormModal.vue'
 import InvoiceDetailModal from '@/components/InvoiceDetailModal.vue'
+import InvoiceSendDialog from '@/components/InvoiceSendDialog.vue'
 import PaginationControls from '@/components/PaginationControls.vue'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
 import { useAuthStore } from '@/stores/auth'
@@ -158,7 +169,14 @@ const filterStatus = ref<string | null>(null)
 const invoices = ref<any[]>([])
 const showFormModal = ref(false)
 const showDetailModal = ref(false)
+const showSendDialog = ref(false)
 const selectedInvoice = ref<any>(null)
+// Eigener Ref statt Mitbenutzung von `selectedInvoice`: Der Send-Dialog kann
+// laut design.md Decision D8 über dem weiterhin geöffneten Detail-Modal
+// geöffnet werden. Würden sich beide Modals `selectedInvoice` teilen, würde
+// `closeSendDialog()` es auf `null` setzen und damit das im Hintergrund noch
+// offene Detail-Modal leerräumen (Reviewer-Befund, siehe review.md).
+const sendDialogInvoice = ref<any>(null)
 
 const { currentPage, lastPage, total, updateFromMeta, resetPage } = usePagination()
 
@@ -275,6 +293,16 @@ function closeDetailModal() {
   selectedInvoice.value = null
 }
 
+function openSendDialog(invoice: any) {
+  sendDialogInvoice.value = invoice
+  showSendDialog.value = true
+}
+
+function closeSendDialog() {
+  showSendDialog.value = false
+  sendDialogInvoice.value = null
+}
+
 async function handleInvoiceSaved() {
   await loadInvoices()
   closeFormModal()
@@ -366,6 +394,18 @@ async function cancelInvoice(invoice: any) {
     showSuccess('Rechnung storniert', 'Die Rechnung wurde storniert')
   } catch (error) {
     handleApiError(error, 'Fehler beim Stornieren der Rechnung')
+  }
+}
+
+async function sendInvoiceEmail(invoice: any) {
+  try {
+    await apiClient.post(`/api/v1/invoices/${invoice.id}/send-email`)
+    closeSendDialog()
+    showSuccess('Rechnung versendet', 'Die Rechnung wurde per E-Mail versendet')
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Versenden der Rechnung')
+    // Dialog bleibt bewusst offen, damit sofort auf "Manuell versenden"
+    // ausgewichen werden kann (design.md Decision D8).
   }
 }
 

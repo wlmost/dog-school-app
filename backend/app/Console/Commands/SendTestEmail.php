@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Mail\BookingConfirmation;
-use App\Mail\InvoiceCreated;
+use App\Mail\InvoiceSent;
 use App\Mail\PaymentReminder;
 use App\Mail\WelcomeEmail;
 use App\Models\Booking;
@@ -127,7 +127,7 @@ class SendTestEmail extends Command
         $originalEmail = $invoice->customer->user->email;
         $invoice->customer->user->email = $recipient;
 
-        Mail::to($recipient)->send(new InvoiceCreated($invoice));
+        Mail::to($recipient)->send(new InvoiceSent($invoice));
 
         // Restore original email
         $invoice->customer->user->email = $originalEmail;

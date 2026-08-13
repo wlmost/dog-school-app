@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Mail;
 
+use App\Listeners\SendInvoiceEmail;
 use App\Models\Invoice;
 use App\Models\Setting;
+use App\Services\InvoicePdfRenderer;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Address;
@@ -15,7 +17,7 @@ use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Cache;
 
-class InvoiceCreated extends Mailable
+class InvoiceSent extends Mailable
 {
     use Queueable, SerializesModels;
 
@@ -58,7 +60,7 @@ class InvoiceCreated extends Mailable
         });
 
         return new Content(
-            view: 'emails.invoice-created',
+            view: 'emails.invoice-sent',
             with: ['settings' => $settings]
         );
     }
@@ -66,10 +68,26 @@ class InvoiceCreated extends Mailable
     /**
      * Get the attachments for the message.
      *
+     * The {@see InvoicePdfRenderer} is resolved from the container here,
+     * inside the method, rather than injected via the constructor: this
+     * mailable is instantiated directly (`new InvoiceSent($invoice)`, see
+     * {@see SendInvoiceEmail}), not through the container. A
+     * constructor-promoted service property would additionally be picked
+     * up by `Queueable`/`SerializesModels` and (de)serialized on every
+     * queue round-trip, which is unnecessary overhead for a service that
+     * has no state of its own.
+     *
      * @return array<int, Attachment>
      */
     public function attachments(): array
     {
-        return [];
+        $pdfRenderer = app(InvoicePdfRenderer::class);
+
+        return [
+            Attachment::fromData(
+                fn () => $pdfRenderer->render($this->invoice)->output(),
+                $this->invoice->invoice_number.'.pdf',
+            )->withMime('application/pdf'),
+        ];
     }
 }

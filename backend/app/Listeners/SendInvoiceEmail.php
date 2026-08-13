@@ -4,16 +4,12 @@ declare(strict_types=1);
 
 namespace App\Listeners;
 
-use App\Events\InvoiceWasCreated;
-use App\Mail\InvoiceCreated;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
+use App\Events\InvoiceWasSent;
+use App\Mail\InvoiceSent;
 use Illuminate\Support\Facades\Mail;
 
-class SendInvoiceCreatedEmail implements ShouldQueue
+class SendInvoiceEmail
 {
-    use InteractsWithQueue;
-
     /**
      * Create the event listener.
      */
@@ -25,7 +21,7 @@ class SendInvoiceCreatedEmail implements ShouldQueue
     /**
      * Handle the event.
      */
-    public function handle(InvoiceWasCreated $event): void
+    public function handle(InvoiceWasSent $event): void
     {
         // Load necessary relationships
         $event->invoice->load([
@@ -33,24 +29,15 @@ class SendInvoiceCreatedEmail implements ShouldQueue
             'items',
         ]);
 
-        // Queue invoice created email to customer
+        // Send invoice email to customer
         Mail::to($event->invoice->customer->user->email)
-            ->queue(new InvoiceCreated($event->invoice));
-    }
-
-    /**
-     * Determine whether the listener should be queued.
-     */
-    public function shouldQueue(InvoiceWasCreated $event): bool
-    {
-        // Only queue if invoice was created successfully
-        return $event->invoice->exists;
+            ->send(new InvoiceSent($event->invoice));
     }
 
     /**
      * Handle a job failure.
      */
-    public function failed(InvoiceWasCreated $event, \Throwable $exception): void
+    public function failed(InvoiceWasSent $event, \Throwable $exception): void
     {
         // Log the error
         logger()->error('Failed to send invoice created email', [
