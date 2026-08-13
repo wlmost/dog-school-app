@@ -169,7 +169,7 @@
                   <button v-if="canFinalize(invoice)" @click="$emit('finalize', invoice)" class="btn bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white">
                     Freigeben
                   </button>
-                  <button v-if="canSend(invoice)" disabled title="Versand-Dialog folgt in einem späteren Update" class="btn bg-gray-200 dark:bg-gray-600 text-gray-400 dark:text-gray-500 cursor-not-allowed">
+                  <button v-if="canSend(invoice)" @click="$emit('send', invoice)" class="btn bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-600 text-white">
                     Senden
                   </button>
                   <button v-if="canCancel(invoice)" @click="$emit('cancel', invoice)" class="btn bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white">
@@ -206,6 +206,7 @@ defineEmits<{
   delete: [invoice: any]
   finalize: [invoice: any]
   cancel: [invoice: any]
+  send: [invoice: any]
 }>()
 
 const isSmallBusiness = ref(false)
