@@ -70,7 +70,9 @@ Route::prefix('v1')->middleware('throttle:60,1')->group(function () {
 });
 
 // PayPal webhook - separate without rate limiting (PayPal needs reliable access)
-Route::post('/api/v1/payments/paypal/webhook', [PaymentController::class, 'handleWebhook']);
+Route::prefix('v1')->group(function () {
+    Route::post('/payments/paypal/webhook', [PaymentController::class, 'handleWebhook']);
+});
 
 // Protected routes
 Route::prefix('v1')->middleware('auth:sanctum')->group(function () {

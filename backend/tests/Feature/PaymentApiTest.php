@@ -330,3 +330,16 @@ test('trainer cannot delete payment', function () {
         ->deleteJson('/api/v1/payments/'.$payment->id)
         ->assertForbidden();
 });
+
+test('paypal webhook is reachable at the external path PayPal is configured with, without authentication', function () {
+    // Regression test: the route was previously double-prefixed
+    // ("/api" + implicit "/api" from bootstrap/app.php), resulting in
+    // "/api/api/v1/payments/paypal/webhook" - a path PayPal could never
+    // reach. This asserts the exact URL PayPal is configured to call.
+    $this->postJson('/api/v1/payments/paypal/webhook', [
+        'event_type' => 'PAYMENT.CAPTURE.COMPLETED',
+        'resource' => ['id' => 'UNKNOWN-TRANSACTION-ID'],
+    ])
+        ->assertOk()
+        ->assertJsonPath('status', 'success');
+});
