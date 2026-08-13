@@ -4,11 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Events\InvoiceWasCreated;
-use App\Listeners\SendInvoiceCreatedEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -66,10 +63,13 @@ class AppServiceProvider extends ServiceProvider
             return $user->isCustomer() || $user->isTrainer() || $user->isAdmin();
         });
 
-        // Register event listeners
-        Event::listen(
-            InvoiceWasCreated::class,
-            SendInvoiceCreatedEmail::class
-        );
+        // Event listeners are intentionally NOT registered here via
+        // Event::listen(): Laravel's automatic event discovery already
+        // registers any Listener::handle() method typed against an Event
+        // class (see `php artisan event:list`). Registering them here too
+        // caused every event (InvoiceWasSent, BookingCreated,
+        // UserRegistered) to be handled twice, sending duplicate emails —
+        // see the archived `add-invoice-send-flow` and
+        // `fix-duplicate-event-listener-registration` changes.
     }
 }

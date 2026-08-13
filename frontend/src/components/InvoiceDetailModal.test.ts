@@ -140,7 +140,7 @@ describe('InvoiceDetailModal', () => {
   })
 
   describe('Status "sent"', () => {
-    it('zeigt PDF, Bezahlt-markieren, einen deaktivierten Senden-Button und Stornieren, aber nicht Bearbeiten/Löschen/Freigeben', async () => {
+    it('zeigt PDF, Bezahlt-markieren, einen aktiven Senden-Button und Stornieren, aber nicht Bearbeiten/Löschen/Freigeben', async () => {
       mockTrainerAuth()
       const wrapper = await mountModal(makeInvoice({ status: 'sent' }))
 
@@ -154,8 +154,7 @@ describe('InvoiceDetailModal', () => {
       expect(buttons).not.toContain('Freigeben')
 
       const sendButton = findActionButton(wrapper, 'Senden')
-      expect(sendButton?.attributes('disabled')).toBeDefined()
-      expect(sendButton?.attributes('title')).toBe('Versand-Dialog folgt in einem späteren Update')
+      expect(sendButton?.attributes('disabled')).toBeUndefined()
     })
 
     it('emittiert "cancel" beim Klick auf Stornieren', async () => {
@@ -166,6 +165,16 @@ describe('InvoiceDetailModal', () => {
       await findActionButton(wrapper, 'Stornieren')?.trigger('click')
 
       expect(wrapper.emitted('cancel')?.[0]).toEqual([invoice])
+    })
+
+    it('emittiert "send" mit dem invoice-Objekt beim Klick auf Senden', async () => {
+      mockTrainerAuth()
+      const invoice = makeInvoice({ status: 'sent' })
+      const wrapper = await mountModal(invoice)
+
+      await findActionButton(wrapper, 'Senden')?.trigger('click')
+
+      expect(wrapper.emitted('send')?.[0]).toEqual([invoice])
     })
   })
 

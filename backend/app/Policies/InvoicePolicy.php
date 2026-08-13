@@ -146,4 +146,20 @@ class InvoicePolicy
             && in_array($invoice->status, ['sent', 'paid', 'reminded'], true)
             && $invoice->original_invoice_id === null;
     }
+
+    /**
+     * Determine whether the user can (re-)send the invoice by email.
+     *
+     * Deliberately role-only, same split as {@see self::finalize()} and
+     * {@see self::markAsPaid()}: the status whitelist (`sent`/`reminded`/
+     * `overdue`) and the "customer has an email address" check are both
+     * enforced as HTTP 422 in `InvoiceController::sendEmail()`, not here
+     * — "policy = may this role act at all, controller = is this action
+     * valid given the invoice's current state" (see `design.md` Decision
+     * D7).
+     */
+    public function send(User $user, Invoice $invoice): bool
+    {
+        return $user->isAdminOrTrainer();
+    }
 }

@@ -49,9 +49,13 @@ export function handleApiError(error: unknown, fallbackMessage = 'Ein Fehler ist
         return
       }
 
-      // Server Error (500+)
+      // Server Error (500+): Bevorzugt die vom Backend mitgelieferte Nachricht
+      // anzeigen, falls vorhanden — sie ist i.d.R. gezielt formuliert (z.B.
+      // Fallback-Hinweise wie beim gescheiterten Rechnungsversand, HTTP 502,
+      // siehe InvoiceController::sendEmail()). Nur wenn das Backend keine
+      // Nachricht mitliefert, greift die generische Server-Fehler-Meldung.
       if (status >= 500) {
-        toast.error('Server-Fehler', 'Ein interner Fehler ist aufgetreten. Bitte versuchen Sie es später erneut')
+        toast.error('Server-Fehler', data.message || 'Ein interner Fehler ist aufgetreten. Bitte versuchen Sie es später erneut')
         return
       }
 

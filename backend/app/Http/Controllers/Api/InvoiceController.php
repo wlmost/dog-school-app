@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\InvoiceWasSent;
 use App\Helpers\DatabaseHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInvoiceRequest;
 use App\Http\Requests\UpdateInvoiceRequest;
 use App\Http\Resources\InvoiceResource;
+use App\Listeners\SendInvoiceEmail;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Setting;
 use App\Services\InvoiceNumberGenerator;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\InvoicePdfRenderer;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
@@ -45,6 +47,13 @@ class InvoiceController extends Controller
      * {@see self::FINALIZE_MAX_ATTEMPTS}.
      */
     private const CANCEL_MAX_ATTEMPTS = 3;
+
+    /**
+     * Invoice statuses for which {@see self::sendEmail()} is allowed. A
+     * `draft` has no assigned invoice number/PDF content yet, and `paid`/
+     * `cancelled` invoices are not meant to trigger a (re-)send.
+     */
+    private const SENDABLE_STATUSES = ['sent', 'reminded', 'overdue'];
 
     /**
      * Display a listing of invoices with optional filtering.
@@ -399,20 +408,60 @@ class InvoiceController extends Controller
     /**
      * Generate and download invoice as PDF.
      */
-    public function downloadPdf(Invoice $invoice): Response
+    public function downloadPdf(Invoice $invoice, InvoicePdfRenderer $pdfRenderer): Response
     {
         // Load relationships for authorization and PDF generation
         $invoice->load(['customer.user', 'items', 'payments']);
 
         $this->authorize('view', $invoice);
 
-        // Generate PDF
-        $pdf = Pdf::loadView('pdf.invoice', ['invoice' => $invoice])
-            ->setPaper('a4', 'portrait')
-            ->setOption('isHtml5ParserEnabled', true)
-            ->setOption('isRemoteEnabled', true);
-
         // Return PDF download
-        return $pdf->download($invoice->invoice_number.'.pdf');
+        return $pdfRenderer->render($invoice)->download($invoice->invoice_number.'.pdf');
+    }
+
+    /**
+     * (Re-)send the invoice to the customer by email, from within the app.
+     *
+     * The invoice's status is deliberately left unchanged: this endpoint is
+     * a delivery channel, not a state transition (see `design.md`
+     * Goals/Non-Goals). Dispatching {@see InvoiceWasSent} runs
+     * {@see SendInvoiceEmail} synchronously (no queue, see
+     * `task-T01.notes.md`), so a mail transport failure surfaces here as a
+     * thrown exception rather than a silently failed queued job.
+     */
+    public function sendEmail(Invoice $invoice): JsonResponse
+    {
+        $this->authorize('send', $invoice);
+
+        $invoice->load(['customer.user', 'items']);
+
+        if (! in_array($invoice->status, self::SENDABLE_STATUSES, true)) {
+            return response()->json([
+                'message' => 'Diese Rechnung kann in ihrem aktuellen Status nicht versendet werden.',
+            ], 422);
+        }
+
+        if (! $invoice->customer->user->email) {
+            return response()->json([
+                'message' => 'Für diesen Kunden ist keine E-Mail-Adresse hinterlegt.',
+            ], 422);
+        }
+
+        try {
+            InvoiceWasSent::dispatch($invoice);
+        } catch (\Throwable $e) {
+            logger()->error('Rechnungs-E-Mail konnte nicht versendet werden', [
+                'invoice_id' => $invoice->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Die Rechnung konnte nicht per E-Mail versendet werden. Bitte laden Sie das PDF herunter und versenden Sie es manuell.',
+            ], 502);
+        }
+
+        return response()->json([
+            'message' => 'Rechnung wurde per E-Mail versendet.',
+        ]);
     }
 }

@@ -69,10 +69,10 @@ describe('Customer API - Index', function () {
     test('can filter customers by search term', function () {
         $admin = User::factory()->admin()->create();
 
-        $user1 = User::factory()->create(['first_name' => 'John', 'last_name' => 'Doe']);
+        $user1 = User::factory()->create(['first_name' => 'John', 'last_name' => 'Doe', 'email' => 'john.doe@example.test']);
         $customer1 = Customer::factory()->create(['user_id' => $user1->id]);
 
-        $user2 = User::factory()->create(['first_name' => 'Jane', 'last_name' => 'Smith']);
+        $user2 = User::factory()->create(['first_name' => 'Jane', 'last_name' => 'Smith', 'email' => 'jane.smith@example.test']);
         $customer2 = Customer::factory()->create(['user_id' => $user2->id]);
 
         $response = $this->actingAs($admin)

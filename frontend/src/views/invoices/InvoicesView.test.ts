@@ -1,4 +1,5 @@
 import { mount, flushPromises } from '@vue/test-utils'
+import { nextTick } from 'vue'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import InvoicesView from '@/views/invoices/InvoicesView.vue'
 import apiClient from '@/api/client'
@@ -75,7 +76,16 @@ const globalStubs = {
     template: '<div data-testid="invoice-form-modal" />',
   },
   InvoiceDetailModal: {
+    name: 'InvoiceDetailModal',
+    props: ['isOpen', 'invoice'],
+    emits: ['close', 'download', 'edit', 'mark-paid', 'delete', 'finalize', 'cancel', 'send'],
     template: '<div data-testid="invoice-detail-modal" />',
+  },
+  InvoiceSendDialog: {
+    name: 'InvoiceSendDialog',
+    props: ['isOpen', 'invoice'],
+    emits: ['close', 'download', 'send-email'],
+    template: '<div data-testid="invoice-send-dialog" />',
   },
 }
 
@@ -181,7 +191,7 @@ describe('InvoicesView', () => {
   // Status: sent                                                         //
   // ------------------------------------------------------------------ //
   describe('Status "sent"', () => {
-    it('zeigt PDF, einen deaktivierten Senden-Button und Stornieren, aber nicht Bearbeiten/Löschen/Freigeben', async () => {
+    it('zeigt PDF, einen aktiven Senden-Button und Stornieren, aber nicht Bearbeiten/Löschen/Freigeben', async () => {
       const wrapper = await mountWithInvoice(makeInvoice({ status: 'sent' }))
 
       const buttons = actionButtonTexts(wrapper)
@@ -193,15 +203,21 @@ describe('InvoicesView', () => {
       expect(buttons).not.toContain('Freigeben')
 
       const sendButton = findActionButton(wrapper, 'Senden')
-      expect(sendButton?.attributes('disabled')).toBeDefined()
-      expect(sendButton?.attributes('title')).toBe('Versand-Dialog folgt in einem späteren Update')
+      expect(sendButton?.attributes('disabled')).toBeUndefined()
     })
 
-    it('löst beim Klick auf Senden keinen API-Aufruf aus', async () => {
-      const wrapper = await mountWithInvoice(makeInvoice({ status: 'sent' }))
+    it('öffnet beim Klick auf Senden den InvoiceSendDialog mit der Rechnung', async () => {
+      const invoice = makeInvoice({ status: 'sent' })
+      const wrapper = await mountWithInvoice(invoice)
+
+      const dialog = wrapper.findComponent({ name: 'InvoiceSendDialog' })
+      expect(dialog.props('isOpen')).toBe(false)
 
       await findActionButton(wrapper, 'Senden')?.trigger('click')
+      await nextTick()
 
+      expect(dialog.props('isOpen')).toBe(true)
+      expect(dialog.props('invoice')).toEqual(invoice)
       expect(apiClient.post).not.toHaveBeenCalled()
     })
 
@@ -228,6 +244,127 @@ describe('InvoicesView', () => {
       await flushPromises()
 
       expect(handleApiError).toHaveBeenCalled()
+    })
+  })
+
+  // ------------------------------------------------------------------ //
+  // InvoiceSendDialog-Interaktion                                       //
+  // ------------------------------------------------------------------ //
+  describe('InvoiceSendDialog-Interaktion', () => {
+    async function openDialog(invoice: ReturnType<typeof makeInvoice>) {
+      const wrapper = await mountWithInvoice(invoice)
+      await findActionButton(wrapper, 'Senden')?.trigger('click')
+      await nextTick()
+      const dialog = wrapper.findComponent({ name: 'InvoiceSendDialog' })
+      return { wrapper, dialog }
+    }
+
+    it('sendet die Rechnung per E-Mail, schließt den Dialog und zeigt einen Erfolgs-Toast', async () => {
+      const invoice = makeInvoice({ status: 'sent' })
+      const { dialog } = await openDialog(invoice)
+      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: {} })
+
+      await dialog.vm.$emit('send-email', invoice)
+      await flushPromises()
+
+      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/invoices/1/send-email')
+      expect(dialog.props('isOpen')).toBe(false)
+      expect(showSuccess).toHaveBeenCalled()
+    })
+
+    it('zeigt bei fehlgeschlagenem Versand einen Fehler-Toast, der Dialog bleibt offen', async () => {
+      const invoice = makeInvoice({ status: 'sent' })
+      const { dialog } = await openDialog(invoice)
+      vi.mocked(apiClient.post).mockRejectedValueOnce(new Error('fail'))
+
+      await dialog.vm.$emit('send-email', invoice)
+      await flushPromises()
+
+      expect(handleApiError).toHaveBeenCalled()
+      expect(dialog.props('isOpen')).toBe(true)
+    })
+
+    it('reicht die Backend-Fehlermeldung "keine E-Mail-Adresse hinterlegt" (HTTP 422) unverändert an handleApiError weiter', async () => {
+      const invoice = makeInvoice({ status: 'sent' })
+      const { dialog } = await openDialog(invoice)
+      const backendError = Object.assign(new Error('Request failed with status code 422'), {
+        response: {
+          status: 422,
+          data: { message: 'Für diesen Kunden ist keine E-Mail-Adresse hinterlegt.' },
+        },
+      })
+      vi.mocked(apiClient.post).mockRejectedValueOnce(backendError)
+
+      await dialog.vm.$emit('send-email', invoice)
+      await flushPromises()
+
+      expect(handleApiError).toHaveBeenCalledWith(backendError, expect.any(String))
+      expect(dialog.props('isOpen')).toBe(true)
+    })
+
+    it('löst beim download-Event denselben PDF-Download wie der bestehende PDF-Button aus', async () => {
+      const invoice = makeInvoice({ status: 'sent' })
+      const { dialog } = await openDialog(invoice)
+      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: new Blob() })
+
+      await dialog.vm.$emit('download', invoice)
+      await flushPromises()
+
+      expect(apiClient.get).toHaveBeenCalledWith('/api/v1/invoices/1/pdf', { responseType: 'blob' })
+    })
+
+    it('schließt den Dialog beim close-Event', async () => {
+      const invoice = makeInvoice({ status: 'sent' })
+      const { dialog } = await openDialog(invoice)
+
+      await dialog.vm.$emit('close')
+      await nextTick()
+
+      expect(dialog.props('isOpen')).toBe(false)
+    })
+
+    it('öffnet den InvoiceSendDialog, wenn InvoiceDetailModal ein send-Event emittiert', async () => {
+      const invoice = makeInvoice({ status: 'sent' })
+      const wrapper = await mountWithInvoice(invoice)
+      const detailModal = wrapper.findComponent({ name: 'InvoiceDetailModal' })
+      const dialog = wrapper.findComponent({ name: 'InvoiceSendDialog' })
+
+      await detailModal.vm.$emit('send', invoice)
+      await nextTick()
+
+      expect(dialog.props('isOpen')).toBe(true)
+      expect(dialog.props('invoice')).toEqual(invoice)
+    })
+
+    it('lässt das Detail-Modal nach dem Schließen eines aus ihm heraus geöffneten Send-Dialogs weiterhin korrekt sichtbar (Reviewer-Befund: geteilter selectedInvoice-Ref)', async () => {
+      const invoice = makeInvoice({ status: 'sent' })
+      const wrapper = await mountWithInvoice(invoice)
+
+      // Detail-Modal öffnen (Klick auf die Tabellenzeile)
+      await wrapper.find('tbody tr').trigger('click')
+      await nextTick()
+
+      const detailModal = wrapper.findComponent({ name: 'InvoiceDetailModal' })
+      expect(detailModal.props('isOpen')).toBe(true)
+      expect(detailModal.props('invoice')).toEqual(invoice)
+
+      // Send-Dialog aus dem Detail-Modal heraus öffnen: design.md Decision D8
+      // sieht vor, dass er über dem weiterhin offenen Detail-Modal erscheint.
+      await detailModal.vm.$emit('send', invoice)
+      await nextTick()
+
+      const dialog = wrapper.findComponent({ name: 'InvoiceSendDialog' })
+      expect(dialog.props('isOpen')).toBe(true)
+      expect(detailModal.props('isOpen')).toBe(true)
+
+      // Erfolgreicher App-Mail-Versand schließt nur den Send-Dialog
+      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: {} })
+      await dialog.vm.$emit('send-email', invoice)
+      await flushPromises()
+
+      expect(dialog.props('isOpen')).toBe(false)
+      expect(detailModal.props('isOpen')).toBe(true)
+      expect(detailModal.props('invoice')).toEqual(invoice)
     })
   })
 

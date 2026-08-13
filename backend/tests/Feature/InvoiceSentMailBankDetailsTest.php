@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use App\Mail\InvoiceCreated;
+use App\Mail\InvoiceSent;
 use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
@@ -27,7 +27,7 @@ beforeEach(function () {
 });
 
 it('rendert die rechnungs-mail ohne php-fehler wenn keine bankdaten-settings existieren', function () {
-    $mail = new InvoiceCreated($this->invoice);
+    $mail = new InvoiceSent($this->invoice);
 
     $mail->assertSeeInHtml('Bitte überweisen Sie den Betrag innerhalb von 2 Wochen auf folgendes Konto:', false);
 });
@@ -39,7 +39,7 @@ it('zeigt die konfigurierten bankdaten und das zahlungsziel im überweisungstext
     Setting::set('company_bank_bic', 'COBADEFFXXX', 'string', group: 'company');
     Setting::set('company_payment_term_weeks', 4, 'integer', group: 'company');
 
-    $mail = new InvoiceCreated($this->invoice);
+    $mail = new InvoiceSent($this->invoice);
 
     $mail->assertSeeInHtml('Bitte überweisen Sie den Betrag innerhalb von 4 Wochen auf folgendes Konto:', false)
         ->assertSeeInHtml('Hundeschule Beispiel')
@@ -49,7 +49,7 @@ it('zeigt die konfigurierten bankdaten und das zahlungsziel im überweisungstext
 });
 
 it('enthält weiterhin die zahlungsziel-zeile mit dem fälligkeitsdatum zusätzlich zum überweisungstext', function () {
-    $mail = new InvoiceCreated($this->invoice);
+    $mail = new InvoiceSent($this->invoice);
 
     $mail->assertSeeInHtml('Zahlungsziel:')
         ->assertSeeInHtml($this->invoice->due_date->format('d.m.Y'))
@@ -57,8 +57,18 @@ it('enthält weiterhin die zahlungsziel-zeile mit dem fälligkeitsdatum zusätzl
 });
 
 it('enthält nicht mehr die alte hartkodierte platzhalter-iban und bic in der rechnungs-mail', function () {
-    $mail = new InvoiceCreated($this->invoice);
+    $mail = new InvoiceSent($this->invoice);
 
     $mail->assertDontSeeInHtml('DE89 3704 0044 0532 0130 00')
         ->assertDontSeeInHtml('COBADEFFXXX');
+});
+
+it('hängt das rechnungs-pdf als anhang an', function () {
+    $mail = new InvoiceSent($this->invoice);
+
+    $attachments = $mail->attachments();
+
+    expect($attachments)->toHaveCount(1)
+        ->and($attachments[0]->mime)->toBe('application/pdf')
+        ->and($attachments[0]->as)->toBe($this->invoice->invoice_number.'.pdf');
 });

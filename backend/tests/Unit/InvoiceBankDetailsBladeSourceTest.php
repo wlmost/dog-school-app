@@ -34,14 +34,14 @@ it('lädt im pdf-template die neuen bankdaten- und zahlungsziel-settings', funct
 });
 
 it('enthält im rechnungs-mail-template nicht mehr die hartkodierte platzhalter-iban oder bic', function () {
-    $source = file_get_contents($this->backendRoot.'/resources/views/emails/invoice-created.blade.php');
+    $source = file_get_contents($this->backendRoot.'/resources/views/emails/invoice-sent.blade.php');
 
     expect($source)->not->toContain('DE89 3704 0044 0532 0130 00');
     expect($source)->not->toContain('COBADEFFXXX');
 });
 
 it('nutzt im rechnungs-mail-template die neuen bankdaten-settings aus dem settings-array', function () {
-    $source = file_get_contents($this->backendRoot.'/resources/views/emails/invoice-created.blade.php');
+    $source = file_get_contents($this->backendRoot.'/resources/views/emails/invoice-sent.blade.php');
 
     expect($source)->toContain("\$settings['company_bank_account_holder']");
     expect($source)->toContain("\$settings['company_bank_name']");

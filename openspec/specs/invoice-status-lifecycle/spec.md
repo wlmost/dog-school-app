@@ -81,8 +81,8 @@ der Rechnung nur die fachlich zulässigen Aktionen anzeigen.
 #### Scenario: Offene Rechnung zeigt PDF, Senden und Stornieren
 - **GIVEN** eine Rechnung im Status `sent`
 - **WHEN** ein Admin oder Trainer die Liste betrachtet
-- **THEN** die Aktionen PDF, Senden (sichtbar, ohne aktive Funktion in
-  diesem Change) und Stornieren werden angezeigt
+- **THEN** die Aktionen PDF, Senden (öffnet den Versand-Dialog, siehe
+  Capability `invoice-send-flow`) und Stornieren werden angezeigt
 
 #### Scenario: Bezahlte Rechnung zeigt PDF, Stornieren und Zahlungseingangsdatum
 - **GIVEN** eine Rechnung im Status `paid`
