@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePaymentRequest;
 use App\Http\Requests\UpdatePaymentRequest;
 use App\Http\Resources\PaymentResource;
+use App\Models\Customer;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Services\PayPalService;
@@ -45,6 +46,28 @@ class PaymentController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $query = Payment::query()->with(['invoice.customer.user']);
+
+        $user = $request->user();
+
+        // Role-based filtering
+        if ($user->isTrainer()) {
+            // Trainer sees only payments for invoices of their assigned customers
+            $query->whereHas('invoice.customer', function ($q) use ($user) {
+                $q->where('trainer_id', $user->id);
+            });
+        } elseif ($user->isCustomer()) {
+            // Customer sees only payments for their own invoices
+            $customer = Customer::where('user_id', $user->id)->first();
+            if ($customer) {
+                $query->whereHas('invoice', function ($q) use ($customer) {
+                    $q->where('customer_id', $customer->id);
+                });
+            } else {
+                // No customer record means no payments
+                $query->whereRaw('1 = 0');
+            }
+        }
+        // Admin sees everything (no filter)
 
         // Filter by invoice
         if ($request->has('invoiceId')) {
