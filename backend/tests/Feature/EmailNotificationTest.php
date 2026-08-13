@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use App\Mail\BookingConfirmation;
-use App\Mail\InvoiceCreated;
+use App\Mail\InvoiceSent;
 use App\Mail\PaymentReminder;
 use App\Models\Booking;
 use App\Models\Course;
@@ -327,6 +327,6 @@ describe('Email Queue Configuration', function () {
         ]);
 
         Mail::assertNothingQueued();
-        Mail::assertNotSent(InvoiceCreated::class);
+        Mail::assertNotSent(InvoiceSent::class);
     });
 });

@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Events\BookingCreated;
-use App\Events\InvoiceWasCreated;
+use App\Events\InvoiceWasSent;
 use App\Events\UserRegistered;
 use App\Listeners\SendBookingConfirmationEmail;
-use App\Listeners\SendInvoiceCreatedEmail;
+use App\Listeners\SendInvoiceEmail;
 use App\Listeners\SendWelcomeEmail;
 use Illuminate\Console\Command;
 
@@ -63,7 +63,7 @@ class TestEventIntegration extends Command
     {
         $events = [
             'BookingCreated' => BookingCreated::class,
-            'InvoiceWasCreated' => InvoiceWasCreated::class,
+            'InvoiceWasSent' => InvoiceWasSent::class,
             'UserRegistered' => UserRegistered::class,
         ];
 
@@ -80,7 +80,7 @@ class TestEventIntegration extends Command
     {
         $listeners = [
             'SendBookingConfirmationEmail' => SendBookingConfirmationEmail::class,
-            'SendInvoiceCreatedEmail' => SendInvoiceCreatedEmail::class,
+            'SendInvoiceEmail' => SendInvoiceEmail::class,
             'SendWelcomeEmail' => SendWelcomeEmail::class,
         ];
 
@@ -100,7 +100,7 @@ class TestEventIntegration extends Command
 
         // Check if listeners are registered
         $bookingListeners = $events->getListeners(BookingCreated::class);
-        $invoiceListeners = $events->getListeners(InvoiceWasCreated::class);
+        $invoiceListeners = $events->getListeners(InvoiceWasSent::class);
         $userListeners = $events->getListeners(UserRegistered::class);
 
         if (count($bookingListeners) > 0) {
@@ -110,9 +110,9 @@ class TestEventIntegration extends Command
         }
 
         if (count($invoiceListeners) > 0) {
-            $this->line('  ✓ InvoiceWasCreated has '.count($invoiceListeners).' listener(s)');
+            $this->line('  ✓ InvoiceWasSent has '.count($invoiceListeners).' listener(s)');
         } else {
-            $this->warn('  ⚠ InvoiceWasCreated has NO listeners');
+            $this->warn('  ⚠ InvoiceWasSent has NO listeners');
         }
 
         if (count($userListeners) > 0) {
