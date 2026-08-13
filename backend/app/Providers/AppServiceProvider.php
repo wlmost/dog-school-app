@@ -4,12 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Events\BookingCreated;
 use App\Events\InvoiceWasCreated;
-use App\Events\UserRegistered;
-use App\Listeners\SendBookingConfirmationEmail;
 use App\Listeners\SendInvoiceCreatedEmail;
-use App\Listeners\SendWelcomeEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -72,18 +68,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Register event listeners
         Event::listen(
-            BookingCreated::class,
-            SendBookingConfirmationEmail::class
-        );
-
-        Event::listen(
             InvoiceWasCreated::class,
             SendInvoiceCreatedEmail::class
-        );
-
-        Event::listen(
-            UserRegistered::class,
-            SendWelcomeEmail::class
         );
     }
 }
