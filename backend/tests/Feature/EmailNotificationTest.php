@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Mail\BookingConfirmation;
 use App\Mail\InvoiceSent;
 use App\Mail\PaymentReminder;
+use App\Mail\WelcomeEmail;
 use App\Models\Booking;
 use App\Models\Course;
 use App\Models\Customer;
@@ -13,6 +14,8 @@ use App\Models\Invoice;
 use App\Models\TrainingSession;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
+
+uses()->group('feature', 'notification');
 
 beforeEach(function () {
     Mail::fake();
@@ -46,6 +49,23 @@ describe('Booking Confirmation Emails', function () {
         Mail::assertQueued(BookingConfirmation::class, function ($mail) {
             return $mail->hasTo($this->customer->email);
         });
+    });
+
+    // Regression test: BookingCreated used to be registered twice
+    // (auto-discovered handle() + manual Event::listen() in
+    // AppServiceProvider), which queued this mail twice per booking.
+    it('sendet beim erstellen einer buchung genau eine bestätigungs-mail statt zwei', function () {
+        $this->actingAs($this->customer);
+
+        $this->postJson('/api/v1/bookings', [
+            'trainingSessionId' => $this->session->id,
+            'customerId' => $this->customerModel->id,
+            'dogId' => $this->dog->id,
+            'status' => 'confirmed',
+            'bookingDate' => now()->toDateString(),
+        ]);
+
+        Mail::assertQueued(BookingConfirmation::class, 1);
     });
 
     it('sends confirmation email when confirming a pending booking', function () {
@@ -95,6 +115,39 @@ describe('Booking Confirmation Emails', function () {
             expect($mail->booking->trainingSession->id)->toBe($this->session->id);
 
             return true;
+        });
+    });
+});
+
+describe('User Registration Emails', function () {
+    // Regression test: UserRegistered used to be registered twice
+    // (auto-discovered handle() + manual Event::listen() in
+    // AppServiceProvider), which sent this mail twice per registration.
+    it('sendet bei der registrierung eines neuen nutzers genau eine willkommens-mail statt zwei', function () {
+        $this->actingAs($this->admin);
+
+        $this->postJson('/api/v1/auth/register', [
+            'email' => 'new-trainer@example.test',
+            'role' => 'trainer',
+            'first_name' => 'Neu',
+            'last_name' => 'Trainer',
+        ]);
+
+        Mail::assertSent(WelcomeEmail::class, 1);
+    });
+
+    it('sendet die willkommens-mail an den neu registrierten nutzer', function () {
+        $this->actingAs($this->admin);
+
+        $this->postJson('/api/v1/auth/register', [
+            'email' => 'new-trainer@example.test',
+            'role' => 'trainer',
+            'first_name' => 'Neu',
+            'last_name' => 'Trainer',
+        ]);
+
+        Mail::assertSent(WelcomeEmail::class, function ($mail) {
+            return $mail->hasTo('new-trainer@example.test');
         });
     });
 });

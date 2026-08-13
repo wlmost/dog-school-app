@@ -4,13 +4,8 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Events\BookingCreated;
-use App\Events\UserRegistered;
-use App\Listeners\SendBookingConfirmationEmail;
-use App\Listeners\SendWelcomeEmail;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -68,29 +63,13 @@ class AppServiceProvider extends ServiceProvider
             return $user->isCustomer() || $user->isTrainer() || $user->isAdmin();
         });
 
-        // Register event listeners.
-        //
-        // InvoiceWasSent/SendInvoiceEmail is deliberately NOT registered
-        // here: Laravel's automatic event discovery already registers any
-        // Listener::handle() method typed against an Event class (see
-        // `php artisan event:list`). Registering it here too caused
-        // SendInvoiceEmail to run twice per InvoiceWasSent dispatch,
-        // sending the invoice email twice for every click of "Aus der App
-        // versenden" once the listener switched to synchronous Mail::send()
-        // (see add-invoice-send-flow task-review.test-report.md). The two
-        // registrations below are known to have the same double-dispatch
-        // issue (BookingCreated/UserRegistered use ShouldQueue, so it is
-        // masked by queue deduplication behavior rather than fixed) — left
-        // untouched here as out of scope for this change, see the
-        // fix-duplicate-event-listener-registration follow-up.
-        Event::listen(
-            BookingCreated::class,
-            SendBookingConfirmationEmail::class
-        );
-
-        Event::listen(
-            UserRegistered::class,
-            SendWelcomeEmail::class
-        );
+        // Event listeners are intentionally NOT registered here via
+        // Event::listen(): Laravel's automatic event discovery already
+        // registers any Listener::handle() method typed against an Event
+        // class (see `php artisan event:list`). Registering them here too
+        // caused every event (InvoiceWasSent, BookingCreated,
+        // UserRegistered) to be handled twice, sending duplicate emails —
+        // see the archived `add-invoice-send-flow` and
+        // `fix-duplicate-event-listener-registration` changes.
     }
 }
