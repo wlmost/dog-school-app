@@ -213,33 +213,6 @@ class InvoiceController extends Controller
     }
 
     /**
-     * Mark invoice as paid.
-     */
-    public function markAsPaid(Invoice $invoice): InvoiceResource|JsonResponse
-    {
-        $this->authorize('markAsPaid', $invoice);
-
-        if ($invoice->status === 'draft') {
-            return response()->json([
-                'message' => 'Ein Entwurf muss zuerst freigegeben werden, bevor er als bezahlt markiert werden kann.',
-            ], 422);
-        }
-
-        if ($invoice->isPaid()) {
-            return response()->json([
-                'message' => 'Rechnung ist bereits bezahlt.',
-            ], 422);
-        }
-
-        $invoice->update([
-            'status' => 'paid',
-            'paid_date' => now(),
-        ]);
-
-        return new InvoiceResource($invoice->fresh(['customer.user', 'items', 'payments']));
-    }
-
-    /**
      * Finalize a draft invoice: assigns the next invoice number and moves
      * it to status "sent". No email is dispatched here (see Change 2).
      *

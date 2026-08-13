@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property string $payment_method
  * @property string|null $transaction_id
  * @property string $status
+ * @property string|null $notes
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Invoice $invoice
@@ -41,6 +42,7 @@ class Payment extends Model
         'payment_method',
         'transaction_id',
         'status',
+        'notes',
     ];
 
     /**

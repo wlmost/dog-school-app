@@ -31,6 +31,7 @@ class StorePaymentRequest extends FormRequest
             'paymentMethod' => ['required', 'in:cash,bank_transfer,paypal,stripe,credit_card'],
             'transactionId' => ['nullable', 'string', 'max:255'],
             'status' => ['sometimes', 'in:pending,completed,failed,refunded'],
+            'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
 
@@ -48,6 +49,7 @@ class StorePaymentRequest extends FormRequest
             'paymentMethod' => 'Zahlungsmethode',
             'transactionId' => 'Transaktions-ID',
             'status' => 'Status',
+            'notes' => 'Notiz',
         ];
     }
 
@@ -67,6 +69,7 @@ class StorePaymentRequest extends FormRequest
             'payment_method' => $validated['paymentMethod'],
             'transaction_id' => $validated['transactionId'] ?? null,
             'status' => $validated['status'] ?? 'pending',
+            'notes' => $validated['notes'] ?? null,
         ];
     }
 }

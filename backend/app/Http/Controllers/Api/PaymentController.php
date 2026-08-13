@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Exceptions\InvoiceOverpaymentException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePaymentRequest;
 use App\Http\Requests\UpdatePaymentRequest;
 use App\Http\Resources\PaymentResource;
 use App\Models\Invoice;
 use App\Models\Payment;
+use App\Services\InvoicePaymentRecorder;
 use App\Services\PayPalService;
 use App\Services\PayPalWebhookValidator;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
@@ -27,15 +29,25 @@ class PaymentController extends Controller
 {
     use AuthorizesRequests;
 
+    /**
+     * Invoice statuses a payment may currently be recorded against
+     * (see `design.md` Decision D3 of `add-invoice-payment-entry`).
+     */
+    private const PAYABLE_STATUSES = ['sent', 'reminded', 'overdue'];
+
     public function __construct(
         private ?PayPalService $payPalService = null,
-        private ?PayPalWebhookValidator $webhookValidator = null
+        private ?PayPalWebhookValidator $webhookValidator = null,
+        private ?InvoicePaymentRecorder $paymentRecorder = null
     ) {
         if ($this->payPalService === null) {
             $this->payPalService = app(PayPalService::class);
         }
         if ($this->webhookValidator === null) {
             $this->webhookValidator = app(PayPalWebhookValidator::class);
+        }
+        if ($this->paymentRecorder === null) {
+            $this->paymentRecorder = app(InvoicePaymentRecorder::class);
         }
     }
 
@@ -84,24 +96,53 @@ class PaymentController extends Controller
     /**
      * Store a newly created payment.
      */
-    public function store(StorePaymentRequest $request): PaymentResource
+    public function store(StorePaymentRequest $request): PaymentResource|JsonResponse
     {
-        $this->authorize('create', Payment::class);
+        $invoice = Invoice::findOrFail($request->validated('invoiceId'));
 
-        $payment = Payment::create($request->validatedSnakeCase());
+        $this->authorize('create', [Payment::class, $invoice]);
 
-        // Update invoice status if fully paid
-        $invoice = $payment->invoice;
-        $totalPaid = $invoice->payments()->completed()->sum('amount');
+        if (! in_array($invoice->status, self::PAYABLE_STATUSES, true)) {
+            return response()->json([
+                'message' => 'Für diese Rechnung können aktuell keine Zahlungen erfasst werden.',
+            ], 422);
+        }
 
-        if ($totalPaid >= $invoice->total_amount) {
-            $invoice->update([
-                'status' => 'paid',
-                'paid_date' => now(),
-            ]);
+        $data = $request->validatedSnakeCase();
+
+        // Fail-fast UX shortcut for the common (non-racing) case. This is
+        // NOT the authoritative overpayment guard: it reads
+        // `remaining_balance` before any row lock is acquired, so it
+        // cannot see payments that are concurrently being recorded for
+        // the same invoice. `InvoicePaymentRecorder::record()` repeats
+        // the same comparison after `lockForUpdate()` and is what
+        // actually closes that race (see task-fix-overpayment-race.notes.md).
+        if ($data['amount'] > $invoice->remaining_balance) {
+            return $this->overpaymentResponse($invoice->remaining_balance);
+        }
+
+        try {
+            $payment = $this->paymentRecorder->record($invoice, $data);
+        } catch (InvoiceOverpaymentException $e) {
+            return $this->overpaymentResponse($e->remainingBalance);
         }
 
         return new PaymentResource($payment->load('invoice.customer.user'));
+    }
+
+    /**
+     * Builds the 422 response for a rejected overpayment attempt, shared
+     * by the controller's fail-fast pre-check and the authoritative,
+     * lock-protected check inside {@see InvoicePaymentRecorder::record()}.
+     */
+    private function overpaymentResponse(float $remainingBalance): JsonResponse
+    {
+        return response()->json([
+            'message' => sprintf(
+                'Der Zahlungsbetrag übersteigt den offenen Restbetrag von %s €.',
+                number_format($remainingBalance, 2, ',', '.')
+            ),
+        ], 422);
     }
 
     /**
@@ -161,20 +202,9 @@ class PaymentController extends Controller
             ], 422);
         }
 
-        $payment->update(['status' => 'completed']);
+        $payment = $this->paymentRecorder->completeExisting($payment);
 
-        // Update invoice if fully paid
-        $invoice = $payment->invoice;
-        $totalPaid = $invoice->payments()->completed()->sum('amount');
-
-        if ($totalPaid >= $invoice->total_amount) {
-            $invoice->update([
-                'status' => 'paid',
-                'paid_date' => now(),
-            ]);
-        }
-
-        return new PaymentResource($payment->fresh());
+        return new PaymentResource($payment);
     }
 
     // ==================== PayPal Integration ====================
@@ -336,16 +366,7 @@ class PaymentController extends Controller
         $payment = Payment::where('transaction_id', $transactionId)->first();
 
         if ($payment && $payment->status !== 'completed') {
-            $payment->update(['status' => 'completed']);
-
-            // Update invoice
-            $invoice = $payment->invoice;
-            if ($invoice->remaining_balance <= 0.01) {
-                $invoice->update([
-                    'status' => 'paid',
-                    'paid_date' => now(),
-                ]);
-            }
+            $this->paymentRecorder->completeExisting($payment);
 
             Log::info('Payment status updated to completed', ['payment_id' => $payment->id]);
         }

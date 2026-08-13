@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
+use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\User;
 
@@ -38,12 +39,21 @@ class PaymentPolicy
     }
 
     /**
-     * Determine whether the user can create payments.
+     * Determine whether the user can create a payment for the given invoice.
+     *
+     * Trainers may only record payments for invoices whose customer is one
+     * of their own assigned customers (`Customer::trainer_id === $user->id`)
+     * — the same scoping rule `InvoiceController::index()` already applies
+     * for trainers, so a trainer cannot record a payment for a foreign
+     * customer's invoice via the new payment-entry UI.
      */
-    public function create(User $user): bool
+    public function create(User $user, Invoice $invoice): bool
     {
-        // Only admins and trainers can create payments
-        return $user->isAdminOrTrainer();
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        return $user->isTrainer() && $invoice->customer->trainer_id === $user->id;
     }
 
     /**
