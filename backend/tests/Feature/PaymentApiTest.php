@@ -54,6 +54,86 @@ test('customer can list payments for their invoices', function () {
     expect($response->json('data'))->toHaveCount(2);
 });
 
+test('customer cannot see other customers payments in unfiltered list', function () {
+    Payment::factory()->count(2)->create(['invoice_id' => $this->invoice->id]);
+
+    $otherCustomerUser = User::factory()->create(['role' => 'customer']);
+    $otherCustomer = Customer::factory()->create(['user_id' => $otherCustomerUser->id]);
+    $otherInvoice = Invoice::factory()->create(['customer_id' => $otherCustomer->id]);
+    Payment::factory()->count(3)->create(['invoice_id' => $otherInvoice->id]);
+
+    $response = $this->actingAs($this->customerUser)
+        ->getJson('/api/v1/payments')
+        ->assertOk();
+
+    expect($response->json('data'))->toHaveCount(2);
+    foreach ($response->json('data') as $payment) {
+        expect($payment['invoice']['id'])->toBe($this->invoice->id);
+    }
+});
+
+test('customer cannot access other customers payments by manipulating invoiceId filter', function () {
+    $otherCustomerUser = User::factory()->create(['role' => 'customer']);
+    $otherCustomer = Customer::factory()->create(['user_id' => $otherCustomerUser->id]);
+    $otherInvoice = Invoice::factory()->create(['customer_id' => $otherCustomer->id]);
+    Payment::factory()->count(3)->create(['invoice_id' => $otherInvoice->id]);
+
+    $response = $this->actingAs($this->customerUser)
+        ->getJson('/api/v1/payments?invoiceId='.$otherInvoice->id)
+        ->assertOk();
+
+    expect($response->json('data'))->toHaveCount(0);
+});
+
+test('customer without customer record sees no payments', function () {
+    $customerUserWithoutRecord = User::factory()->create(['role' => 'customer']);
+    Payment::factory()->count(3)->create(['invoice_id' => $this->invoice->id]);
+
+    $response = $this->actingAs($customerUserWithoutRecord)
+        ->getJson('/api/v1/payments')
+        ->assertOk();
+
+    expect($response->json('data'))->toHaveCount(0);
+});
+
+test('trainer only sees payments for their assigned customers', function () {
+    Payment::factory()->count(2)->create(['invoice_id' => $this->invoice->id]);
+    $this->customer->update(['trainer_id' => $this->trainer->id]);
+
+    $otherTrainer = User::factory()->create(['role' => 'trainer']);
+    $otherCustomerUser = User::factory()->create(['role' => 'customer']);
+    $otherCustomer = Customer::factory()->create([
+        'user_id' => $otherCustomerUser->id,
+        'trainer_id' => $otherTrainer->id,
+    ]);
+    $otherInvoice = Invoice::factory()->create(['customer_id' => $otherCustomer->id]);
+    Payment::factory()->count(3)->create(['invoice_id' => $otherInvoice->id]);
+
+    $response = $this->actingAs($this->trainer)
+        ->getJson('/api/v1/payments')
+        ->assertOk();
+
+    expect($response->json('data'))->toHaveCount(2);
+    foreach ($response->json('data') as $payment) {
+        expect($payment['invoice']['id'])->toBe($this->invoice->id);
+    }
+});
+
+test('admin can still list all payments regardless of customer or trainer', function () {
+    Payment::factory()->count(2)->create(['invoice_id' => $this->invoice->id]);
+
+    $otherCustomerUser = User::factory()->create(['role' => 'customer']);
+    $otherCustomer = Customer::factory()->create(['user_id' => $otherCustomerUser->id]);
+    $otherInvoice = Invoice::factory()->create(['customer_id' => $otherCustomer->id]);
+    Payment::factory()->count(3)->create(['invoice_id' => $otherInvoice->id]);
+
+    $response = $this->actingAs($this->admin)
+        ->getJson('/api/v1/payments')
+        ->assertOk();
+
+    expect($response->json('data'))->toHaveCount(5);
+});
+
 test('payments can be filtered by payment method', function () {
     Payment::factory()->count(2)->create(['payment_method' => 'cash']);
     Payment::factory()->count(3)->create(['payment_method' => 'stripe']);
@@ -87,13 +167,29 @@ test('can get only completed payments', function () {
     expect($response->json('data'))->toHaveCount(3);
 });
 
-test('trainer can view any payment', function () {
-    $payment = Payment::factory()->create();
+test('trainer can view payment for their assigned customer', function () {
+    $this->customer->update(['trainer_id' => $this->trainer->id]);
+    $payment = Payment::factory()->create(['invoice_id' => $this->invoice->id]);
 
     $this->actingAs($this->trainer)
         ->getJson('/api/v1/payments/'.$payment->id)
         ->assertOk()
         ->assertJsonPath('data.id', $payment->id);
+});
+
+test('trainer cannot view payment for other trainers customer', function () {
+    $otherTrainer = User::factory()->create(['role' => 'trainer']);
+    $otherCustomerUser = User::factory()->create(['role' => 'customer']);
+    $otherCustomer = Customer::factory()->create([
+        'user_id' => $otherCustomerUser->id,
+        'trainer_id' => $otherTrainer->id,
+    ]);
+    $otherInvoice = Invoice::factory()->create(['customer_id' => $otherCustomer->id]);
+    $payment = Payment::factory()->create(['invoice_id' => $otherInvoice->id]);
+
+    $this->actingAs($this->trainer)
+        ->getJson('/api/v1/payments/'.$payment->id)
+        ->assertForbidden();
 });
 
 test('customer can view payment for their invoice', function () {
@@ -231,8 +327,9 @@ test('payment method must be valid', function () {
         ->assertJsonValidationErrors(['paymentMethod']);
 });
 
-test('trainer can update payment', function () {
-    $payment = Payment::factory()->create(['status' => 'pending']);
+test('trainer can update payment for their assigned customer', function () {
+    $this->customer->update(['trainer_id' => $this->trainer->id]);
+    $payment = Payment::factory()->create(['invoice_id' => $this->invoice->id, 'status' => 'pending']);
 
     $this->actingAs($this->trainer)
         ->putJson('/api/v1/payments/'.$payment->id, [
@@ -250,6 +347,28 @@ test('trainer can update payment', function () {
     ]);
 });
 
+test('trainer cannot update payment for other trainers customer', function () {
+    $otherTrainer = User::factory()->create(['role' => 'trainer']);
+    $otherCustomerUser = User::factory()->create(['role' => 'customer']);
+    $otherCustomer = Customer::factory()->create([
+        'user_id' => $otherCustomerUser->id,
+        'trainer_id' => $otherTrainer->id,
+    ]);
+    $otherInvoice = Invoice::factory()->create(['customer_id' => $otherCustomer->id]);
+    $payment = Payment::factory()->create(['invoice_id' => $otherInvoice->id, 'status' => 'pending']);
+
+    $this->actingAs($this->trainer)
+        ->putJson('/api/v1/payments/'.$payment->id, [
+            'status' => 'completed',
+        ])
+        ->assertForbidden();
+
+    $this->assertDatabaseHas('payments', [
+        'id' => $payment->id,
+        'status' => 'pending',
+    ]);
+});
+
 test('customer cannot update payment', function () {
     $payment = Payment::factory()->create(['invoice_id' => $this->invoice->id]);
 
@@ -261,7 +380,8 @@ test('customer cannot update payment', function () {
 });
 
 test('trainer can mark payment as completed', function () {
-    $payment = Payment::factory()->create(['status' => 'pending']);
+    $this->customer->update(['trainer_id' => $this->trainer->id]);
+    $payment = Payment::factory()->create(['invoice_id' => $this->invoice->id, 'status' => 'pending']);
 
     $this->actingAs($this->trainer)
         ->postJson('/api/v1/payments/'.$payment->id.'/mark-completed')
@@ -275,7 +395,8 @@ test('trainer can mark payment as completed', function () {
 });
 
 test('cannot mark already completed payment', function () {
-    $payment = Payment::factory()->create(['status' => 'completed']);
+    $this->customer->update(['trainer_id' => $this->trainer->id]);
+    $payment = Payment::factory()->create(['invoice_id' => $this->invoice->id, 'status' => 'completed']);
 
     $this->actingAs($this->trainer)
         ->postJson('/api/v1/payments/'.$payment->id.'/mark-completed')
@@ -283,8 +404,25 @@ test('cannot mark already completed payment', function () {
         ->assertJsonPath('message', 'Zahlung ist bereits abgeschlossen.');
 });
 
+test('trainer cannot mark payment as completed for other trainers customer', function () {
+    $otherTrainer = User::factory()->create(['role' => 'trainer']);
+    $otherCustomerUser = User::factory()->create(['role' => 'customer']);
+    $otherCustomer = Customer::factory()->create([
+        'user_id' => $otherCustomerUser->id,
+        'trainer_id' => $otherTrainer->id,
+    ]);
+    $otherInvoice = Invoice::factory()->create(['customer_id' => $otherCustomer->id]);
+    $payment = Payment::factory()->create(['invoice_id' => $otherInvoice->id, 'status' => 'pending']);
+
+    $this->actingAs($this->trainer)
+        ->postJson('/api/v1/payments/'.$payment->id.'/mark-completed')
+        ->assertForbidden();
+});
+
 test('marking payment completed updates invoice status if fully paid', function () {
+    $this->customer->update(['trainer_id' => $this->trainer->id]);
     $invoice = Invoice::factory()->create([
+        'customer_id' => $this->customer->id,
         'total_amount' => 150.00,
         'status' => 'sent',
     ]);
