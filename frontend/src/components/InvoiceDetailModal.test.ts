@@ -39,6 +39,10 @@ const headlessUiStubs = {
 // `remainingBalance`/`totalPaid` defaulten auf den unbezahlten Fall (voller
 // Betrag offen), damit `canRecordPayment()` für die payable Status-Werte
 // standardmäßig `true` liefert, sofern nicht explizit überschrieben.
+// `nextDunningLevel` defaultet auf `1` (erste Mahnstufe offen), damit
+// `canRemind()` für die remindable Status-Werte standardmäßig `true`
+// liefert, sofern nicht explizit überschrieben (z. B. auf `null` für den
+// "Maximalstufe erreicht"-Fall).
 function makeInvoice(overrides: Record<string, unknown> = {}) {
   return {
     id: 1,
@@ -57,6 +61,9 @@ function makeInvoice(overrides: Record<string, unknown> = {}) {
     originalInvoiceId: null,
     originalInvoiceNumber: null,
     cancellationInvoiceNumber: null,
+    nextDunningLevel: 1,
+    nextDunningFeeAmount: 5,
+    dunnings: [],
     ...overrides,
   }
 }
@@ -392,6 +399,83 @@ describe('InvoiceDetailModal', () => {
 
       expect(wrapper.text()).not.toContain('Bezahlt:')
       expect(wrapper.text()).not.toContain('Rest:')
+    })
+  })
+
+  describe('"Mahnen"-Button (canRemind)', () => {
+    it.each(['sent', 'reminded', 'overdue'])('ist sichtbar für Status "%s" mit offener Mahnstufe und emittiert "remind" mit dem invoice-Objekt', async (status) => {
+      mockTrainerAuth()
+      const invoice = makeInvoice({ status })
+      const wrapper = await mountModal(invoice)
+
+      const button = findActionButton(wrapper, 'Mahnen')
+      expect(button).toBeDefined()
+
+      await button?.trigger('click')
+
+      expect(wrapper.emitted('remind')?.[0]).toEqual([invoice])
+    })
+
+    it.each(['draft', 'paid', 'cancelled'])('ist NICHT sichtbar für Status "%s"', async (status) => {
+      mockTrainerAuth()
+      const wrapper = await mountModal(makeInvoice({ status }))
+
+      expect(findActionButton(wrapper, 'Mahnen')).toBeUndefined()
+    })
+
+    it('ist NICHT sichtbar, wenn nextDunningLevel bereits null ist (Mahnstufe 3 erreicht), obwohl der Status remindable wäre', async () => {
+      mockTrainerAuth()
+      const wrapper = await mountModal(makeInvoice({ status: 'sent', nextDunningLevel: null, nextDunningFeeAmount: null }))
+
+      expect(findActionButton(wrapper, 'Mahnen')).toBeUndefined()
+    })
+
+    it('ist NICHT sichtbar für Stornorechnungen (originalInvoiceId gesetzt), unabhängig vom eigenen Status', async () => {
+      mockTrainerAuth()
+      const wrapper = await mountModal(makeInvoice({ status: 'sent', originalInvoiceId: 42 }))
+
+      expect(findActionButton(wrapper, 'Mahnen')).toBeUndefined()
+    })
+
+    it('zeigt keinen "Mahnen"-Button für Kunden, selbst bei offener Mahnstufe', async () => {
+      mockCustomerAuth()
+      const wrapper = await mountModal(makeInvoice({ status: 'sent' }))
+
+      expect(findActionButton(wrapper, 'Mahnen')).toBeUndefined()
+    })
+  })
+
+  describe('Mahnhistorie ("Mahnungen"-Block)', () => {
+    it('listet je Mahnung Stufe, Datum, Gebühr und die Rechnungsnummer des verlinkten Gebührendokuments', async () => {
+      mockTrainerAuth()
+      const wrapper = await mountModal(makeInvoice({
+        status: 'reminded',
+        dunnings: [
+          { id: 1, level: 1, dunningDate: '2026-08-05', feeAmount: 5, feeInvoiceId: 10, feeInvoiceNumber: 'RE-2026-0010' },
+          { id: 2, level: 2, dunningDate: '2026-08-12', feeAmount: 10, feeInvoiceId: 11, feeInvoiceNumber: 'RE-2026-0011' },
+        ],
+      }))
+
+      expect(wrapper.text()).toContain('Mahnungen')
+      expect(wrapper.text()).toContain('Stufe 1')
+      // `toLocaleDateString('de-DE')` liefert Tag/Monat ohne führende Null.
+      expect(wrapper.text()).toContain('5.8.2026')
+      // `Intl.NumberFormat('de-DE', { style: 'currency' })` trennt Betrag
+      // und Symbol mit einem geschützten Leerzeichen (U+00A0), kein
+      // normales Leerzeichen — daher `\s` statt eines literalen Space.
+      expect(wrapper.text()).toMatch(/5,00\s€/)
+      expect(wrapper.text()).toContain('RE-2026-0010')
+      expect(wrapper.text()).toContain('Stufe 2')
+      expect(wrapper.text()).toContain('12.8.2026')
+      expect(wrapper.text()).toMatch(/10,00\s€/)
+      expect(wrapper.text()).toContain('RE-2026-0011')
+    })
+
+    it('zeigt keinen "Mahnungen"-Block, wenn keine Mahnungen vorliegen', async () => {
+      mockTrainerAuth()
+      const wrapper = await mountModal(makeInvoice({ status: 'sent', dunnings: [] }))
+
+      expect(wrapper.text()).not.toContain('Mahnungen')
     })
   })
 })

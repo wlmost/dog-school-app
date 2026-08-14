@@ -147,6 +147,19 @@
                   </div>
                 </div>
 
+                <!-- Dunnings -->
+                <div v-if="invoice.dunnings && invoice.dunnings.length > 0" class="border-t border-gray-200 dark:border-gray-700 pt-4">
+                  <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Mahnungen</h4>
+                  <div class="space-y-2">
+                    <div v-for="dunning in invoice.dunnings" :key="dunning.id" class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <div>
+                        <p class="text-sm font-medium text-gray-900 dark:text-gray-100">Stufe {{ dunning.level }} — {{ formatCurrency(dunning.feeAmount) }}</p>
+                        <p class="text-xs text-gray-600 dark:text-gray-400">{{ formatDate(dunning.dunningDate) }}<span v-if="dunning.feeInvoiceNumber"> - {{ dunning.feeInvoiceNumber }}</span></p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- Notes -->
                 <div v-if="invoice.notes" class="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Notizen</h4>
@@ -178,6 +191,9 @@
                   </button>
                   <button v-if="canCancel(invoice)" @click="$emit('cancel', invoice)" class="btn bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white">
                     Stornieren
+                  </button>
+                  <button v-if="canRemind(invoice)" @click="$emit('remind', invoice)" class="btn bg-orange-600 hover:bg-orange-700 dark:bg-orange-700 dark:hover:bg-orange-600 text-white">
+                    Mahnen
                   </button>
                 </div>
               </div>
@@ -211,6 +227,7 @@ defineEmits<{
   finalize: [invoice: any]
   cancel: [invoice: any]
   send: [invoice: any]
+  remind: [invoice: any]
 }>()
 
 const isSmallBusiness = ref(false)
@@ -232,6 +249,13 @@ const CANCELLABLE_STATUSES = ['sent', 'reminded', 'paid']
 // in InvoicesView.vue etablierten Muster (bewusste Nicht-Konsolidierung,
 // siehe design.md Context zu T07).
 const PAYABLE_STATUSES = ['sent', 'reminded', 'overdue']
+
+// Statuswerte, für die eine Mahnung ausgelöst werden darf. Muss
+// `InvoiceDunningRecorder`s Eligibility-Prüfung spiegeln (siehe
+// design.md Decision D3). Lokal dupliziert nach dem in InvoicesView.vue
+// etablierten Muster (bewusste Nicht-Konsolidierung, siehe design.md
+// Context zu T07/T08).
+const REMINDABLE_STATUSES = ['sent', 'reminded', 'overdue']
 
 function canDelete(invoice: any): boolean {
   return !authStore.isCustomer && invoice.status === 'draft'
@@ -255,6 +279,13 @@ function canCancel(invoice: any): boolean {
   return !authStore.isCustomer
     && CANCELLABLE_STATUSES.includes(invoice.status)
     && !invoice.originalInvoiceId
+}
+
+function canRemind(invoice: any): boolean {
+  return !authStore.isCustomer
+    && REMINDABLE_STATUSES.includes(invoice.status)
+    && !invoice.originalInvoiceId
+    && invoice.nextDunningLevel !== null
 }
 
 onMounted(() => {
