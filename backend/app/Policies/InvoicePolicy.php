@@ -97,31 +97,11 @@ class InvoicePolicy
      * the controller's explicit 422 branch is ever reached — matching
      * neither the acceptance criteria (HTTP 422 with a message) nor the
      * established house pattern for state conflicts (see
-     * {@see self::markAsPaid()}, which follows the same split: policy =
+     * {@see self::send()}, which follows the same split: policy =
      * "may this role act at all", controller = "is this action valid given
      * the invoice's current state").
      */
     public function finalize(User $user, Invoice $invoice): bool
-    {
-        return $user->isAdminOrTrainer();
-    }
-
-    /**
-     * Determine whether the user can mark the invoice as paid.
-     *
-     * Role-only, deliberately **not** reusing {@see self::update()}: T06
-     * restricted `update()` to `status === 'draft'` (an invoice's content
-     * is fixed once finalized), but marking an invoice paid is only
-     * meaningful for a non-draft invoice (`sent`/`overdue`/`reminded`).
-     * Reusing `update()` here would have made `markAsPaid()` unreachable
-     * for its only real use case. This dedicated ability restores the
-     * split `design.md` Decision D4 calls for ("jede [Aktion] mit eigener
-     * Policy-Methode"): policy = "may this role act at all", both the
-     * draft (never finalized, no `invoice_number` yet) and the
-     * already-paid conflict are 422s handled in
-     * `InvoiceController::markAsPaid()`, exactly like {@see self::finalize()}.
-     */
-    public function markAsPaid(User $user, Invoice $invoice): bool
     {
         return $user->isAdminOrTrainer();
     }
@@ -150,9 +130,9 @@ class InvoicePolicy
     /**
      * Determine whether the user can (re-)send the invoice by email.
      *
-     * Deliberately role-only, same split as {@see self::finalize()} and
-     * {@see self::markAsPaid()}: the status whitelist (`sent`/`reminded`/
-     * `overdue`) and the "customer has an email address" check are both
+     * Deliberately role-only, same split as {@see self::finalize()}: the
+     * status whitelist (`sent`/`reminded`/`overdue`) and the "customer has
+     * an email address" check are both
      * enforced as HTTP 422 in `InvoiceController::sendEmail()`, not here
      * — "policy = may this role act at all, controller = is this action
      * valid given the invoice's current state" (see `design.md` Decision

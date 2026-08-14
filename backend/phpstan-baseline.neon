@@ -163,12 +163,6 @@ parameters:
 			path: app/Http/Controllers/Api/PaymentController.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:completed\(\)\.$#'
-			identifier: method.notFound
-			count: 2
-			path: app/Http/Controllers/Api/PaymentController.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
 			identifier: property.notFound
 			count: 1
@@ -281,12 +275,6 @@ parameters:
 			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Http/Resources/InvoiceResource.php
-
-		-
-			message: '#^Access to an undefined property App\\Http\\Resources\\PaymentResource\:\:\$notes\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Resources/PaymentResource.php
 
 		-
 			message: '#^Using nullsafe method call on non\-nullable type Illuminate\\Support\\Carbon\. Use \-\> instead\.$#'
@@ -635,6 +623,12 @@ parameters:
 			identifier: notIdentical.alwaysTrue
 			count: 1
 			path: app/Services/CourseSessionService.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Relations\\HasMany\:\:completed\(\)\.$#'
+			identifier: method.notFound
+			count: 2
+			path: app/Services/InvoicePaymentRecorder.php
 
 		-
 			message: '#^Access to private property PaypalServerSdkLib\\Models\\AmountWithBreakdown\:\:\$currencyCode\.$#'

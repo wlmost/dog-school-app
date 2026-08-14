@@ -38,6 +38,8 @@ function makeInvoice(overrides: Record<string, unknown> = {}) {
     invoiceDate: '2026-08-01',
     dueDate: '2026-08-15',
     totalAmount: 100,
+    remainingBalance: 100,
+    totalPaid: 0,
     status: 'draft',
     isOverdue: false,
     paidDate: null,
@@ -78,7 +80,7 @@ const globalStubs = {
   InvoiceDetailModal: {
     name: 'InvoiceDetailModal',
     props: ['isOpen', 'invoice'],
-    emits: ['close', 'download', 'edit', 'mark-paid', 'delete', 'finalize', 'cancel', 'send'],
+    emits: ['close', 'download', 'edit', 'delete', 'finalize', 'cancel', 'send', 'record-payment'],
     template: '<div data-testid="invoice-detail-modal" />',
   },
   InvoiceSendDialog: {
@@ -86,6 +88,12 @@ const globalStubs = {
     props: ['isOpen', 'invoice'],
     emits: ['close', 'download', 'send-email'],
     template: '<div data-testid="invoice-send-dialog" />',
+  },
+  InvoicePaymentDialog: {
+    name: 'InvoicePaymentDialog',
+    props: ['isOpen', 'invoice', 'isSubmitting'],
+    emits: ['close', 'record-payment'],
+    template: '<div data-testid="invoice-payment-dialog" />',
   },
 }
 
@@ -365,6 +373,192 @@ describe('InvoicesView', () => {
       expect(dialog.props('isOpen')).toBe(false)
       expect(detailModal.props('isOpen')).toBe(true)
       expect(detailModal.props('invoice')).toEqual(invoice)
+    })
+  })
+
+  // ------------------------------------------------------------------ //
+  // canRecordPayment() — Sichtbarkeit des "Zahlung erfassen"-Buttons     //
+  // ------------------------------------------------------------------ //
+  describe('"Zahlung erfassen"-Button (canRecordPayment)', () => {
+    it.each(['sent', 'reminded', 'overdue'])(
+      'zeigt den Button für Status "%s" mit offenem Restbetrag',
+      async (status) => {
+        const wrapper = await mountWithInvoice(makeInvoice({ status, remainingBalance: 40 }))
+
+        expect(actionButtonTexts(wrapper)).toContain('Zahlung erfassen')
+      },
+    )
+
+    it.each(['draft', 'paid', 'cancelled'])(
+      'versteckt den Button für Status "%s"',
+      async (status) => {
+        const wrapper = await mountWithInvoice(makeInvoice({ status, remainingBalance: 40 }))
+
+        expect(actionButtonTexts(wrapper)).not.toContain('Zahlung erfassen')
+      },
+    )
+
+    it('versteckt den Button, wenn kein Restbetrag mehr offen ist', async () => {
+      const wrapper = await mountWithInvoice(makeInvoice({ status: 'sent', remainingBalance: 0 }))
+
+      expect(actionButtonTexts(wrapper)).not.toContain('Zahlung erfassen')
+    })
+
+    it('versteckt den Button für Kunden, unabhängig vom Status', async () => {
+      mockCustomerAuth()
+      vi.mocked(apiClient.get).mockResolvedValueOnce({
+        data: { data: [makeInvoice({ status: 'sent', remainingBalance: 40 })] },
+      })
+      const wrapper = mountView()
+      await flushPromises()
+
+      expect(actionButtonTexts(wrapper)).not.toContain('Zahlung erfassen')
+    })
+  })
+
+  // ------------------------------------------------------------------ //
+  // InvoicePaymentDialog-Interaktion / recordPayment()                  //
+  // ------------------------------------------------------------------ //
+  describe('InvoicePaymentDialog-Interaktion', () => {
+    async function openPaymentDialog(invoice: ReturnType<typeof makeInvoice>) {
+      const wrapper = await mountWithInvoice(invoice)
+      await findActionButton(wrapper, 'Zahlung erfassen')?.trigger('click')
+      await nextTick()
+      const dialog = wrapper.findComponent({ name: 'InvoicePaymentDialog' })
+      return { wrapper, dialog }
+    }
+
+    const paymentPayload = {
+      amount: 40,
+      paymentDate: '2026-08-10',
+      paymentMethod: 'cash',
+      notes: '',
+    }
+
+    it('öffnet beim Klick auf "Zahlung erfassen" den InvoicePaymentDialog mit der Rechnung', async () => {
+      const invoice = makeInvoice({ status: 'sent', remainingBalance: 40 })
+      const wrapper = await mountWithInvoice(invoice)
+
+      const dialog = wrapper.findComponent({ name: 'InvoicePaymentDialog' })
+      expect(dialog.props('isOpen')).toBe(false)
+
+      await findActionButton(wrapper, 'Zahlung erfassen')?.trigger('click')
+      await nextTick()
+
+      expect(dialog.props('isOpen')).toBe(true)
+      expect(dialog.props('invoice')).toEqual(invoice)
+    })
+
+    it('erfasst bei Erfolg die Zahlung, lädt neu, schließt den Dialog und zeigt einen Erfolgs-Toast', async () => {
+      const invoice = makeInvoice({ status: 'sent', remainingBalance: 40 })
+      const { dialog } = await openPaymentDialog(invoice)
+      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: {} })
+      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { data: [] } })
+
+      await dialog.vm.$emit('record-payment', paymentPayload)
+      await flushPromises()
+
+      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/payments', {
+        invoiceId: 1,
+        amount: 40,
+        paymentDate: '2026-08-10',
+        paymentMethod: 'cash',
+        notes: undefined,
+        status: 'completed',
+      })
+      expect(apiClient.get).toHaveBeenCalledTimes(2)
+      expect(dialog.props('isOpen')).toBe(false)
+      expect(showSuccess).toHaveBeenCalled()
+    })
+
+    it('übermittelt eine ausgefüllte Notiz unverändert', async () => {
+      const invoice = makeInvoice({ status: 'sent', remainingBalance: 40 })
+      const { dialog } = await openPaymentDialog(invoice)
+      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: {} })
+      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { data: [] } })
+
+      await dialog.vm.$emit('record-payment', { ...paymentPayload, notes: 'Barzahlung im Büro' })
+      await flushPromises()
+
+      expect(apiClient.post).toHaveBeenCalledWith(
+        '/api/v1/payments',
+        expect.objectContaining({ notes: 'Barzahlung im Büro' }),
+      )
+    })
+
+    it('zeigt bei einer 422-Ablehnung (Überzahlung/ungültiger Status) einen Fehler-Toast, der Dialog bleibt offen', async () => {
+      const invoice = makeInvoice({ status: 'sent', remainingBalance: 40 })
+      const { dialog } = await openPaymentDialog(invoice)
+      const backendError = Object.assign(new Error('Request failed with status code 422'), {
+        response: {
+          status: 422,
+          data: { message: 'Der Zahlungsbetrag übersteigt den offenen Restbetrag von 40,00 €.' },
+        },
+      })
+      vi.mocked(apiClient.post).mockRejectedValueOnce(backendError)
+
+      await dialog.vm.$emit('record-payment', paymentPayload)
+      await flushPromises()
+
+      expect(handleApiError).toHaveBeenCalledWith(backendError, expect.any(String))
+      expect(dialog.props('isOpen')).toBe(true)
+      expect(apiClient.get).toHaveBeenCalledTimes(1)
+    })
+
+    it('schließt den Dialog beim close-Event', async () => {
+      const invoice = makeInvoice({ status: 'sent', remainingBalance: 40 })
+      const { dialog } = await openPaymentDialog(invoice)
+
+      await dialog.vm.$emit('close')
+      await nextTick()
+
+      expect(dialog.props('isOpen')).toBe(false)
+    })
+
+    it('öffnet den InvoicePaymentDialog, wenn InvoiceDetailModal ein record-payment-Event emittiert', async () => {
+      const invoice = makeInvoice({ status: 'sent', remainingBalance: 40 })
+      const wrapper = await mountWithInvoice(invoice)
+      const detailModal = wrapper.findComponent({ name: 'InvoiceDetailModal' })
+      const dialog = wrapper.findComponent({ name: 'InvoicePaymentDialog' })
+
+      await detailModal.vm.$emit('record-payment', invoice)
+      await nextTick()
+
+      expect(dialog.props('isOpen')).toBe(true)
+      expect(dialog.props('invoice')).toEqual(invoice)
+    })
+  })
+
+  // ------------------------------------------------------------------ //
+  // Teilzahlungs-Anzeige (invoice.totalPaid > 0 && status !== 'paid')    //
+  // ------------------------------------------------------------------ //
+  describe('Teilzahlungs-Anzeige', () => {
+    it('zeigt "X von Y bezahlt", wenn bereits eine Teilzahlung erfasst wurde', async () => {
+      const wrapper = await mountWithInvoice(
+        makeInvoice({ status: 'sent', totalPaid: 30, totalAmount: 100, remainingBalance: 70 }),
+      )
+
+      // formatCurrency() nutzt Intl.NumberFormat, das je nach ICU-Daten einen
+      // schmalen geschützten Leerraum (U+202F) statt eines normalen
+      // Leerzeichens vor "€" einfügen kann — daher Vergleich per Regex statt
+      // exakter String-Gleichheit.
+      expect(wrapper.text()).toMatch(/30,00\s?€ von 100,00\s?€ bezahlt/)
+    })
+
+    it('zeigt keine Teilzahlungs-Anzeige ohne bisherige Zahlung', async () => {
+      const wrapper = await mountWithInvoice(
+        makeInvoice({ status: 'sent', totalPaid: 0, totalAmount: 100, remainingBalance: 100 }),
+      )
+
+      expect(wrapper.text()).not.toContain('bezahlt')
+    })
+
+    it('zeigt keine Teilzahlungs-Anzeige mehr, sobald die Rechnung vollständig bezahlt ist', async () => {
+      const wrapper = await mountWithInvoice(
+        makeInvoice({ status: 'paid', totalPaid: 100, totalAmount: 100, remainingBalance: 0, paidDate: '2026-08-05' }),
+      )
+
+      expect(wrapper.text()).not.toContain('von 100,00 € bezahlt')
     })
   })
 

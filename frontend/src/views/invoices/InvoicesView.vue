@@ -91,6 +91,9 @@
                   <span v-if="invoice.status === 'reminded'" class="text-xs text-gray-500 dark:text-gray-400">
                     Gemahnt am {{ formatDate(invoice.remindedAt) }}
                   </span>
+                  <span v-if="invoice.totalPaid > 0 && invoice.status !== 'paid'" class="text-xs text-gray-500 dark:text-gray-400">
+                    {{ formatCurrency(invoice.totalPaid) }} von {{ formatCurrency(invoice.totalAmount) }} bezahlt
+                  </span>
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2" @click.stop>
@@ -99,6 +102,7 @@
                 <button v-if="canDelete(invoice)" @click="deleteInvoice(invoice)" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">Löschen</button>
                 <button v-if="canFinalize(invoice)" @click="finalizeInvoice(invoice)" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">Freigeben</button>
                 <button v-if="canSend(invoice)" @click="openSendDialog(invoice)" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">Senden</button>
+                <button v-if="canRecordPayment(invoice)" @click="openPaymentDialog(invoice)" class="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300">Zahlung erfassen</button>
                 <button v-if="canCancel(invoice)" @click="cancelInvoice(invoice)" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">Stornieren</button>
               </td>
             </tr>
@@ -131,11 +135,11 @@
       @close="closeDetailModal"
       @download="downloadPDF"
       @edit="editFromDetail"
-      @mark-paid="markAsPaid"
       @delete="deleteInvoice"
       @finalize="finalizeInvoice"
       @cancel="cancelInvoice"
       @send="openSendDialog"
+      @record-payment="openPaymentDialog"
     />
 
     <!-- Invoice Send Dialog -->
@@ -146,6 +150,15 @@
       @download="downloadPDF"
       @send-email="sendInvoiceEmail"
     />
+
+    <!-- Invoice Payment Dialog -->
+    <InvoicePaymentDialog
+      :is-open="showPaymentDialog"
+      :invoice="paymentDialogInvoice"
+      :is-submitting="isRecordingPayment"
+      @close="closePaymentDialog"
+      @record-payment="(payload) => recordPayment(paymentDialogInvoice, payload)"
+    />
   </div>
 </template>
 
@@ -155,6 +168,7 @@ import apiClient from '@/api/client'
 import InvoiceFormModal from '@/components/InvoiceFormModal.vue'
 import InvoiceDetailModal from '@/components/InvoiceDetailModal.vue'
 import InvoiceSendDialog from '@/components/InvoiceSendDialog.vue'
+import InvoicePaymentDialog from '@/components/InvoicePaymentDialog.vue'
 import PaginationControls from '@/components/PaginationControls.vue'
 import { handleApiError, showSuccess } from '@/utils/errorHandler'
 import { useAuthStore } from '@/stores/auth'
@@ -170,6 +184,8 @@ const invoices = ref<any[]>([])
 const showFormModal = ref(false)
 const showDetailModal = ref(false)
 const showSendDialog = ref(false)
+const showPaymentDialog = ref(false)
+const isRecordingPayment = ref(false)
 const selectedInvoice = ref<any>(null)
 // Eigener Ref statt Mitbenutzung von `selectedInvoice`: Der Send-Dialog kann
 // laut design.md Decision D8 über dem weiterhin geöffneten Detail-Modal
@@ -177,6 +193,11 @@ const selectedInvoice = ref<any>(null)
 // `closeSendDialog()` es auf `null` setzen und damit das im Hintergrund noch
 // offene Detail-Modal leerräumen (Reviewer-Befund, siehe review.md).
 const sendDialogInvoice = ref<any>(null)
+// Eigener Ref, gleiche Begründung wie `sendDialogInvoice` (design.md
+// Decision D6): der Zahlungsdialog kann über dem weiterhin geöffneten
+// Detail-Modal geöffnet werden, ein geteilter `selectedInvoice`-Ref würde
+// beim Schließen des Zahlungsdialogs das Detail-Modal leerräumen.
+const paymentDialogInvoice = ref<any>(null)
 
 const { currentPage, lastPage, total, updateFromMeta, resetPage } = usePagination()
 
@@ -246,6 +267,13 @@ const SENDABLE_STATUSES = ['sent', 'reminded', 'overdue']
 // aufzunehmen würde nur zu einem serverseitigen 403 führen.
 const CANCELLABLE_STATUSES = ['sent', 'reminded', 'paid']
 
+// Statuswerte, für die eine Zahlung erfasst werden darf. Muss
+// `PaymentController::store()`s `PAYABLE_STATUSES`-Konstante spiegeln
+// (backend/app/Http/Controllers/Api/PaymentController.php, siehe design.md
+// Decision D3) — plus die Zusatzbedingung, dass noch ein Restbetrag offen
+// ist (`remainingBalance > 0`).
+const PAYABLE_STATUSES = ['sent', 'reminded', 'overdue']
+
 function canEdit(invoice: any): boolean {
   return !authStore.isCustomer && invoice.status === 'draft'
 }
@@ -266,6 +294,12 @@ function canCancel(invoice: any): boolean {
   return !authStore.isCustomer
     && CANCELLABLE_STATUSES.includes(invoice.status)
     && !invoice.originalInvoiceId
+}
+
+function canRecordPayment(invoice: any): boolean {
+  return !authStore.isCustomer
+    && PAYABLE_STATUSES.includes(invoice.status)
+    && invoice.remainingBalance > 0
 }
 
 function editInvoice(invoice: any) {
@@ -303,6 +337,16 @@ function closeSendDialog() {
   sendDialogInvoice.value = null
 }
 
+function openPaymentDialog(invoice: any) {
+  paymentDialogInvoice.value = invoice
+  showPaymentDialog.value = true
+}
+
+function closePaymentDialog() {
+  showPaymentDialog.value = false
+  paymentDialogInvoice.value = null
+}
+
 async function handleInvoiceSaved() {
   await loadInvoices()
   closeFormModal()
@@ -329,20 +373,37 @@ async function downloadPDF(invoice: any) {
   }
 }
 
-async function markAsPaid(invoice: any) {
-  if (!confirm(`Rechnung ${invoice.invoiceNumber} als bezahlt markieren?`)) {
-    return
-  }
+interface RecordPaymentPayload {
+  amount: number
+  paymentDate: string
+  paymentMethod: string
+  notes: string
+}
 
+async function recordPayment(invoice: any, payload: RecordPaymentPayload) {
+  isRecordingPayment.value = true
   try {
-    await apiClient.post(`/api/v1/invoices/${invoice.id}/mark-paid`)
+    await apiClient.post('/api/v1/payments', {
+      invoiceId: invoice.id,
+      amount: payload.amount,
+      paymentDate: payload.paymentDate,
+      paymentMethod: payload.paymentMethod,
+      notes: payload.notes || undefined,
+      status: 'completed',
+    })
     await loadInvoices()
+    closePaymentDialog()
     if (showDetailModal.value) {
       closeDetailModal()
     }
-    showSuccess('Rechnung aktualisiert', 'Die Rechnung wurde als bezahlt markiert')
+    showSuccess('Zahlung erfasst', 'Die Zahlung wurde erfolgreich erfasst')
   } catch (error) {
-    handleApiError(error, 'Fehler beim Aktualisieren der Rechnung')
+    handleApiError(error, 'Fehler beim Erfassen der Zahlung')
+    // Dialog bleibt bewusst offen (auch bei 422 wegen Überzahlung/ungültigem
+    // Status), damit der Betrag korrigiert werden kann — analog zum
+    // Send-Dialog-Fehlerverhalten (design.md Decision D6).
+  } finally {
+    isRecordingPayment.value = false
   }
 }
 

@@ -20,6 +20,25 @@ pest()->extend(TestCase::class)
 
 /*
 |--------------------------------------------------------------------------
+| Concurrency Test Case
+|--------------------------------------------------------------------------
+|
+| Deliberately does NOT bind RefreshDatabase. RefreshDatabase wraps every
+| test in a single uncommitted transaction on the connection and rolls it
+| back afterwards, which is incompatible with tests under `tests/Concurrency`
+| that fork the process (pcntl_fork()) to race two genuinely separate
+| database connections against the same row — a forked child's fresh
+| connection would never see the parent's uncommitted fixture. Those tests
+| manage their own connection/transaction lifecycle and cleanup explicitly
+| instead (see InvoicePaymentRecorderConcurrencyTest.php).
+|
+*/
+
+pest()->extend(TestCase::class)
+    ->in('Concurrency');
+
+/*
+|--------------------------------------------------------------------------
 | Expectations
 |--------------------------------------------------------------------------
 |

@@ -14,7 +14,10 @@ beforeEach(function () {
     $this->admin = User::factory()->create(['role' => 'admin']);
     $this->trainer = User::factory()->create(['role' => 'trainer']);
     $this->customerUser = User::factory()->create(['role' => 'customer']);
-    $this->customer = Customer::factory()->create(['user_id' => $this->customerUser->id]);
+    $this->customer = Customer::factory()->create([
+        'user_id' => $this->customerUser->id,
+        'trainer_id' => $this->trainer->id,
+    ]);
     $this->invoice = Invoice::factory()->create([
         'customer_id' => $this->customer->id,
         'total_amount' => 200.00,
@@ -256,7 +259,11 @@ test('invoice status updates to paid when fully paid', function () {
         'status' => 'completed',
     ];
 
-    $this->actingAs($this->trainer)
+    // Admin instead of trainer: this test exercises the status-sync logic,
+    // not authorization, and the invoice's customer has no trainer_id here
+    // (would 403 under PaymentPolicy::create()'s new trainer-scoping, see
+    // task-T03.notes.md).
+    $this->actingAs($this->admin)
         ->postJson('/api/v1/payments', $data)
         ->assertCreated();
 

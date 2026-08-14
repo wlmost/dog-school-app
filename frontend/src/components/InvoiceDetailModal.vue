@@ -133,11 +133,15 @@
                 <!-- Payments -->
                 <div v-if="invoice.payments && invoice.payments.length > 0" class="border-t border-gray-200 dark:border-gray-700 pt-4">
                   <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Zahlungen</h4>
+                  <p class="text-sm text-gray-700 dark:text-gray-300 mb-3">
+                    Bezahlt: {{ formatCurrency(invoice.totalPaid) }} von {{ formatCurrency(invoice.totalAmount) }} — Rest: {{ formatCurrency(invoice.remainingBalance) }}
+                  </p>
                   <div class="space-y-2">
                     <div v-for="payment in invoice.payments" :key="payment.id" class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div>
                         <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ formatCurrency(payment.amount) }}</p>
-                        <p class="text-xs text-gray-600 dark:text-gray-400">{{ formatDate(payment.payment_date) }} - {{ payment.payment_method }}</p>
+                        <p class="text-xs text-gray-600 dark:text-gray-400">{{ formatDate(payment.paymentDate) }} - {{ payment.paymentMethod }}</p>
+                        <p v-if="payment.notes" class="text-xs text-gray-500 dark:text-gray-400">{{ payment.notes }}</p>
                       </div>
                     </div>
                   </div>
@@ -160,8 +164,8 @@
                   <button v-if="!authStore.isCustomer && invoice.status === 'draft'" @click="$emit('edit', invoice)" class="btn bg-yellow-500 hover:bg-yellow-600 dark:bg-yellow-600 dark:hover:bg-yellow-500 text-white">
                     Bearbeiten
                   </button>
-                  <button v-if="canMarkAsPaid(invoice)" @click="$emit('mark-paid', invoice)" class="btn bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white">
-                    Als bezahlt markieren
+                  <button v-if="canRecordPayment(invoice)" @click="$emit('record-payment', invoice)" class="btn bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-600 text-white">
+                    Zahlung erfassen
                   </button>
                   <button v-if="canDelete(invoice)" @click="$emit('delete', invoice)" class="btn bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-600 text-white">
                     Löschen
@@ -202,7 +206,7 @@ defineEmits<{
   close: []
   download: [invoice: any]
   edit: [invoice: any]
-  'mark-paid': [invoice: any]
+  'record-payment': [invoice: any]
   delete: [invoice: any]
   finalize: [invoice: any]
   cancel: [invoice: any]
@@ -221,6 +225,14 @@ const SENDABLE_STATUSES = ['sent', 'reminded', 'overdue']
 // Siehe InvoicesView.vue für die identische Logik/Kommentierung.
 const CANCELLABLE_STATUSES = ['sent', 'reminded', 'paid']
 
+// Statuswerte, für die eine Zahlung erfasst werden darf. Muss
+// `PaymentController::store()`s `PAYABLE_STATUSES`-Konstante spiegeln
+// (siehe design.md Decision D3) — plus die Zusatzbedingung, dass noch ein
+// Restbetrag offen ist (`remainingBalance > 0`). Lokal dupliziert nach dem
+// in InvoicesView.vue etablierten Muster (bewusste Nicht-Konsolidierung,
+// siehe design.md Context zu T07).
+const PAYABLE_STATUSES = ['sent', 'reminded', 'overdue']
+
 function canDelete(invoice: any): boolean {
   return !authStore.isCustomer && invoice.status === 'draft'
 }
@@ -229,14 +241,10 @@ function canFinalize(invoice: any): boolean {
   return !authStore.isCustomer && invoice.status === 'draft'
 }
 
-// Muss `InvoiceController::markAsPaid()` spiegeln, das einen Entwurf
-// (`status === 'draft'`) mit HTTP 422 ablehnt ("Ein Entwurf muss zuerst
-// freigegeben werden, bevor er als bezahlt markiert werden kann."). Ein
-// Entwurf besitzt außerdem noch keine Rechnungsnummer (wird erst in
-// `finalize()` vergeben), daher darf der Button hierfür gar nicht erst
-// sichtbar sein.
-function canMarkAsPaid(invoice: any): boolean {
-  return !authStore.isCustomer && invoice.status === 'sent'
+function canRecordPayment(invoice: any): boolean {
+  return !authStore.isCustomer
+    && PAYABLE_STATUSES.includes(invoice.status)
+    && invoice.remainingBalance > 0
 }
 
 function canSend(invoice: any): boolean {

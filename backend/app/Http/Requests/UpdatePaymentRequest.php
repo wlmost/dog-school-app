@@ -30,6 +30,7 @@ class UpdatePaymentRequest extends FormRequest
             'paymentMethod' => ['sometimes', 'in:cash,bank_transfer,paypal,stripe,credit_card'],
             'transactionId' => ['nullable', 'string', 'max:255'],
             'status' => ['sometimes', 'in:pending,completed,failed,refunded'],
+            'notes' => ['nullable', 'string', 'max:1000'],
         ];
     }
 
@@ -46,6 +47,7 @@ class UpdatePaymentRequest extends FormRequest
             'paymentMethod' => 'Zahlungsmethode',
             'transactionId' => 'Transaktions-ID',
             'status' => 'Status',
+            'notes' => 'Notiz',
         ];
     }
 
@@ -73,6 +75,9 @@ class UpdatePaymentRequest extends FormRequest
         }
         if (isset($validated['status'])) {
             $data['status'] = $validated['status'];
+        }
+        if (array_key_exists('notes', $validated)) {
+            $data['notes'] = $validated['notes'];
         }
 
         return $data;
