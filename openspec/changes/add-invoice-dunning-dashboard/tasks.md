@@ -337,11 +337,11 @@ T06) → T10 (Cross-Cutting QA, braucht alle).
   Link am Kartenende. Leerer Zustand: "Keine überfälligen oder gemahnten
   Rechnungen".
 - **Akzeptanzkriterien:**
-  - [ ] Neuer/erweiterter Test: Karte sichtbar für `admin`/`trainer`,
+  - [x] Neuer/erweiterter Test: Karte sichtbar für `admin`/`trainer`,
     nicht für `customer`; rendert Einträge aus
     `overdueOrRemindedInvoices`; zeigt Leer-Zustand bei leerer Liste;
     Link zur Rechnungsliste vorhanden.
-  - [ ] `npm run lint`, `npx vitest run`, `npm run build` grün.
+  - [x] `npm run lint`, `npx vitest run`, `npm run build` grün.
 
 ## T10: Cross-Cutting QA-Durchlauf
 
