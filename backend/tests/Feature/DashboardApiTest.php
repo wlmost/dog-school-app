@@ -99,6 +99,79 @@ describe('Admin Dashboard', function () {
     });
 });
 
+describe('Admin Dashboard — overdue or reminded invoices', function () {
+    it('lists overdue and reminded invoices of all customers for admin', function () {
+        $this->actingAs($this->admin);
+
+        $overdueInvoice = Invoice::factory()->for($this->customer, 'customer')->create([
+            'status' => 'sent',
+            'due_date' => now()->subDays(3),
+        ]);
+
+        $otherCustomer = Customer::factory()->create();
+        $remindedInvoice = Invoice::factory()->for($otherCustomer, 'customer')->create([
+            'status' => 'reminded',
+            'due_date' => now()->addDays(10),
+        ]);
+
+        $response = $this->getJson('/api/v1/dashboard');
+
+        $response->assertOk()
+            ->assertJsonStructure([
+                'overdueOrRemindedInvoices' => [
+                    ['id', 'invoiceNumber', 'customerName', 'dueDate', 'status', 'dunningLevel', 'remainingBalance'],
+                ],
+            ]);
+
+        $invoiceIds = collect($response->json('overdueOrRemindedInvoices'))->pluck('id');
+        expect($invoiceIds)->toContain($overdueInvoice->id, $remindedInvoice->id);
+    });
+
+    it('excludes a dunning-fee document even when its due date is in the past', function () {
+        $this->actingAs($this->admin);
+
+        $originalInvoice = Invoice::factory()->for($this->customer, 'customer')->create([
+            'status' => 'reminded',
+            'due_date' => now()->subDays(3),
+        ]);
+
+        $feeInvoice = Invoice::factory()->for($this->customer, 'customer')->create([
+            'status' => 'sent',
+            'due_date' => now()->subDays(3),
+            'document_type' => 'dunning_fee',
+            'original_invoice_id' => $originalInvoice->id,
+        ]);
+
+        $response = $this->getJson('/api/v1/dashboard');
+
+        $response->assertOk();
+        $invoiceIds = collect($response->json('overdueOrRemindedInvoices'))->pluck('id');
+        expect($invoiceIds)->toContain($originalInvoice->id)
+            ->not->toContain($feeInvoice->id);
+    });
+
+    it('excludes paid and cancelled invoices even when overdue', function () {
+        $this->actingAs($this->admin);
+
+        $paidInvoice = Invoice::factory()->for($this->customer, 'customer')->create([
+            'status' => 'paid',
+            'due_date' => now()->subDays(3),
+        ]);
+
+        $cancelledInvoice = Invoice::factory()->for($this->customer, 'customer')->create([
+            'status' => 'cancelled',
+            'due_date' => now()->subDays(3),
+        ]);
+
+        $response = $this->getJson('/api/v1/dashboard');
+
+        $response->assertOk();
+        $invoiceIds = collect($response->json('overdueOrRemindedInvoices'))->pluck('id');
+        expect($invoiceIds)->not->toContain($paidInvoice->id);
+        expect($invoiceIds)->not->toContain($cancelledInvoice->id);
+    });
+});
+
 describe('Trainer Dashboard', function () {
     it('returns dashboard data for trainer users', function () {
         $this->actingAs($this->trainer);
@@ -174,6 +247,34 @@ describe('Trainer Dashboard', function () {
         expect($response->json('upcomingSessions'))->toHaveCount(1);
         expect($response->json('upcomingSessions.0.course'))->toBe($trainerCourse->name);
     });
+
+    it('only shows overdue or reminded invoices of assigned customers for trainer', function () {
+        $this->actingAs($this->trainer);
+
+        $overdueInvoice = Invoice::factory()->for($this->assignedCustomer, 'customer')->create([
+            'status' => 'sent',
+            'due_date' => now()->subDays(5),
+        ]);
+
+        // Not overdue, not reminded -> should not appear
+        Invoice::factory()->for($this->assignedCustomer, 'customer')->create([
+            'status' => 'sent',
+            'due_date' => now()->addDays(5),
+        ]);
+
+        // Overdue invoice of a non-assigned customer -> should not appear
+        $otherCustomer = Customer::factory()->create();
+        Invoice::factory()->for($otherCustomer, 'customer')->create([
+            'status' => 'sent',
+            'due_date' => now()->subDays(5),
+        ]);
+
+        $response = $this->getJson('/api/v1/dashboard');
+
+        $response->assertOk();
+        expect($response->json('overdueOrRemindedInvoices'))->toHaveCount(1);
+        expect($response->json('overdueOrRemindedInvoices.0.id'))->toBe($overdueInvoice->id);
+    });
 });
 
 describe('Customer Dashboard', function () {
@@ -211,6 +312,15 @@ describe('Customer Dashboard', function () {
 
         $response->assertOk();
         expect($response->json('stats'))->not->toHaveKey('customers');
+    });
+
+    it('does not include the overdue or reminded invoices widget for customers', function () {
+        $this->actingAs($this->customerUser);
+
+        $response = $this->getJson('/api/v1/dashboard');
+
+        $response->assertOk();
+        expect($response->json())->not->toHaveKey('overdueOrRemindedInvoices');
     });
 
     it('shows upcoming sessions for customer dogs', function () {
