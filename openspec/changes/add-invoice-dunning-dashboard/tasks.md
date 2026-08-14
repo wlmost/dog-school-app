@@ -310,12 +310,12 @@ T06) → T10 (Cross-Cutting QA, braucht alle).
   (`formatCurrency(dunning.feeAmount)`) und die Rechnungsnummer des
   verlinkten Gebührendokuments (`dunning.feeInvoiceNumber`).
 - **Akzeptanzkriterien:**
-  - [ ] `InvoiceDetailModal.test.ts`: Test für Sichtbarkeit des neuen
+  - [x] `InvoiceDetailModal.test.ts`: Test für Sichtbarkeit des neuen
     "Mahnen"-Buttons je Status/`nextDunningLevel` (inkl. Abwesenheit bei
     bereits erreichter Stufe 3), Test für den neuen `remind`-Emit, Test
     für die Mahnhistorie-Anzeige (Stufe/Datum/Gebühr/Dokumentnummer),
     Test für die Abwesenheit des Blocks ohne Mahnungen.
-  - [ ] `npm run lint`, `npx vitest run`, `npm run build` grün.
+  - [x] `npm run lint`, `npx vitest run`, `npm run build` grün.
 
 ## T09: `DashboardView.vue` — Widget "Überfällige & gemahnte Rechnungen"
 
