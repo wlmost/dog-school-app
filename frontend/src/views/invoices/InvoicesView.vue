@@ -103,6 +103,7 @@
                 <button v-if="canFinalize(invoice)" @click="finalizeInvoice(invoice)" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">Freigeben</button>
                 <button v-if="canSend(invoice)" @click="openSendDialog(invoice)" class="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300">Senden</button>
                 <button v-if="canRecordPayment(invoice)" @click="openPaymentDialog(invoice)" class="text-green-600 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300">Zahlung erfassen</button>
+                <button v-if="canRemind(invoice)" @click="remindInvoice(invoice)" class="text-orange-600 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-300">Mahnen</button>
                 <button v-if="canCancel(invoice)" @click="cancelInvoice(invoice)" class="text-red-600 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300">Stornieren</button>
               </td>
             </tr>
@@ -140,6 +141,7 @@
       @cancel="cancelInvoice"
       @send="openSendDialog"
       @record-payment="openPaymentDialog"
+      @remind="remindInvoice"
     />
 
     <!-- Invoice Send Dialog -->
@@ -274,6 +276,12 @@ const CANCELLABLE_STATUSES = ['sent', 'reminded', 'paid']
 // ist (`remainingBalance > 0`).
 const PAYABLE_STATUSES = ['sent', 'reminded', 'overdue']
 
+// Statuswerte, für die der Mahnen-Button angezeigt wird. Muss exakt
+// InvoiceDunningRecorder::trigger()s Eligibility-Prüfung spiegeln
+// (backend/app/Services/InvoiceDunningRecorder.php, siehe design.md
+// Decision D3) — analog zu SENDABLE_STATUSES.
+const REMINDABLE_STATUSES = ['sent', 'reminded', 'overdue']
+
 function canEdit(invoice: any): boolean {
   return !authStore.isCustomer && invoice.status === 'draft'
 }
@@ -300,6 +308,13 @@ function canRecordPayment(invoice: any): boolean {
   return !authStore.isCustomer
     && PAYABLE_STATUSES.includes(invoice.status)
     && invoice.remainingBalance > 0
+}
+
+function canRemind(invoice: any): boolean {
+  return !authStore.isCustomer
+    && REMINDABLE_STATUSES.includes(invoice.status)
+    && !invoice.originalInvoiceId
+    && invoice.nextDunningLevel !== null
 }
 
 function editInvoice(invoice: any) {
@@ -455,6 +470,23 @@ async function cancelInvoice(invoice: any) {
     showSuccess('Rechnung storniert', 'Die Rechnung wurde storniert')
   } catch (error) {
     handleApiError(error, 'Fehler beim Stornieren der Rechnung')
+  }
+}
+
+async function remindInvoice(invoice: any) {
+  if (!confirm(`Mahnung Stufe ${invoice.nextDunningLevel} für Rechnung ${invoice.invoiceNumber} auslösen? Es wird eine Mahngebühr von ${formatCurrency(invoice.nextDunningFeeAmount)} berechnet und automatisch eine E-Mail an den Kunden verschickt.`)) {
+    return
+  }
+
+  try {
+    await apiClient.post(`/api/v1/invoices/${invoice.id}/remind`)
+    await loadInvoices()
+    if (showDetailModal.value) {
+      closeDetailModal()
+    }
+    showSuccess('Mahnung ausgelöst', 'Die Mahnung wurde erfasst und per E-Mail an den Kunden verschickt')
+  } catch (error) {
+    handleApiError(error, 'Fehler beim Auslösen der Mahnung')
   }
 }
 
