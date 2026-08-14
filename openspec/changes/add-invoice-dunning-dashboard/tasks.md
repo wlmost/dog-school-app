@@ -90,7 +90,7 @@ T06) → T10 (Cross-Cutting QA, braucht alle).
   (`\RuntimeException`, öffentliche readonly Properties für Kontext,
   sprechende `parent::__construct()`-Nachricht).
 - **Akzeptanzkriterien:**
-  - [ ] Neue Pest-Testdatei `backend/tests/Feature/Domain/Invoice/
+  - [x] Neue Pest-Testdatei `backend/tests/Feature/Domain/Invoice/
     InvoiceDunningRecorderTest.php` (`uses()->group('domain',
     'invoice')`, `it()`-Stil gemäß TESTING.md) deckt ab: (a) erste
     Mahnung erzeugt Level 1 + Gebührendokument mit korrektem Betrag +
@@ -103,13 +103,13 @@ T06) → T10 (Cross-Cutting QA, braucht alle).
     `InvoiceDunningNotEligibleException`; (f) `total_amount` der
     Original-Rechnung bleibt nach dem Trigger unverändert (Kernkriterium
     der bindenden Entscheidung 1).
-  - [ ] **DB-kritisch — gegen echtes PostgreSQL getestet:** ein
+  - [x] **DB-kritisch — gegen echtes PostgreSQL getestet:** ein
     Concurrency-Test (zwei nahezu gleichzeitige `trigger()`-Aufrufe für
     dieselbe Rechnung) bestätigt genau einen Übergang auf Level 1, keine
     doppelte Stufe (analog zum PostgreSQL-Concurrency-Test aus
     `add-invoice-payment-entry` T02). Ergebnis in `task-T02.notes.md`
     dokumentiert.
-  - [ ] `composer stan`/`composer compat-check` grün.
+  - [x] `composer stan`/`composer compat-check` grün.
 
 ## T03: Mahn-E-Mail (Event/Listener/Mailable/View)
 
