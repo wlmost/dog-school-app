@@ -144,16 +144,16 @@ T06) → T10 (Cross-Cutting QA, braucht alle).
   `AppServiceProvider` (automatische Discovery, siehe
   `design.md`/`AppServiceProvider.php:66-74`).
 - **Akzeptanzkriterien:**
-  - [ ] Neuer Test (Teil von `InvoiceDunningApiTest.php` aus T04 oder
+  - [x] Neuer Test (Teil von `InvoiceDunningApiTest.php` aus T04 oder
     eigene Datei `InvoiceDunningNoticeMailTest.php`) prüft mit
     `Mail::fake()`: `InvoiceDunningTriggered::dispatch($dunning)` löst
     genau eine `InvoiceDunningNotice` an die Kunden-E-Mail-Adresse aus,
     mit dem Gebührendokument als PDF-Anhang.
-  - [ ] Mail-Inhaltstest (analog `InvoiceCreatedMailBankDetailsTest.php`/
+  - [x] Mail-Inhaltstest (analog `InvoiceCreatedMailBankDetailsTest.php`/
     `InvoiceSentMailBankDetailsTest.php`-Muster): `(new
     InvoiceDunningNotice($dunning))->render()` enthält Stufe,
     Gebührenbetrag und die Rechnungsnummer der Original-Rechnung.
-  - [ ] `composer stan`/`composer compat-check` grün.
+  - [x] `composer stan`/`composer compat-check` grün.
 
 ## T04: `InvoiceController::remind()` + Policy + Route + Resource-Erweiterung
 
