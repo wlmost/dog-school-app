@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
+use App\Events\InvoiceDunningTriggered;
 use App\Events\InvoiceWasSent;
+use App\Exceptions\InvoiceDunningLevelExceededException;
+use App\Exceptions\InvoiceDunningNotEligibleException;
 use App\Helpers\DatabaseHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreInvoiceRequest;
@@ -13,7 +16,9 @@ use App\Http\Resources\InvoiceResource;
 use App\Listeners\SendInvoiceEmail;
 use App\Models\Customer;
 use App\Models\Invoice;
+use App\Models\InvoiceDunning;
 use App\Models\Setting;
+use App\Services\InvoiceDunningRecorder;
 use App\Services\InvoiceNumberGenerator;
 use App\Services\InvoicePdfRenderer;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -61,7 +66,7 @@ class InvoiceController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $query = Invoice::query()->with([
-            'customer.user', 'items', 'payments', 'originalInvoice', 'cancellationInvoice', 'dunnings',
+            'customer.user', 'items', 'payments', 'originalInvoice', 'cancellationInvoice', 'dunnings.feeInvoice',
         ]);
 
         $user = $request->user();
@@ -174,7 +179,7 @@ class InvoiceController extends Controller
     public function show(Invoice $invoice): InvoiceResource
     {
         // Load customer for authorization check
-        $invoice->load(['customer.user', 'items', 'payments', 'originalInvoice', 'cancellationInvoice', 'dunnings']);
+        $invoice->load(['customer.user', 'items', 'payments', 'originalInvoice', 'cancellationInvoice', 'dunnings.feeInvoice']);
 
         $this->authorize('view', $invoice);
 
@@ -271,7 +276,7 @@ class InvoiceController extends Controller
         }
 
         return new InvoiceResource($invoice->fresh([
-            'customer.user', 'items', 'payments', 'originalInvoice', 'cancellationInvoice', 'dunnings',
+            'customer.user', 'items', 'payments', 'originalInvoice', 'cancellationInvoice', 'dunnings.feeInvoice',
         ]));
     }
 
@@ -323,7 +328,7 @@ class InvoiceController extends Controller
         });
 
         return new InvoiceResource($cancellationInvoice->fresh([
-            'customer.user', 'items', 'payments', 'originalInvoice', 'cancellationInvoice', 'dunnings',
+            'customer.user', 'items', 'payments', 'originalInvoice', 'cancellationInvoice', 'dunnings.feeInvoice',
         ]));
     }
 
@@ -437,5 +442,68 @@ class InvoiceController extends Controller
         return response()->json([
             'message' => 'Rechnung wurde per E-Mail versendet.',
         ]);
+    }
+
+    /**
+     * Trigger the next dunning level for the invoice: creates a standalone
+     * dunning-fee document, records an {@see InvoiceDunning},
+     * moves the invoice's status to `reminded`, and sends the customer a
+     * notification email with the fee document attached as a PDF (see
+     * `design.md` Decision D3/D6/D7).
+     *
+     * {@see InvoicePolicy::remind()} stays role-only, mirroring
+     * {@see self::finalize()}/{@see self::sendEmail()}: the eligibility and
+     * dunning-level upper-bound checks live inside
+     * {@see InvoiceDunningRecorder::trigger()}'s row-locked critical
+     * section and surface here as domain exceptions
+     * ({@see InvoiceDunningNotEligibleException},
+     * {@see InvoiceDunningLevelExceededException}), translated to HTTP 422
+     * with a sprechende Nachricht built from each exception's context
+     * properties.
+     *
+     * The {@see InvoiceDunningTriggered} dispatch happens *after*
+     * `trigger()`'s transaction has already committed and is wrapped in
+     * its own `try/catch (\Throwable)`: a mail transport failure surfaces
+     * as HTTP 502, identical to {@see self::sendEmail()}'s established
+     * pattern. The already-recorded dunning and fee document are
+     * deliberately **not** rolled back on a mail failure (`design.md`
+     * Decision D7) — consistent with `sendEmail()`, which also never
+     * undoes a data mutation because of a transport error.
+     */
+    public function remind(Invoice $invoice, InvoiceDunningRecorder $recorder): InvoiceResource|JsonResponse
+    {
+        $this->authorize('remind', $invoice);
+
+        try {
+            $dunning = $recorder->trigger($invoice);
+        } catch (InvoiceDunningNotEligibleException $e) {
+            return response()->json([
+                'message' => $e->documentType !== null
+                    ? 'Für Storno- oder Mahngebühren-Dokumente kann keine Mahnung ausgelöst werden.'
+                    : sprintf('Diese Rechnung kann in ihrem aktuellen Status (%s) nicht gemahnt werden.', $e->status),
+            ], 422);
+        } catch (InvoiceDunningLevelExceededException $e) {
+            return response()->json([
+                'message' => sprintf('Für diese Rechnung wurde bereits die maximale Mahnstufe %d erreicht.', $e->maxDunningLevel),
+            ], 422);
+        }
+
+        try {
+            InvoiceDunningTriggered::dispatch($dunning);
+        } catch (\Throwable $e) {
+            logger()->error('Mahn-E-Mail konnte nicht versendet werden', [
+                'invoice_id' => $invoice->id,
+                'invoice_dunning_id' => $dunning->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'message' => 'Die Mahnung wurde erfasst, aber die Benachrichtigungs-E-Mail konnte nicht versendet werden. Bitte laden Sie das Gebührendokument herunter und versenden Sie es manuell.',
+            ], 502);
+        }
+
+        return new InvoiceResource($invoice->fresh([
+            'customer.user', 'items', 'payments', 'originalInvoice', 'cancellationInvoice', 'dunnings.feeInvoice',
+        ]));
     }
 }

@@ -184,6 +184,7 @@ Route::prefix('v1')->middleware('auth:sanctum')->group(function () {
     Route::post('/invoices/{invoice}/finalize', [InvoiceController::class, 'finalize']);
     Route::post('/invoices/{invoice}/cancel', [InvoiceController::class, 'cancel']);
     Route::post('/invoices/{invoice}/send-email', [InvoiceController::class, 'sendEmail']);
+    Route::post('/invoices/{invoice}/remind', [InvoiceController::class, 'remind']);
     Route::get('/invoices/overdue/list', [InvoiceController::class, 'overdue']);
 
     // PayPal Integration

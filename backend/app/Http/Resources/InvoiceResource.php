@@ -50,6 +50,9 @@ class InvoiceResource extends JsonResource
             'isOverdue' => $this->isOverdue(),
             'remindedAt' => $this->reminded_at?->toDateString(),
             'dunningLevel' => $this->dunning_level,
+            'documentType' => $this->document_type,
+            'nextDunningLevel' => $this->next_dunning_level,
+            'nextDunningFeeAmount' => $this->next_dunning_fee_amount,
             'originalInvoiceId' => $this->original_invoice_id,
             'originalInvoiceNumber' => $this->whenLoaded('originalInvoice', fn () => $this->originalInvoice?->invoice_number),
             'cancellationInvoiceId' => $this->whenLoaded('cancellationInvoice', fn () => $this->cancellationInvoice?->id),
@@ -61,6 +64,7 @@ class InvoiceResource extends JsonResource
             'customer' => new CustomerResource($this->whenLoaded('customer')),
             'items' => InvoiceItemResource::collection($this->whenLoaded('items')),
             'payments' => PaymentResource::collection($this->whenLoaded('payments')),
+            'dunnings' => InvoiceDunningResource::collection($this->whenLoaded('dunnings')),
         ];
     }
 }

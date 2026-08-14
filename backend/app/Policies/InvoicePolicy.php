@@ -142,4 +142,22 @@ class InvoicePolicy
     {
         return $user->isAdminOrTrainer();
     }
+
+    /**
+     * Determine whether the user can trigger a dunning for the invoice.
+     *
+     * Deliberately role-only, same split as {@see self::finalize()}/
+     * {@see self::send()}: the eligibility (`document_type`/`status`) and
+     * dunning-level upper-bound checks both live inside
+     * `InvoiceDunningRecorder::trigger()`'s row-locked critical section
+     * (see `design.md` Decision D3), because the level check cannot be
+     * safely evaluated as a Controller-side pre-check without reopening
+     * the exact race window the lock closes.
+     * `InvoiceController::remind()` translates the resulting domain
+     * exceptions into HTTP 422 with a sprechende Nachricht.
+     */
+    public function remind(User $user, Invoice $invoice): bool
+    {
+        return $user->isAdminOrTrainer();
+    }
 }
