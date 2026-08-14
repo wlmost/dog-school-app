@@ -100,7 +100,7 @@ describe('Admin Dashboard', function () {
 });
 
 describe('Admin Dashboard — overdue or reminded invoices', function () {
-    it('lists overdue and reminded invoices of all customers for admin', function () {
+    it('listet überfällige und gemahnte rechnungen aller kunden für admin auf', function () {
         $this->actingAs($this->admin);
 
         $overdueInvoice = Invoice::factory()->for($this->customer, 'customer')->create([
@@ -127,7 +127,7 @@ describe('Admin Dashboard — overdue or reminded invoices', function () {
         expect($invoiceIds)->toContain($overdueInvoice->id, $remindedInvoice->id);
     });
 
-    it('excludes a dunning-fee document even when its due date is in the past', function () {
+    it('schließt ein mahngebühren-dokument aus, auch wenn dessen fälligkeitsdatum in der vergangenheit liegt', function () {
         $this->actingAs($this->admin);
 
         $originalInvoice = Invoice::factory()->for($this->customer, 'customer')->create([
@@ -150,7 +150,7 @@ describe('Admin Dashboard — overdue or reminded invoices', function () {
             ->not->toContain($feeInvoice->id);
     });
 
-    it('excludes paid and cancelled invoices even when overdue', function () {
+    it('schließt bezahlte und stornierte rechnungen aus, auch wenn sie überfällig sind', function () {
         $this->actingAs($this->admin);
 
         $paidInvoice = Invoice::factory()->for($this->customer, 'customer')->create([
@@ -248,7 +248,7 @@ describe('Trainer Dashboard', function () {
         expect($response->json('upcomingSessions.0.course'))->toBe($trainerCourse->name);
     });
 
-    it('only shows overdue or reminded invoices of assigned customers for trainer', function () {
+    it('zeigt trainern nur überfällige oder gemahnte rechnungen ihrer zugewiesenen kunden', function () {
         $this->actingAs($this->trainer);
 
         $overdueInvoice = Invoice::factory()->for($this->assignedCustomer, 'customer')->create([
@@ -314,7 +314,7 @@ describe('Customer Dashboard', function () {
         expect($response->json('stats'))->not->toHaveKey('customers');
     });
 
-    it('does not include the overdue or reminded invoices widget for customers', function () {
+    it('enthält das widget für überfällige oder gemahnte rechnungen nicht für kunden', function () {
         $this->actingAs($this->customerUser);
 
         $response = $this->getJson('/api/v1/dashboard');
