@@ -215,11 +215,7 @@ it('setzt den rechnungsstatus über den service auf paid wenn ein paypal-webhook
         'transaction_id' => 'CAPTURE-XYZ',
     ]);
 
-    // Note: this route is registered with a duplicated `/api` prefix
-    // (`routes/api.php` already runs under the framework's `api/` prefix,
-    // and the route definition itself additionally hardcodes `/api/v1/...`)
-    // — a pre-existing quirk, not something to fix as part of this task.
-    $this->postJson('/api/api/v1/payments/paypal/webhook', [
+    $this->postJson('/api/v1/payments/paypal/webhook', [
         'event_type' => 'PAYMENT.CAPTURE.COMPLETED',
         'resource' => ['id' => 'CAPTURE-XYZ'],
     ])->assertOk();
