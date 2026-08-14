@@ -225,12 +225,12 @@ T06) → T10 (Cross-Cutting QA, braucht alle).
   `new PaymentReminder($invoice, 7)`; `match`-Ausdruck und
   `sendAllEmails()` entsprechend anpassen.
 - **Akzeptanzkriterien:**
-  - [ ] `grep -rn "SendPaymentReminders\|PaymentReminder\|invoices:send-reminders"`
+  - [x] `grep -rn "SendPaymentReminders\|PaymentReminder\|invoices:send-reminders"`
     in `backend/app/` und `backend/routes/` liefert keine Treffer mehr.
-  - [ ] `php artisan schedule:list` (oder Äquivalent) zeigt keinen
+  - [x] `php artisan schedule:list` (oder Äquivalent) zeigt keinen
     `invoices:send-reminders`-Eintrag mehr, `queue:prune-failed` bleibt
     sichtbar.
-  - [ ] `composer qa` grün, keine verwaisten Referenzen.
+  - [x] `composer qa` grün, keine verwaisten Referenzen.
 
 ## T06: Dashboard-Backend — überfällige/gemahnte Rechnungen
 

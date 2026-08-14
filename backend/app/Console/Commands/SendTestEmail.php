@@ -3,11 +3,12 @@
 namespace App\Console\Commands;
 
 use App\Mail\BookingConfirmation;
+use App\Mail\InvoiceDunningNotice;
 use App\Mail\InvoiceSent;
-use App\Mail\PaymentReminder;
 use App\Mail\WelcomeEmail;
 use App\Models\Booking;
 use App\Models\Invoice;
+use App\Models\InvoiceDunning;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
@@ -19,7 +20,7 @@ class SendTestEmail extends Command
      *
      * @var string
      */
-    protected $signature = 'email:test {recipient} {--type=all : Type of email to send (all|welcome|booking|invoice|reminder)}';
+    protected $signature = 'email:test {recipient} {--type=all : Type of email to send (all|welcome|booking|invoice|dunning)}';
 
     /**
      * The console command description.
@@ -44,7 +45,7 @@ class SendTestEmail extends Command
                 'welcome' => $this->sendWelcomeEmail($recipient),
                 'booking' => $this->sendBookingEmail($recipient),
                 'invoice' => $this->sendInvoiceEmail($recipient),
-                'reminder' => $this->sendReminderEmail($recipient),
+                'dunning' => $this->sendDunningEmail($recipient),
                 default => $this->sendAllEmails($recipient),
             };
 
@@ -65,7 +66,7 @@ class SendTestEmail extends Command
         $this->sendWelcomeEmail($recipient);
         $this->sendBookingEmail($recipient);
         $this->sendInvoiceEmail($recipient);
-        $this->sendReminderEmail($recipient);
+        $this->sendDunningEmail($recipient);
     }
 
     protected function sendWelcomeEmail(string $recipient): void
@@ -135,32 +136,28 @@ class SendTestEmail extends Command
         $this->line('   ✓ Invoice created email sent');
     }
 
-    protected function sendReminderEmail(string $recipient): void
+    protected function sendDunningEmail(string $recipient): void
     {
-        $this->line('📧 Sending Payment Reminder Email...');
+        $this->line('📧 Sending Invoice Dunning Notice Email...');
 
-        // Get overdue invoice
-        $invoice = Invoice::with(['customer.user', 'items'])
-            ->where('status', 'pending')
-            ->orWhere('status', 'overdue')
-            ->first();
+        // Get an existing dunning record for realistic data
+        $dunning = InvoiceDunning::with(['invoice.customer.user', 'feeInvoice.items'])->first();
 
-        if (! $invoice) {
-            // Create temporary overdue invoice
-            $this->warn('   ⚠ No overdue invoices found. Skipping payment reminder.');
+        if (! $dunning) {
+            $this->warn('   ⚠ No dunning records found in database. Skipping dunning notice.');
 
             return;
         }
 
         // Temporarily override customer email for testing
-        $originalEmail = $invoice->customer->user->email;
-        $invoice->customer->user->email = $recipient;
+        $originalEmail = $dunning->invoice->customer->user->email;
+        $dunning->invoice->customer->user->email = $recipient;
 
-        Mail::to($recipient)->send(new PaymentReminder($invoice, 7));
+        Mail::to($recipient)->send(new InvoiceDunningNotice($dunning));
 
         // Restore original email
-        $invoice->customer->user->email = $originalEmail;
+        $dunning->invoice->customer->user->email = $originalEmail;
 
-        $this->line('   ✓ Payment reminder sent');
+        $this->line('   ✓ Invoice dunning notice sent');
     }
 }

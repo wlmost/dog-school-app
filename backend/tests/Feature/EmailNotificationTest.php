@@ -4,13 +4,11 @@ declare(strict_types=1);
 
 use App\Mail\BookingConfirmation;
 use App\Mail\InvoiceSent;
-use App\Mail\PaymentReminder;
 use App\Mail\WelcomeEmail;
 use App\Models\Booking;
 use App\Models\Course;
 use App\Models\Customer;
 use App\Models\Dog;
-use App\Models\Invoice;
 use App\Models\TrainingSession;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
@@ -193,156 +191,6 @@ describe('Invoice Creation Emails', function () {
         ])->assertStatus(422);
 
         Mail::assertNothingQueued();
-    });
-});
-
-describe('Payment Reminder Emails', function () {
-    it('sends reminders for overdue invoices via command', function () {
-        // Clear any existing invoices from previous tests
-        Invoice::query()->delete();
-
-        // Create overdue invoice
-        $invoice = Invoice::factory()
-            ->for($this->customerModel, 'customer')
-            ->create([
-                'issue_date' => now(),
-                'due_date' => now()->subDays(10),
-                'status' => 'sent',
-            ]);
-
-        $this->artisan('invoices:send-reminders', ['--days' => 7])
-            ->assertSuccessful();
-
-        Mail::assertQueued(PaymentReminder::class, function ($mail) use ($invoice) {
-            expect($mail->invoice->id)->toBe($invoice->id);
-
-            return $mail->hasTo($this->customer->email);
-        });
-    });
-
-    it('does not send reminders for paid invoices', function () {
-        // Clear any existing invoices from previous tests
-        Invoice::query()->delete();
-
-        Invoice::factory()
-            ->for($this->customerModel, 'customer')
-            ->create([
-                'issue_date' => now(),
-                'due_date' => now()->subDays(10),
-                'status' => 'paid',
-                'paid_date' => now()->subDays(2),
-            ]);
-
-        $this->artisan('invoices:send-reminders', ['--days' => 7])
-            ->assertSuccessful();
-
-        Mail::assertNothingQueued();
-    });
-
-    it('does not send reminders for cancelled invoices', function () {
-        // Clear any existing invoices from previous tests
-        Invoice::query()->delete();
-
-        Invoice::factory()
-            ->for($this->customerModel, 'customer')
-            ->create([
-                'issue_date' => now(),
-                'due_date' => now()->subDays(10),
-                'status' => 'cancelled',
-            ]);
-
-        $this->artisan('invoices:send-reminders', ['--days' => 7])
-            ->assertSuccessful();
-
-        Mail::assertNothingQueued();
-    });
-
-    it('respects the days overdue threshold', function () {
-        // Clear any existing invoices from previous tests
-        Invoice::query()->delete();
-
-        // Invoice 5 days overdue (below threshold of 7 days)
-        Invoice::factory()
-            ->for($this->customerModel, 'customer')
-            ->create([
-                'issue_date' => now(),
-                'due_date' => now()->subDays(5),
-                'status' => 'sent',
-            ]);
-
-        $this->artisan('invoices:send-reminders', ['--days' => 7])
-            ->assertSuccessful();
-
-        Mail::assertNothingQueued();
-    });
-
-    it('sends multiple reminders for multiple overdue invoices', function () {
-        // Clear any existing invoices from previous tests
-        Invoice::query()->delete();
-
-        $user2 = User::factory()->customer()->create();
-        $customer2 = Customer::factory()->for($user2)->create();
-
-        Invoice::factory()
-            ->for($this->customerModel, 'customer')
-            ->create([
-                'issue_date' => now(),
-                'due_date' => now()->subDays(10),
-                'status' => 'sent',
-            ]);
-
-        Invoice::factory()
-            ->for($customer2, 'customer')
-            ->create([
-                'issue_date' => now(),
-                'due_date' => now()->subDays(15),
-                'status' => 'sent',
-            ]);
-
-        $this->artisan('invoices:send-reminders', ['--days' => 7])
-            ->assertSuccessful();
-
-        Mail::assertQueued(PaymentReminder::class, 2);
-    });
-
-    it('supports dry run mode without sending emails', function () {
-        Invoice::factory()
-            ->for($this->customerModel, 'customer')
-            ->create([
-                'issue_date' => now(),
-                'due_date' => now()->subDays(10),
-            ]);
-
-        $this->artisan('invoices:send-reminders', ['--days' => 7, '--dry-run' => true])
-            ->assertSuccessful();
-
-        Mail::assertNothingQueued();
-    });
-
-    it('includes invoice details in reminder email', function () {
-        // Clear any existing invoices from previous tests
-        Invoice::query()->delete();
-
-        $invoice = Invoice::factory()
-            ->for($this->customerModel, 'customer')
-            ->create([
-                'invoice_number' => 'INV-2024-999',
-                'issue_date' => now(),
-                'due_date' => now()->subDays(10),
-                'total_amount' => 250.00,
-                'status' => 'sent',
-            ]);
-
-        $this->artisan('invoices:send-reminders', ['--days' => 7])
-            ->assertSuccessful();
-
-        Mail::assertQueued(PaymentReminder::class, function ($mail) use ($invoice) {
-            expect($mail->invoice->id)->toBe($invoice->id);
-            expect($mail->invoice->invoice_number)->toBe('INV-2024-999');
-            expect((float) $mail->invoice->total_amount)->toBe(250.00);
-
-            return true;
-        });
     });
 });
 
