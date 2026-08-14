@@ -13,6 +13,7 @@ use App\Models\DogDeletionRequest;
 use App\Models\DogRegistrationRequest;
 use App\Models\Invoice;
 use App\Models\TrainingSession;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -139,6 +140,10 @@ class DashboardController extends Controller
                     'cancellationReason' => $b->cancellation_reason,
                     'updatedAt' => $b->updated_at?->toISOString(),
                 ]),
+            'overdueOrRemindedInvoices' => $this->overdueOrRemindedInvoicesQuery()
+                ->limit(10)
+                ->get()
+                ->map(fn (Invoice $i) => $this->mapOverdueOrRemindedInvoice($i)),
         ]);
     }
 
@@ -220,11 +225,18 @@ class DashboardController extends Controller
                 ];
             });
 
+        $overdueOrRemindedInvoices = $this->overdueOrRemindedInvoicesQuery()
+            ->whereIn('customer_id', $assignedCustomers)
+            ->limit(10)
+            ->get()
+            ->map(fn (Invoice $i) => $this->mapOverdueOrRemindedInvoice($i));
+
         return response()->json([
             'stats' => $stats,
             'upcomingSessions' => $upcomingSessions,
             'recentBookings' => $recentBookings,
             'pendingCancellationRequests' => $pendingCancellationRequests,
+            'overdueOrRemindedInvoices' => $overdueOrRemindedInvoices,
         ]);
     }
 
@@ -317,5 +329,40 @@ class DashboardController extends Controller
             'upcomingSessions' => $upcomingSessions,
             'recentBookings' => $recentBookings,
         ]);
+    }
+
+    /**
+     * Base query for invoices that are either overdue or already reminded,
+     * used by the admin/trainer "overdueOrRemindedInvoices" dashboard
+     * widget. `whereNull('document_type')` excludes cancellation/dunning-fee
+     * documents (see design.md, avoiding "noise" from short-lived fee
+     * documents).
+     *
+     * @return Builder<Invoice>
+     */
+    private function overdueOrRemindedInvoicesQuery(): Builder
+    {
+        return Invoice::query()
+            ->with('customer.user')
+            ->whereNull('document_type')
+            ->whereNotIn('status', ['draft', 'paid', 'cancelled'])
+            ->where(fn ($query) => $query->where('status', 'reminded')->orWhere('due_date', '<', now()))
+            ->orderBy('due_date');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function mapOverdueOrRemindedInvoice(Invoice $invoice): array
+    {
+        return [
+            'id' => $invoice->id,
+            'invoiceNumber' => $invoice->invoice_number,
+            'customerName' => $invoice->customer?->user->full_name ?? 'Unbekannt',
+            'dueDate' => $invoice->due_date->format('d.m.Y'),
+            'status' => $invoice->status,
+            'dunningLevel' => $invoice->dunning_level,
+            'remainingBalance' => $invoice->remaining_balance,
+        ];
     }
 }

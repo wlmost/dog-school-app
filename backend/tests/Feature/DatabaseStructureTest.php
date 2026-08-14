@@ -3,6 +3,8 @@
 declare(strict_types=1);
 
 use App\Models\Invoice;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 test('users table has correct structure', function () {
@@ -133,6 +135,45 @@ test('invoices table exists with required columns', function () {
     ]))->toBeTrue();
 });
 
+// add-invoice-dunning-dashboard T01 (M1): document_type-Diskriminator
+// zwischen regulärer Rechnung, Stornorechnung und Mahngebühren-Dokument
+// (siehe design.md Decision D1).
+test('invoices table has document_type column', function () {
+    expect(Schema::hasColumns('invoices', ['document_type']))->toBeTrue();
+});
+
+// add-invoice-dunning-dashboard T01 (M1): Backfill bestehender
+// Stornorechnungen auf document_type = 'cancellation' beim Migrieren.
+// Simuliert den Produktivfall: eine Stornorechnung existiert bereits
+// (original_invoice_id gesetzt), bevor die document_type-Spalte
+// hinzugefügt wird — anschließend muss die Migration sie korrekt
+// zurückschreiben.
+test('document_type backfill sets cancellation on pre-existing cancellation invoices', function () {
+    $migrationPath = 'database/migrations/2026_08_14_140001_add_document_type_to_invoices_table.php';
+
+    Artisan::call('migrate:rollback', ['--path' => $migrationPath, '--force' => true]);
+
+    $original = Invoice::factory()->create(['status' => 'sent']);
+
+    DB::table('invoices')->insert([
+        'customer_id' => $original->customer_id,
+        'invoice_number' => 'INV-STORNO-'.$original->id,
+        'original_invoice_id' => $original->id,
+        'status' => 'sent',
+        'total_amount' => $original->total_amount,
+        'issue_date' => now(),
+        'due_date' => now()->addDays(14),
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]);
+
+    Artisan::call('migrate', ['--path' => $migrationPath, '--force' => true]);
+
+    $cancellation = Invoice::where('original_invoice_id', $original->id)->first();
+
+    expect($cancellation->document_type)->toBe('cancellation');
+});
+
 // add-invoice-status-lifecycle: invoice_number ist seit Migration M3 nullable
 // (Entwürfe erhalten erst bei finalize()/cancel() eine Nummer, siehe
 // design.md Decision D2/D5) — dieser Test dokumentiert den Schema-Vertrag
@@ -144,10 +185,13 @@ test('invoice_number column on invoices table is nullable', function () {
 });
 
 // add-invoice-status-lifecycle T01 (M2): Mahnstufen-Datenmodell.
+// add-invoice-dunning-dashboard T01 (M2): fee_invoice_id verknüpft jeden
+// Mahn-Datensatz mit seinem eigenständigen Gebührendokument.
 test('invoice_dunnings table exists with required columns', function () {
     expect(Schema::hasTable('invoice_dunnings'))->toBeTrue();
     expect(Schema::hasColumns('invoice_dunnings', [
-        'id', 'invoice_id', 'level', 'dunning_date', 'fee_amount', 'created_at', 'updated_at',
+        'id', 'invoice_id', 'level', 'dunning_date', 'fee_amount', 'fee_invoice_id',
+        'created_at', 'updated_at',
     ]))->toBeTrue();
 });
 

@@ -271,6 +271,72 @@
       </div>
     </div>
 
+    <!-- Overdue or Reminded Invoices (trainer and admin) -->
+    <div v-if="user?.role === 'trainer' || user?.role === 'admin'" class="card">
+      <div class="flex items-center justify-between mb-4">
+        <h4 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          Überfällige & gemahnte Rechnungen
+        </h4>
+        <span
+          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+          :class="overdueOrRemindedInvoices.length > 0
+            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+            : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'"
+        >
+          {{ overdueOrRemindedInvoices.length }}
+        </span>
+      </div>
+
+      <div v-if="loading" class="text-center py-8">
+        <svg class="animate-spin h-8 w-8 text-primary-600 dark:text-primary-400 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <p class="text-gray-500 dark:text-gray-400 mt-2">Lade Daten...</p>
+      </div>
+
+      <div
+        v-else-if="!overdueOrRemindedInvoices.length"
+        class="text-center py-8 text-gray-500 dark:text-gray-400"
+      >
+        Keine überfälligen oder gemahnten Rechnungen
+      </div>
+
+      <div v-else class="divide-y divide-gray-200 dark:divide-gray-700">
+        <div
+          v-for="invoice in overdueOrRemindedInvoices"
+          :key="invoice.id"
+          class="flex items-center justify-between py-3"
+        >
+          <div class="flex-1 min-w-0">
+            <p class="font-medium text-gray-900 dark:text-gray-100 truncate">
+              {{ invoice.invoiceNumber }}
+              <span :class="invoiceStatusClass(invoice.status)" class="px-2 py-0.5 text-xs font-medium rounded-full ml-1">
+                {{ invoiceStatusLabel(invoice.status) }}
+              </span>
+              <span v-if="invoice.dunningLevel !== null" class="text-xs font-normal text-gray-500 dark:text-gray-400 ml-1">
+                &middot; Mahnstufe {{ invoice.dunningLevel }}
+              </span>
+            </p>
+            <p class="text-sm text-gray-600 dark:text-gray-400">
+              {{ invoice.customerName }} &middot; fällig {{ invoice.dueDate }}
+            </p>
+          </div>
+          <div class="ml-4 shrink-0 text-right">
+            <p class="font-medium text-gray-900 dark:text-gray-100">
+              {{ formatCurrency(invoice.remainingBalance) }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-4 text-right">
+        <router-link :to="{ name: 'Invoices' }" class="text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline">
+          Zur Rechnungsübersicht
+        </router-link>
+      </div>
+    </div>
+
     <!-- Recent Activity -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">      <!-- Upcoming Sessions -->
       <div class="card">
@@ -389,6 +455,16 @@ interface PendingCancellationRequest {
   updatedAt: string
 }
 
+interface OverdueOrRemindedInvoice {
+  id: number
+  invoiceNumber: string
+  customerName: string
+  dueDate: string
+  status: string
+  dunningLevel: number | null
+  remainingBalance: number
+}
+
 const authStore = useAuthStore()
 const user = computed(() => authStore.user)
 
@@ -408,6 +484,7 @@ const recentBookings = ref<any[]>([])
 const pendingDogRegistrations = ref<PendingDogRegistration[]>([])
 const pendingDogDeletionRequests = ref<PendingDogDeletionRequest[]>([])
 const pendingCancellationRequests = ref<PendingCancellationRequest[]>([])
+const overdueOrRemindedInvoices = ref<OverdueOrRemindedInvoice[]>([])
 const processingRequestId = ref<number | null>(null)
 
 // Computed grid class based on user role
@@ -431,6 +508,7 @@ async function loadDashboard() {
     pendingDogRegistrations.value = response.data.pendingDogRegistrations ?? []
     pendingDogDeletionRequests.value = response.data.pendingDogDeletionRequests ?? []
     pendingCancellationRequests.value = response.data.pendingCancellationRequests ?? []
+    overdueOrRemindedInvoices.value = response.data.overdueOrRemindedInvoices ?? []
   } catch (error) {
     console.error('Error loading dashboard data:', error)
   } finally {
@@ -528,6 +606,39 @@ function bookingStatusLabel(status: string) {
     pending: 'Ausstehend',
     cancelled: 'Storniert',
     cancellation_requested: 'Stornierung beantragt',
+  }
+  return labels[status as keyof typeof labels] || status
+}
+
+function formatCurrency(amount: number) {
+  if (!amount) return '0,00 €'
+  return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(amount)
+}
+
+// Dupliziert (statt aus `InvoicesView.vue` importiert) analog zum bereits
+// etablierten Nicht-Konsolidierungs-Muster für Rechnungs-Status-Mappings
+// zwischen `InvoicesView.vue` und `InvoiceDetailModal.vue`, siehe
+// design.md Ist-Zustand Frontend.
+function invoiceStatusClass(status: string) {
+  const classes = {
+    draft: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300',
+    sent: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+    paid: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    overdue: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+    reminded: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+    cancelled: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+  }
+  return classes[status as keyof typeof classes] || classes.draft
+}
+
+function invoiceStatusLabel(status: string) {
+  const labels = {
+    draft: 'Entwurf',
+    sent: 'Versendet',
+    paid: 'Bezahlt',
+    overdue: 'Überfällig',
+    reminded: 'Gemahnt',
+    cancelled: 'Storniert'
   }
   return labels[status as keyof typeof labels] || status
 }

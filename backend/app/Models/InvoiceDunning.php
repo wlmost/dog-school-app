@@ -21,9 +21,11 @@ use Illuminate\Support\Carbon;
  * @property int $level
  * @property Carbon $dunning_date
  * @property float $fee_amount
+ * @property int|null $fee_invoice_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Invoice $invoice
+ * @property-read Invoice|null $feeInvoice
  */
 class InvoiceDunning extends Model
 {
@@ -39,6 +41,7 @@ class InvoiceDunning extends Model
         'level',
         'dunning_date',
         'fee_amount',
+        'fee_invoice_id',
     ];
 
     /**
@@ -62,5 +65,14 @@ class InvoiceDunning extends Model
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    /**
+     * Get the standalone fee invoice document created for this dunning,
+     * if any.
+     */
+    public function feeInvoice(): BelongsTo
+    {
+        return $this->belongsTo(Invoice::class, 'fee_invoice_id');
     }
 }

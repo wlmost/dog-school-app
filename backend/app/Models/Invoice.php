@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Support\DunningFeeSchedule;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -21,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property int $customer_id
  * @property string|null $invoice_number
  * @property int|null $original_invoice_id
+ * @property string|null $document_type
  * @property Carbon $invoice_date
  * @property Carbon $due_date
  * @property float $subtotal
@@ -39,6 +41,9 @@ use Illuminate\Support\Carbon;
  * @property-read Collection<int, InvoiceDunning> $dunnings
  * @property-read Invoice|null $originalInvoice
  * @property-read Invoice|null $cancellationInvoice
+ * @property-read Collection<int, Invoice> $dunningFeeInvoices
+ * @property-read int|null $nextDunningLevel
+ * @property-read float|null $nextDunningFeeAmount
  */
 class Invoice extends Model
 {
@@ -53,6 +58,7 @@ class Invoice extends Model
         'customer_id',
         'invoice_number',
         'original_invoice_id',
+        'document_type',
         'status',
         'total_amount',
         'issue_date',
@@ -120,10 +126,28 @@ class Invoice extends Model
 
     /**
      * Get the cancellation invoice created for this invoice, if any.
+     *
+     * Filtered by `document_type` (see design.md Decision D1): without
+     * this filter, a dunning-fee document (which also sets
+     * `original_invoice_id`, see {@see dunningFeeInvoices()}) could be
+     * returned here instead of the real cancellation invoice.
      */
     public function cancellationInvoice(): HasOne
     {
-        return $this->hasOne(self::class, 'original_invoice_id');
+        return $this->hasOne(self::class, 'original_invoice_id')
+            ->where('document_type', 'cancellation');
+    }
+
+    /**
+     * Get the dunning-fee documents created for this invoice, if any. A
+     * fee invoice is a standalone `Invoice` (own invoice number, one
+     * `InvoiceItem` line) that references this invoice via
+     * `original_invoice_id` and `document_type = 'dunning_fee'`.
+     */
+    public function dunningFeeInvoices(): HasMany
+    {
+        return $this->hasMany(self::class, 'original_invoice_id')
+            ->where('document_type', 'dunning_fee');
     }
 
     /**
@@ -176,6 +200,27 @@ class Invoice extends Model
     public function getRemindedAtAttribute(): ?Carbon
     {
         return $this->dunnings->sortByDesc('dunning_date')->first()?->dunning_date;
+    }
+
+    /**
+     * Get the dunning level that the next triggered dunning would reach,
+     * or null if the maximum level is already reached (no further
+     * app-internal dunning possible, see `config/invoicing.php`).
+     */
+    public function getNextDunningLevelAttribute(): ?int
+    {
+        return DunningFeeSchedule::nextLevel($this->dunning_level);
+    }
+
+    /**
+     * Get the fee that would be charged for the next dunning level, or
+     * null if the maximum level is already reached.
+     */
+    public function getNextDunningFeeAmountAttribute(): ?float
+    {
+        $nextLevel = $this->next_dunning_level;
+
+        return $nextLevel !== null ? DunningFeeSchedule::feeForLevel($nextLevel) : null;
     }
 
     /**

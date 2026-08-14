@@ -45,6 +45,11 @@ function makeInvoice(overrides: Record<string, unknown> = {}) {
     paidDate: null,
     remindedAt: null,
     originalInvoiceId: null,
+    // Default entspricht einer frischen Rechnung ohne Mahnhistorie
+    // (`InvoiceDunningRecorder`/`DunningFeeSchedule::nextLevel(null) === 1`,
+    // siehe task-T01.notes.md).
+    nextDunningLevel: 1,
+    nextDunningFeeAmount: 5,
     ...overrides,
   }
 }
@@ -80,7 +85,7 @@ const globalStubs = {
   InvoiceDetailModal: {
     name: 'InvoiceDetailModal',
     props: ['isOpen', 'invoice'],
-    emits: ['close', 'download', 'edit', 'delete', 'finalize', 'cancel', 'send', 'record-payment'],
+    emits: ['close', 'download', 'edit', 'delete', 'finalize', 'cancel', 'send', 'record-payment', 'remind'],
     template: '<div data-testid="invoice-detail-modal" />',
   },
   InvoiceSendDialog: {
@@ -526,6 +531,141 @@ describe('InvoicesView', () => {
 
       expect(dialog.props('isOpen')).toBe(true)
       expect(dialog.props('invoice')).toEqual(invoice)
+    })
+  })
+
+  // ------------------------------------------------------------------ //
+  // "Mahnen"-Button (canRemind) — Sichtbarkeit                          //
+  // ------------------------------------------------------------------ //
+  describe('"Mahnen"-Button (canRemind)', () => {
+    it.each(['sent', 'reminded', 'overdue'])(
+      'zeigt den Button für Status "%s" mit offener nächster Mahnstufe',
+      async (status) => {
+        const wrapper = await mountWithInvoice(
+          makeInvoice({ status, nextDunningLevel: 1, nextDunningFeeAmount: 5 }),
+        )
+
+        expect(actionButtonTexts(wrapper)).toContain('Mahnen')
+      },
+    )
+
+    it.each(['draft', 'paid', 'cancelled'])(
+      'versteckt den Button für Status "%s"',
+      async (status) => {
+        const wrapper = await mountWithInvoice(makeInvoice({ status }))
+
+        expect(actionButtonTexts(wrapper)).not.toContain('Mahnen')
+      },
+    )
+
+    it('versteckt den Button, wenn bereits die maximale Mahnstufe 3 erreicht ist (nextDunningLevel === null)', async () => {
+      const wrapper = await mountWithInvoice(
+        makeInvoice({ status: 'reminded', nextDunningLevel: null, nextDunningFeeAmount: null }),
+      )
+
+      expect(actionButtonTexts(wrapper)).not.toContain('Mahnen')
+    })
+
+    it('versteckt den Button für Stornorechnungen (originalInvoiceId gesetzt)', async () => {
+      const wrapper = await mountWithInvoice(
+        makeInvoice({ status: 'sent', originalInvoiceId: 42 }),
+      )
+
+      expect(actionButtonTexts(wrapper)).not.toContain('Mahnen')
+    })
+
+    it('versteckt den Button für Kunden, unabhängig vom Status', async () => {
+      mockCustomerAuth()
+      vi.mocked(apiClient.get).mockResolvedValueOnce({
+        data: { data: [makeInvoice({ status: 'sent' })] },
+      })
+      const wrapper = mountView()
+      await flushPromises()
+
+      expect(actionButtonTexts(wrapper)).not.toContain('Mahnen')
+    })
+  })
+
+  // ------------------------------------------------------------------ //
+  // remindInvoice() — Bestätigungsdialog + API-Aufruf                    //
+  // ------------------------------------------------------------------ //
+  describe('remindInvoice()', () => {
+    it('zeigt vor dem Auslösen einen Bestätigungsdialog mit Mahnstufe und Gebühr', async () => {
+      mockConfirm(true)
+      const wrapper = await mountWithInvoice(
+        makeInvoice({ status: 'sent', nextDunningLevel: 2, nextDunningFeeAmount: 10 }),
+      )
+      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: {} })
+      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { data: [] } })
+
+      await findActionButton(wrapper, 'Mahnen')?.trigger('click')
+      await flushPromises()
+
+      expect(confirm).toHaveBeenCalledWith(
+        expect.stringContaining('Mahnung Stufe 2 für Rechnung RE-2026-0001 auslösen?'),
+      )
+      expect(confirm).toHaveBeenCalledWith(expect.stringContaining('10,00'))
+    })
+
+    it('bricht ab und sendet keinen POST-Aufruf, wenn der Bestätigungsdialog abgelehnt wird', async () => {
+      mockConfirm(false)
+      const wrapper = await mountWithInvoice(makeInvoice({ status: 'sent' }))
+
+      await findActionButton(wrapper, 'Mahnen')?.trigger('click')
+      await flushPromises()
+
+      expect(apiClient.post).not.toHaveBeenCalled()
+    })
+
+    it('löst beim Mahnen einen POST-Aufruf gegen /remind aus, lädt die Liste neu und zeigt einen Erfolgs-Toast', async () => {
+      mockConfirm(true)
+      const wrapper = await mountWithInvoice(makeInvoice({ status: 'sent' }))
+      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: {} })
+      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { data: [] } })
+
+      await findActionButton(wrapper, 'Mahnen')?.trigger('click')
+      await flushPromises()
+
+      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/invoices/1/remind')
+      expect(apiClient.get).toHaveBeenCalledTimes(2)
+      expect(showSuccess).toHaveBeenCalled()
+    })
+
+    it('meldet einen Fehler über handleApiError, wenn das Mahnen fehlschlägt (z.B. 422 bei maximaler Mahnstufe), ohne abzustürzen', async () => {
+      mockConfirm(true)
+      const wrapper = await mountWithInvoice(makeInvoice({ status: 'sent' }))
+      const backendError = Object.assign(new Error('Request failed with status code 422'), {
+        response: {
+          status: 422,
+          data: { message: 'Für diese Rechnung wurde bereits die maximale Mahnstufe 3 erreicht.' },
+        },
+      })
+      vi.mocked(apiClient.post).mockRejectedValueOnce(backendError)
+
+      await findActionButton(wrapper, 'Mahnen')?.trigger('click')
+      await flushPromises()
+
+      expect(handleApiError).toHaveBeenCalledWith(backendError, expect.any(String))
+    })
+
+    it('schließt ein offenes Detail-Modal nach erfolgreichem Mahnen, ausgelöst über das InvoiceDetailModal-remind-Event', async () => {
+      mockConfirm(true)
+      const invoice = makeInvoice({ status: 'sent' })
+      const wrapper = await mountWithInvoice(invoice)
+
+      await wrapper.find('tbody tr').trigger('click')
+      await nextTick()
+      const detailModal = wrapper.findComponent({ name: 'InvoiceDetailModal' })
+      expect(detailModal.props('isOpen')).toBe(true)
+
+      vi.mocked(apiClient.post).mockResolvedValueOnce({ data: {} })
+      vi.mocked(apiClient.get).mockResolvedValueOnce({ data: { data: [] } })
+
+      await detailModal.vm.$emit('remind', invoice)
+      await flushPromises()
+
+      expect(apiClient.post).toHaveBeenCalledWith('/api/v1/invoices/1/remind')
+      expect(detailModal.props('isOpen')).toBe(false)
     })
   })
 
