@@ -187,7 +187,7 @@ T06) → T10 (Cross-Cutting QA, braucht alle).
   Neue `InvoiceDunningResource` exakt wie in `design.md` Decision D6
   spezifiziert.
 - **Akzeptanzkriterien:**
-  - [ ] `InvoiceDunningApiTest.php` (`uses()->group('api', 'invoice')`,
+  - [x] `InvoiceDunningApiTest.php` (`uses()->group('api', 'invoice')`,
     `it()`-Stil) deckt ab: Admin/Trainer können mahnen (201/200 +
     Statuswechsel), Kunde kann nicht mahnen (403), Mahnung auf `draft`/
     `paid`/`cancelled` liefert 422, vierte Mahnung nach Level 3 liefert
@@ -196,7 +196,7 @@ T06) → T10 (Cross-Cutting QA, braucht alle).
     `nextDunningFeeAmount` korrekt (bzw. `null`, wenn Level 3 erreicht),
     Response enthält die vollständige Mahnhistorie inkl.
     `feeInvoiceNumber`.
-  - [ ] `composer qa` grün (einzeln: `composer test`, `composer lint`,
+  - [x] `composer qa` grün (einzeln: `composer test`, `composer lint`,
     `composer stan`, `composer compat-check`).
 
 ## T05: Alten Cron-Mailer entfernen
