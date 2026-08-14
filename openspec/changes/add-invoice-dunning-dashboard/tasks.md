@@ -358,10 +358,10 @@ T06) → T10 (Cross-Cutting QA, braucht alle).
   vorbefüllten Bestandsdaten für den `document_type`-Backfill (T01).
   Ergebnisse in `task-T10.notes.md` dokumentieren.
 - **Akzeptanzkriterien:**
-  - [ ] Alle vier Backend-Kommandos (`composer test`, `composer lint`,
+  - [x] Alle vier Backend-Kommandos (`composer test`, `composer lint`,
     `composer stan`, `composer compat-check`) grün, einzeln ausgeführt
     dokumentiert.
-  - [ ] `npm run lint`, `npx vitest run`, `npm run build` grün, keine
+  - [x] `npm run lint`, `npx vitest run`, `npm run build` grün, keine
     neuen Warnings gegenüber dem Bestand.
-  - [ ] MySQL/PostgreSQL-Migrationslauf inkl. Concurrency-Test und
+  - [x] MySQL/PostgreSQL-Migrationslauf inkl. Concurrency-Test und
     Backfill-Verifikation grün, Ergebnis dokumentiert.
