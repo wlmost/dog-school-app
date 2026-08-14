@@ -588,10 +588,18 @@ test('trainer can cancel a sent invoice, creating a negated cancellation invoice
     $this->assertDatabaseHas('invoices', [
         'id' => $cancellationInvoiceId,
         'original_invoice_id' => $invoice->id,
+        'document_type' => 'cancellation',
         'status' => 'sent',
         'total_amount' => -150.00,
         'notes' => "Storno zu Rechnung {$invoice->invoice_number}",
     ]);
+
+    // add-invoice-dunning-dashboard T01: cancellationInvoice() filtert seit
+    // dem document_type-Diskriminator (design.md Decision D1) auf
+    // 'cancellation' — neu erzeugte Stornorechnungen müssen das Feld
+    // gesetzt bekommen, sonst würde die Relation die eigene Stornorechnung
+    // nicht mehr finden.
+    expect($invoice->refresh()->cancellationInvoice?->id)->toBe($cancellationInvoiceId);
 
     $invoice->refresh();
     expect($invoice->status)->toBe('cancelled');

@@ -344,6 +344,7 @@ class InvoiceController extends Controller
                         'customer_id' => $invoice->customer_id,
                         'invoice_number' => $numberGenerator->generate(),
                         'original_invoice_id' => $invoice->id,
+                        'document_type' => 'cancellation',
                         'status' => 'sent',
                         'total_amount' => -$invoice->total_amount,
                         'issue_date' => today(),
