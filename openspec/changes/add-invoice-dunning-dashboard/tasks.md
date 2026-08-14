@@ -286,12 +286,12 @@ T06) → T10 (Cross-Cutting QA, braucht alle).
   schließen falls offen (Muster wie `cancelInvoice()`). Neuer
   `@remind="remindInvoice"`-Listener auf `<InvoiceDetailModal>`.
 - **Akzeptanzkriterien:**
-  - [ ] `InvoicesView.test.ts`: Tests für `canRemind()`-Sichtbarkeit je
+  - [x] `InvoicesView.test.ts`: Tests für `canRemind()`-Sichtbarkeit je
     Status/`nextDunningLevel`, für den Bestätigungsdialog-Inhalt
     (Stufe + Gebühr), für `remindInvoice()` (Erfolgsfall: Reload +
     `showSuccess`; 422-Fall: Fehlermeldung via `handleApiError`, kein
     Absturz).
-  - [ ] `npm run lint`, `npx vitest run`, `npm run build` grün.
+  - [x] `npm run lint`, `npx vitest run`, `npm run build` grün.
 
 ## T08: `InvoiceDetailModal.vue` — "Mahnen"-Button + Mahnhistorie
 
