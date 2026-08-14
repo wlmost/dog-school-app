@@ -255,14 +255,14 @@ T06) → T10 (Cross-Cutting QA, braucht alle).
   `getCustomerDashboard()` bleibt unverändert (kein Widget für Kunden,
   siehe `proposal.md`/`design.md`).
 - **Akzeptanzkriterien:**
-  - [ ] `DashboardApiTest.php` (Bestand erweitert) deckt ab: Admin sieht
+  - [x] `DashboardApiTest.php` (Bestand erweitert) deckt ab: Admin sieht
     überfällige und gemahnte Rechnungen aller Kunden; Trainer sieht nur
     Rechnungen seiner zugewiesenen Kunden; ein Gebührendokument
     (`document_type = 'dunning_fee'`) taucht **nicht** in der Liste auf,
     auch wenn dessen `due_date` in der Vergangenheit liegt; eine
     bezahlte oder stornierte Rechnung taucht nicht auf; Kunde erhält
     weiterhin keinen entsprechenden Schlüssel im Response.
-  - [ ] `composer qa` grün.
+  - [x] `composer qa` grün.
 
 ## T07: `InvoicesView.vue` — "Mahnen"-Button
 
