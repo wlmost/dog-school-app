@@ -42,23 +42,23 @@ T06) → T10 (Cross-Cutting QA, braucht alle).
   `feeInvoice(): BelongsTo`-Relation (`Invoice::class,
   'fee_invoice_id'`).
 - **Akzeptanzkriterien:**
-  - [ ] Beide Migrationen laufen fehlerfrei gegen SQLite
+  - [x] Beide Migrationen laufen fehlerfrei gegen SQLite
     (`composer test`) — rein additiv, kein treiberspezifischer Pfad
     nötig (siehe `design.md`).
-  - [ ] Migrationstest mit **vorab per Factory erzeugter
+  - [x] Migrationstest mit **vorab per Factory erzeugter
     Stornorechnung** (`original_invoice_id` gesetzt, `document_type`
     noch `null` vor der Migration) bestätigt: nach `migrate` liefert
     diese Rechnung `document_type === 'cancellation'`.
-  - [ ] `Invoice::cancellationInvoice()` liefert weiterhin ausschließlich
+  - [x] `Invoice::cancellationInvoice()` liefert weiterhin ausschließlich
     die echte Stornorechnung, auch wenn zusätzlich ein Datensatz mit
     `original_invoice_id` und `document_type = 'dunning_fee'` für
     dieselbe Original-Rechnung existiert (Regressionstest für Decision
     D1).
-  - [ ] `DunningFeeSchedule::nextLevel(null) === 1`,
+  - [x] `DunningFeeSchedule::nextLevel(null) === 1`,
     `nextLevel(3) === null`, `feeForLevel(4) === null`.
-  - [ ] `DatabaseStructureTest.php` prüft `document_type` auf `invoices`
+  - [x] `DatabaseStructureTest.php` prüft `document_type` auf `invoices`
     und `fee_invoice_id` auf `invoice_dunnings`.
-  - [ ] `composer stan`/`composer compat-check` grün.
+  - [x] `composer stan`/`composer compat-check` grün.
 
 ## T02: `App\Services\InvoiceDunningRecorder`
 
