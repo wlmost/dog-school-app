@@ -1,0 +1,42 @@
+# Rechnungsstatus
+
+Die korrekte Status-Reihenfolge im Lebenszyklus einer Rechnung verläuft chronologisch vom Entwurf über den Versand 
+und die Fälligkeit bis hin zum Ausgleich: Entwurf → Offen (Gesendet) → Bezahlt (bzw. im Mahnfall → Überfällig → Gemahnt).
+
+## Entwurf (Draft)
+Bedeutung: 
+Die Rechnung wird angelegt, Daten und Positionen werden geprüft.
+Rechtliches: 
+Noch keine steuerliche Relevanz oder feste Rechnungsnummer nötig; 
+das Dokument kann beliebig geändert oder gelöscht werden.
+In der Rechnungs-Listenansicht sind die Buttons PDF, Bearbeiten und Löschen angezeigt.
+
+## Offen/Verschickt
+Bedeutung:
+Die Rechnung ist final freigegeben, mit einer festen, fortlaufenden Rechnungsnummer versehen 
+und an den Kunden übermittelt worden.
+Rechtliches:
+Ab diesem Moment ist das Dokument festgeschrieben. 
+Eine nachträgliche Änderung ist steuerrechtlich unzulässig; Fehler erfordern eine Stornierung oder Korrekturrechnung.
+In der Rechnungs-Listenansicht sind die Buttons PDF, Senden und Stornieren angezeigt.
+Beim Senden-Button wird erfragt, ob die Rechnungs aus der App heraus versendet werden soll (falls eine Email-Adresse vorhanden ist), oder
+ob die Rechnung manuell versendet wird. Hierzu muss der Download des PDF angeboten werden, ebenso auch, wenn es keine Email-Adresse gibt.
+
+## Bezahlt
+Die Rechnung wurde bezahlt. In der Liste soll der Zahlungseingang angezeigt werden. Hierzu muss eine Eingabemaske erstellt werden.
+In der Rechnungslisten Ansicht sind die Buttons PDF und Stornieren zu sehen und das Datum des Zahlungseingangs.
+
+## Überfällig
+In der Rechnungs-Listenansicht wird die Rechnung als überfällig markiert, wenn das Zahlungsziel überschritten ist.
+Die App soll im Dashboard die Rechnungen die überfällig oder angemahnt sind darstellen.
+Wenn eine Mahnung ausgelöst werden soll, soll der Trainer/Admin entsprechend informiert und gefragt werden, ob das ausgeführt werden soll.
+
+## Storniert
+In der Rechnungs-Listenansicht wird die Rechnung als storniert angezeigt, wenn eine Stornierung vorgenommen wurde
+
+## Mahnung
+In der Rechnungs-Listenansicht wird die Rechnung als gemahnt angezeigt, sowie das Datum der Mahnung.
+
+Der Kunde soll nur seine Rechnungen im Status Offen, Bezahlt, Überfällig und gemahnt sehen.
+
+Admin als auch Trainer können Rechnungene und Stornos erstellen.
