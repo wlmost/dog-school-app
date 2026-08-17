@@ -87,7 +87,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Register a new user (Admin only).
+     * Register a new user (Admins and Trainers only; Trainers may only assign the customer role).
      */
     public function register(RegisterRequest $request): JsonResponse
     {

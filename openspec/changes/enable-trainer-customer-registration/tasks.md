@@ -14,19 +14,19 @@
   Entscheidung 2). Klassen-Docblock (`RegisterRequest.php:12-16`) bleibt
   unverändert korrekt, da er den Ziel-Zustand bereits beschreibt.
 - **Akzeptanzkriterien:**
-  - [ ] Trainer kann `POST /api/v1/auth/register` mit `role: 'customer'`
+  - [x] Trainer kann `POST /api/v1/auth/register` mit `role: 'customer'`
         aufrufen → HTTP 201, User wird mit `role: 'customer'` angelegt.
-  - [ ] Trainer, der `role: 'admin'` oder `role: 'trainer'` sendet, erhält
+  - [x] Trainer, der `role: 'admin'` oder `role: 'trainer'` sendet, erhält
         HTTP 422 mit Validierungsfehler auf dem Feld `role`; es wird kein
         User angelegt.
-  - [ ] Admin kann weiterhin `role: 'admin'`, `role: 'trainer'` und
+  - [x] Admin kann weiterhin `role: 'admin'`, `role: 'trainer'` und
         `role: 'customer'` registrieren → HTTP 201 (Regressionsschutz,
         unverändertes Verhalten).
-  - [ ] Customer (nicht Admin/Trainer) erhält weiterhin HTTP 403.
-  - [ ] Unauthentifizierter Aufruf erhält weiterhin HTTP 401.
-  - [ ] `composer compat-check` bleibt grün (keine PHP-8.3/8.4-Features,
+  - [x] Customer (nicht Admin/Trainer) erhält weiterhin HTTP 403.
+  - [x] Unauthentifizierter Aufruf erhält weiterhin HTTP 401.
+  - [x] `composer compat-check` bleibt grün (keine PHP-8.3/8.4-Features,
         siehe `CLAUDE.md` Abschnitt 4.1).
-  - [ ] `composer stan` bleibt grün.
+  - [x] `composer stan` bleibt grün.
 
 ## 2. Tests anpassen und erweitern
 
@@ -51,20 +51,20 @@
   `/auth/register`-Aufrufe, siehe `design.md` Abschnitt "Risks /
   Trade-offs") auf Regressionsfreiheit prüfen.
 - **Akzeptanzkriterien:**
-  - [ ] Test für Customer → 403 vorhanden und grün (Nachfolger von
+  - [x] Test für Customer → 403 vorhanden und grün (Nachfolger von
         `'non-admin cannot register new user'`).
-  - [ ] Neuer Test: Trainer registriert `role: 'customer'` → 201, inkl.
+  - [x] Neuer Test: Trainer registriert `role: 'customer'` → 201, inkl.
         `assertDatabaseHas` für den neuen User mit `role: 'customer'`.
-  - [ ] Neuer Test: Trainer versucht `role: 'admin'` → 422 mit
+  - [x] Neuer Test: Trainer versucht `role: 'admin'` → 422 mit
         `assertJsonValidationErrors(['role'])`.
-  - [ ] Neuer Test: Trainer versucht `role: 'trainer'` → 422 mit
+  - [x] Neuer Test: Trainer versucht `role: 'trainer'` → 422 mit
         `assertJsonValidationErrors(['role'])`.
-  - [ ] Bestehender Test `'admin can register new user'`
+  - [x] Bestehender Test `'admin can register new user'`
         (`AuthenticationTest.php:89-124`) bleibt unverändert grün.
-  - [ ] Neuer Test: unauthentifizierter Aufruf (kein Bearer-Token) →
+  - [x] Neuer Test: unauthentifizierter Aufruf (kein Bearer-Token) →
         HTTP 401, kein User wird angelegt.
-  - [ ] `backend/tests/Feature/EmailNotificationTest.php` bleibt
+  - [x] `backend/tests/Feature/EmailNotificationTest.php` bleibt
         vollständig grün (kein Regressionsverhalten für
         admin-initiierte Registrierungen).
-  - [ ] `composer qa` (lint + stan + compat-check + pest) läuft
+  - [x] `composer qa` (lint + stan + compat-check + pest) läuft
         vollständig grün durch, siehe `CLAUDE.md` Abschnitt 7.1.

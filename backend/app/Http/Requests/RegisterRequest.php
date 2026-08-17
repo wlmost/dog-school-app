@@ -24,8 +24,9 @@ class RegisterRequest extends FormRequest
     {
         $user = $this->user();
 
-        // Only authenticated admins may register new users
-        return $user && $user->isAdmin();
+        // Only authenticated admins and trainers may register new users.
+        // Trainers are further restricted to the "customer" role in rules().
+        return $user && ($user->isAdmin() || $user->isTrainer());
     }
 
     /**
@@ -35,10 +36,18 @@ class RegisterRequest extends FormRequest
      */
     public function rules(): array
     {
+        // The set of roles a caller may assign is derived exclusively from
+        // the authenticated caller's own role (server-side auth state), not
+        // from any client-supplied field. Admins may register any role;
+        // trainers may only register customers.
+        $allowedRoles = $this->user()?->isAdmin()
+            ? ['admin', 'trainer', 'customer']
+            : ['customer'];
+
         return [
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['nullable', 'string', 'confirmed', Password::min(8)->mixedCase()->numbers()->symbols()],
-            'role' => ['required', 'string', Rule::in(['admin', 'trainer', 'customer'])],
+            'role' => ['required', 'string', Rule::in($allowedRoles)],
             'first_name' => ['nullable', 'string', 'max:255'],
             'last_name' => ['nullable', 'string', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
