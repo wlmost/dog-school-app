@@ -333,7 +333,31 @@ describe('Dog API - Store', function () {
             ->postJson('/api/v1/dogs', []);
 
         $response->assertStatus(422)
-            ->assertJsonValidationErrors(['customerId', 'name', 'breed', 'dateOfBirth', 'gender']);
+            ->assertJsonValidationErrors(['customerId', 'name', 'breed', 'gender']);
+    });
+
+    it('erstellt einen hund ohne geburtsdatum erfolgreich', function () {
+        $admin = User::factory()->admin()->create();
+        $customer = Customer::factory()->create();
+
+        $data = [
+            'customerId' => $customer->id,
+            'name' => 'Peanut',
+            'breed' => 'Chihuahua',
+            'gender' => 'female',
+        ];
+
+        $response = $this->actingAs($admin)
+            ->postJson('/api/v1/dogs', $data);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('data.name', 'Peanut')
+            ->assertJsonPath('data.dateOfBirth', null);
+
+        $this->assertDatabaseHas('dogs', [
+            'name' => 'Peanut',
+            'date_of_birth' => null,
+        ]);
     });
 
     test('validates chip number uniqueness', function () {
