@@ -123,10 +123,10 @@ test('admin can register new user', function () {
     ]);
 });
 
-test('non-admin cannot register new user', function () {
-    $trainer = User::factory()->create(['role' => 'trainer']);
+test('customer cannot register new user', function () {
+    $customer = User::factory()->customer()->create();
 
-    $response = $this->actingAs($trainer, 'sanctum')
+    $response = $this->actingAs($customer, 'sanctum')
         ->postJson('/api/v1/auth/register', [
             'email' => 'newuser@example.com',
             'password' => 'Password123!',
@@ -135,6 +135,171 @@ test('non-admin cannot register new user', function () {
         ]);
 
     $response->assertStatus(403);
+
+    $this->assertDatabaseMissing('users', [
+        'email' => 'newuser@example.com',
+    ]);
+});
+
+test('trainer can register a new customer', function () {
+    $trainer = User::factory()->trainer()->create();
+
+    $response = $this->actingAs($trainer, 'sanctum')
+        ->postJson('/api/v1/auth/register', [
+            'email' => 'newcustomer@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'role' => 'customer',
+            'first_name' => 'Jane',
+            'last_name' => 'Doe',
+        ]);
+
+    $response->assertStatus(201);
+
+    $this->assertDatabaseHas('users', [
+        'email' => 'newcustomer@example.com',
+        'role' => 'customer',
+        'first_name' => 'Jane',
+        'last_name' => 'Doe',
+    ]);
+});
+
+test('trainer cannot register a new admin', function () {
+    $trainer = User::factory()->trainer()->create();
+
+    $response = $this->actingAs($trainer, 'sanctum')
+        ->postJson('/api/v1/auth/register', [
+            'email' => 'newadmin@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'role' => 'admin',
+        ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['role']);
+
+    $this->assertDatabaseMissing('users', [
+        'email' => 'newadmin@example.com',
+    ]);
+});
+
+test('trainer cannot register a new trainer', function () {
+    $trainer = User::factory()->trainer()->create();
+
+    $response = $this->actingAs($trainer, 'sanctum')
+        ->postJson('/api/v1/auth/register', [
+            'email' => 'newtrainer@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'role' => 'trainer',
+        ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['role']);
+
+    $this->assertDatabaseMissing('users', [
+        'email' => 'newtrainer@example.com',
+    ]);
+});
+
+test('unauthenticated request cannot register new user', function () {
+    $response = $this->postJson('/api/v1/auth/register', [
+        'email' => 'newuser@example.com',
+        'password' => 'Password123!',
+        'password_confirmation' => 'Password123!',
+        'role' => 'customer',
+    ]);
+
+    $response->assertStatus(401);
+
+    $this->assertDatabaseMissing('users', [
+        'email' => 'newuser@example.com',
+    ]);
+});
+
+test('admin can register a new admin', function () {
+    $admin = User::factory()->admin()->create();
+
+    $response = $this->actingAs($admin, 'sanctum')
+        ->postJson('/api/v1/auth/register', [
+            'email' => 'newadmin@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'role' => 'admin',
+        ]);
+
+    $response->assertStatus(201);
+
+    $this->assertDatabaseHas('users', [
+        'email' => 'newadmin@example.com',
+        'role' => 'admin',
+    ]);
+});
+
+test('admin can register a new customer', function () {
+    $admin = User::factory()->admin()->create();
+
+    $response = $this->actingAs($admin, 'sanctum')
+        ->postJson('/api/v1/auth/register', [
+            'email' => 'newcustomerbyadmin@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'role' => 'customer',
+        ]);
+
+    $response->assertStatus(201);
+
+    $this->assertDatabaseHas('users', [
+        'email' => 'newcustomerbyadmin@example.com',
+        'role' => 'customer',
+    ]);
+});
+
+test('trainer cannot escalate privileges via additional forged fields', function () {
+    $trainer = User::factory()->trainer()->create();
+
+    $response = $this->actingAs($trainer, 'sanctum')
+        ->postJson('/api/v1/auth/register', [
+            'email' => 'forgedadmin@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'role' => 'admin',
+            'is_admin' => true,
+            'force_role' => 'admin',
+        ]);
+
+    $response->assertStatus(422)
+        ->assertJsonValidationErrors(['role']);
+
+    $this->assertDatabaseMissing('users', [
+        'email' => 'forgedadmin@example.com',
+    ]);
+});
+
+test('forged fields on an allowed trainer registration have no effect', function () {
+    $trainer = User::factory()->trainer()->create();
+
+    $response = $this->actingAs($trainer, 'sanctum')
+        ->postJson('/api/v1/auth/register', [
+            'email' => 'notreallyadmin@example.com',
+            'password' => 'Password123!',
+            'password_confirmation' => 'Password123!',
+            'role' => 'customer',
+            'is_admin' => true,
+            'force_role' => 'admin',
+        ]);
+
+    $response->assertStatus(201);
+
+    $this->assertDatabaseHas('users', [
+        'email' => 'notreallyadmin@example.com',
+        'role' => 'customer',
+    ]);
+
+    $this->assertDatabaseMissing('users', [
+        'email' => 'notreallyadmin@example.com',
+        'role' => 'admin',
+    ]);
 });
 
 test('registration validates email uniqueness', function () {
