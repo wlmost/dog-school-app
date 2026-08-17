@@ -307,6 +307,7 @@ docker compose exec app composer test
 ```
 openspec/
   triage/<ts>-<kurzname>.md
+  triage/archive/<ts>-<kurzname>.md
   changes/<change-id>/
     proposal.md
     design.md
@@ -318,6 +319,13 @@ openspec/
     acceptance.md               (Architekt am Ende)
     specs/<capability>/spec.md
 ```
+
+**`triage/archive/`:** Sobald die einer Triage-Datei zugrundeliegende
+Anforderung umgesetzt und gemerged ist (openspec-Change archiviert oder
+trivialer Fix per PR gemerged), wird die Datei per `git mv` von
+`triage/<ts>-<kurzname>.md` nach `triage/archive/<ts>-<kurzname>.md`
+verschoben. `triage/` (ohne `archive/`) enthält damit immer nur noch
+offene bzw. unbearbeitete Einträge.
 
 ---
 
