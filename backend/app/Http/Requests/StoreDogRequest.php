@@ -35,7 +35,7 @@ class StoreDogRequest extends FormRequest
             'customerId' => ['required', 'integer', 'exists:customers,id'],
             'name' => ['required', 'string', 'max:255'],
             'breed' => ['required', 'string', 'max:255'],
-            'dateOfBirth' => ['required', 'date', 'before:today'],
+            'dateOfBirth' => ['nullable', 'date', 'before:today'],
             'gender' => ['required', 'in:male,female'],
             'chipNumber' => ['nullable', 'string', 'max:50', 'unique:dogs,chip_number'],
             'weight' => ['nullable', 'numeric', 'min:0', 'max:200'],
